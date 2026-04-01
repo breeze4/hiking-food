@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { get } from '../api';
 import { useTrip } from '../context/TripContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 function TripSummary() {
   const { tripDetail } = useTrip();
@@ -14,68 +17,102 @@ function TripSummary() {
   if (!summary) return null;
 
   function rangeStatus(actual, low, high) {
-    if (actual >= low && actual <= high) return { color: 'green', label: 'in range' };
-    return { color: '#cc8800', label: actual < low ? 'below' : 'above' };
+    if (actual >= low && actual <= high) return { variant: 'success', label: 'in range' };
+    return { variant: 'warning', label: actual < low ? 'below' : 'above' };
   }
 
   const snackStatus = rangeStatus(summary.snack_weight, summary.daytime_weight_low, summary.daytime_weight_high);
   const totalStatus = rangeStatus(summary.combined_weight, summary.total_weight_low, summary.total_weight_high);
 
   return (
-    <div style={{ border: '1px solid #ccc', padding: '1rem' }}>
-      <h3 style={{ marginTop: 0 }}>Summary</h3>
-      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-        <tbody>
-          <tr>
-            <td style={labelStyle}>Snack weight</td>
-            <td style={{ ...valStyle, color: snackStatus.color }}>
-              {summary.snack_weight} oz ({(summary.snack_weight / 16).toFixed(1)} lbs)
-              <small> — target {summary.daytime_weight_low.toFixed(1)}–{summary.daytime_weight_high.toFixed(1)} oz [{snackStatus.label}]</small>
-            </td>
-          </tr>
-          <tr>
-            <td style={labelStyle}>Snack calories</td>
-            <td style={valStyle}>
-              {summary.snack_calories.toLocaleString()}
-              <small> — target {summary.daytime_cal_low.toLocaleString()}–{summary.daytime_cal_high.toLocaleString()}</small>
-            </td>
-          </tr>
-          <tr>
-            <td style={labelStyle}>Snack cal/oz</td>
-            <td style={valStyle}>{summary.snack_cal_per_oz ?? '—'}</td>
-          </tr>
-          <tr style={{ borderTop: '1px solid #ccc' }}>
-            <td style={labelStyle}>Meal weight</td>
-            <td style={valStyle}>{summary.meal_weight_actual} oz ({(summary.meal_weight_actual / 16).toFixed(1)} lbs)</td>
-          </tr>
-          <tr>
-            <td style={labelStyle}>Meal calories</td>
-            <td style={valStyle}>{summary.meal_calories_actual.toLocaleString()}</td>
-          </tr>
-          <tr style={{ borderTop: '2px solid #ccc' }}>
-            <td style={labelStyle}><strong>Combined weight</strong></td>
-            <td style={{ ...valStyle, color: totalStatus.color }}>
-              <strong>{summary.combined_weight} oz ({(summary.combined_weight / 16).toFixed(1)} lbs)</strong>
-              <small> — target {summary.total_weight_low.toFixed(1)}–{summary.total_weight_high.toFixed(1)} oz [{totalStatus.label}]</small>
-            </td>
-          </tr>
-          <tr>
-            <td style={labelStyle}><strong>Combined calories</strong></td>
-            <td style={valStyle}><strong>{summary.combined_calories.toLocaleString()}</strong></td>
-          </tr>
-          <tr style={{ borderTop: '1px solid #ccc' }}>
-            <td style={labelStyle}>Per day</td>
-            <td style={valStyle}>
-              {summary.weight_per_day} oz/day | {summary.cal_per_day?.toLocaleString()} cal/day
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg">Summary</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        {/* Snack totals */}
+        <div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Snack weight</span>
+            <StatusBadge status={snackStatus} />
+          </div>
+          <div className="font-medium">
+            {summary.snack_weight} oz ({(summary.snack_weight / 16).toFixed(1)} lbs)
+          </div>
+          <div className="text-xs text-muted-foreground">
+            target {summary.daytime_weight_low.toFixed(1)}&ndash;{summary.daytime_weight_high.toFixed(1)} oz
+          </div>
+        </div>
+
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Snack calories</span>
+          <span className="font-medium">{summary.snack_calories.toLocaleString()}</span>
+        </div>
+        <div className="text-xs text-muted-foreground -mt-2">
+          target {summary.daytime_cal_low.toLocaleString()}&ndash;{summary.daytime_cal_high.toLocaleString()}
+        </div>
+
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Snack cal/oz</span>
+          <span className="font-medium">{summary.snack_cal_per_oz ?? '\u2014'}</span>
+        </div>
+
+        <Separator />
+
+        {/* Meal totals */}
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Meal weight</span>
+          <span className="font-medium">{summary.meal_weight_actual} oz ({(summary.meal_weight_actual / 16).toFixed(1)} lbs)</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Meal calories</span>
+          <span className="font-medium">{summary.meal_calories_actual.toLocaleString()}</span>
+        </div>
+
+        <Separator className="border-t-2" />
+
+        {/* Combined */}
+        <div>
+          <div className="flex items-center justify-between">
+            <span className="font-semibold">Combined weight</span>
+            <StatusBadge status={totalStatus} />
+          </div>
+          <div className="text-base font-bold">
+            {summary.combined_weight} oz ({(summary.combined_weight / 16).toFixed(1)} lbs)
+          </div>
+          <div className="text-xs text-muted-foreground">
+            target {summary.total_weight_low.toFixed(1)}&ndash;{summary.total_weight_high.toFixed(1)} oz
+          </div>
+        </div>
+
+        <div className="flex justify-between">
+          <span className="font-semibold">Combined calories</span>
+          <span className="text-base font-bold">{summary.combined_calories.toLocaleString()}</span>
+        </div>
+
+        <Separator />
+
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Per day</span>
+          <span className="font-medium">
+            {summary.weight_per_day} oz &middot; {summary.cal_per_day?.toLocaleString()} cal
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
-const labelStyle = { padding: '4px 8px', whiteSpace: 'nowrap' };
-const valStyle = { padding: '4px 8px' };
+function StatusBadge({ status }) {
+  return (
+    <Badge className={
+      status.variant === 'success'
+        ? 'bg-success text-success-foreground hover:bg-success'
+        : 'bg-warning text-warning-foreground hover:bg-warning'
+    }>
+      {status.label}
+    </Badge>
+  );
+}
 
 export default TripSummary;

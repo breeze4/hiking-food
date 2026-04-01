@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { get } from '../api';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 function RecipesPage() {
   const [recipes, setRecipes] = useState([]);
@@ -9,91 +15,69 @@ function RecipesPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadRecipes();
+    get('/recipes').then(setRecipes).catch((err) => setError(err.message));
   }, []);
-
-  async function loadRecipes() {
-    try {
-      setRecipes(await get('/recipes'));
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
 
   const filtered = filter === 'all'
     ? recipes
     : recipes.filter((r) => r.category === filter);
 
   return (
-    <div>
-      <h2>Recipes</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      <div style={{ marginBottom: '1rem' }}>
-        {['all', 'breakfast', 'dinner'].map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setFilter(cat)}
-            style={{
-              marginRight: '0.5rem',
-              fontWeight: filter === cat ? 'bold' : 'normal',
-              textDecoration: filter === cat ? 'underline' : 'none',
-            }}
-          >
-            {cat.charAt(0).toUpperCase() + cat.slice(1)}
-          </button>
-        ))}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold tracking-tight">Recipes</h2>
+        <Button onClick={() => navigate('/recipes/new')}>+ New Recipe</Button>
       </div>
 
-      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-        <thead>
-          <tr>
-            <th style={thStyle}>Name</th>
-            <th style={thStyle}>Category</th>
-            <th style={thStyle}>Weight (oz)</th>
-            <th style={thStyle}>Calories</th>
-            <th style={thStyle}>Cal/oz</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map((r) => (
-            <tr
-              key={r.id}
-              onClick={() => navigate(`/recipes/${r.id}`)}
-              style={{ cursor: 'pointer' }}
-            >
-              <td style={tdStyle}>{r.name}</td>
-              <td style={tdStyle}>{r.category}</td>
-              <td style={tdStyle}>{r.total_weight}</td>
-              <td style={tdStyle}>{r.total_calories}</td>
-              <td style={tdStyle}>{r.cal_per_oz}</td>
-            </tr>
-          ))}
-          {filtered.length === 0 && (
-            <tr>
-              <td style={tdStyle} colSpan={5}>No recipes found.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      {error && <p className="text-destructive text-sm">{error}</p>}
 
-      <button style={{ marginTop: '1rem' }} onClick={() => navigate('/recipes/new')}>
-        + New Recipe
-      </button>
+      <Tabs value={filter} onValueChange={setFilter}>
+        <TabsList>
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="breakfast">Breakfast</TabsTrigger>
+          <TabsTrigger value="dinner">Dinner</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead className="text-right">Weight (oz)</TableHead>
+              <TableHead className="text-right">Calories</TableHead>
+              <TableHead className="text-right">Cal/oz</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.map((r) => (
+              <TableRow
+                key={r.id}
+                onClick={() => navigate(`/recipes/${r.id}`)}
+                className="cursor-pointer"
+              >
+                <TableCell className="font-medium">{r.name}</TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="text-xs">{r.category}</Badge>
+                </TableCell>
+                <TableCell className="text-right">{r.total_weight}</TableCell>
+                <TableCell className="text-right">{r.total_calories}</TableCell>
+                <TableCell className="text-right">{r.cal_per_oz}</TableCell>
+              </TableRow>
+            ))}
+            {filtered.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  No recipes found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
-
-const thStyle = {
-  borderBottom: '2px solid #ccc',
-  padding: '8px',
-  textAlign: 'left',
-};
-
-const tdStyle = {
-  borderBottom: '1px solid #eee',
-  padding: '8px',
-};
 
 export default RecipesPage;

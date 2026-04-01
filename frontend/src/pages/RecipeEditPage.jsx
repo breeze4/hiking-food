@@ -1,6 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { get, post, put, del } from '../api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
 
 function RecipeEditPage() {
   const { id } = useParams();
@@ -8,63 +18,42 @@ function RecipeEditPage() {
   const isNew = id === 'new';
 
   const [form, setForm] = useState({
-    name: '',
-    category: 'breakfast',
-    at_home_prep: '',
-    field_prep: '',
-    notes: '',
+    name: '', category: 'breakfast', at_home_prep: '', field_prep: '', notes: '',
   });
   const [recipeIngredients, setRecipeIngredients] = useState([]);
   const [allIngredients, setAllIngredients] = useState([]);
   const [addIngId, setAddIngId] = useState('');
   const [addAmount, setAddAmount] = useState('');
   const [error, setError] = useState(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
-    loadIngredients();
-    if (!isNew) loadRecipe();
+    get('/ingredients').then(setAllIngredients).catch(() => {});
+    if (!isNew) {
+      get(`/recipes/${id}`).then((data) => {
+        setForm({
+          name: data.name,
+          category: data.category || 'breakfast',
+          at_home_prep: data.at_home_prep || '',
+          field_prep: data.field_prep || '',
+          notes: data.notes || '',
+        });
+        setRecipeIngredients(data.ingredients || []);
+      }).catch((err) => setError(err.message));
+    }
   }, [id]);
 
-  async function loadRecipe() {
-    try {
-      const data = await get(`/recipes/${id}`);
-      setForm({
-        name: data.name,
-        category: data.category || 'breakfast',
-        at_home_prep: data.at_home_prep || '',
-        field_prep: data.field_prep || '',
-        notes: data.notes || '',
-      });
-      setRecipeIngredients(data.ingredients || []);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  async function loadIngredients() {
-    try {
-      setAllIngredients(await get('/ingredients'));
-    } catch (err) {
-      // non-critical
-    }
-  }
-
-  // Build a lookup for cal/oz
   const ingLookup = useMemo(() => {
     const map = {};
     allIngredients.forEach((i) => { map[i.id] = i; });
     return map;
   }, [allIngredients]);
 
-  // Compute totals client-side
   const totals = useMemo(() => {
-    let weight = 0;
-    let cals = 0;
+    let weight = 0, cals = 0;
     recipeIngredients.forEach((ri) => {
       weight += ri.amount_oz || 0;
-      const calPerOz = ingLookup[ri.ingredient_id]?.calories_per_oz ?? 0;
-      cals += (ri.amount_oz || 0) * calPerOz;
+      cals += (ri.amount_oz || 0) * (ingLookup[ri.ingredient_id]?.calories_per_oz ?? 0);
     });
     return {
       total_weight: Math.round(weight * 100) / 100,
@@ -77,16 +66,11 @@ function RecipeEditPage() {
     if (!addIngId || !addAmount) return;
     const ing = ingLookup[parseInt(addIngId)];
     if (!ing) return;
-    setRecipeIngredients([
-      ...recipeIngredients,
-      {
-        id: null,
-        ingredient_id: ing.id,
-        ingredient_name: ing.name,
-        amount_oz: parseFloat(addAmount),
-        calories: parseFloat(addAmount) * (ing.calories_per_oz || 0),
-      },
-    ]);
+    setRecipeIngredients([...recipeIngredients, {
+      id: null, ingredient_id: ing.id, ingredient_name: ing.name,
+      amount_oz: parseFloat(addAmount),
+      calories: parseFloat(addAmount) * (ing.calories_per_oz || 0),
+    }]);
     setAddIngId('');
     setAddAmount('');
   }
@@ -106,22 +90,17 @@ function RecipeEditPage() {
 
   async function handleSave() {
     const payload = {
-      name: form.name,
-      category: form.category,
+      name: form.name, category: form.category,
       at_home_prep: form.at_home_prep || null,
       field_prep: form.field_prep || null,
       notes: form.notes || null,
       ingredients: recipeIngredients.map((ri) => ({
-        ingredient_id: ri.ingredient_id,
-        amount_oz: ri.amount_oz,
+        ingredient_id: ri.ingredient_id, amount_oz: ri.amount_oz,
       })),
     };
     try {
-      if (isNew) {
-        await post('/recipes', payload);
-      } else {
-        await put(`/recipes/${id}`, payload);
-      }
+      if (isNew) await post('/recipes', payload);
+      else await put(`/recipes/${id}`, payload);
       navigate('/recipes');
     } catch (err) {
       setError(err.message);
@@ -129,7 +108,6 @@ function RecipeEditPage() {
   }
 
   async function handleDelete() {
-    if (!confirm(`Delete recipe "${form.name}"?`)) return;
     try {
       await del(`/recipes/${id}`);
       navigate('/recipes');
@@ -139,142 +117,137 @@ function RecipeEditPage() {
   }
 
   return (
-    <div>
-      <h2>{isNew ? 'New Recipe' : `Edit: ${form.name}`}</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <div className="space-y-6 max-w-3xl">
+      <h2 className="text-2xl font-semibold tracking-tight">
+        {isNew ? 'New Recipe' : `Edit: ${form.name}`}
+      </h2>
+      {error && <p className="text-destructive text-sm">{error}</p>}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: '500px' }}>
-        <label>
-          Name
-          <input
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-            style={{ display: 'block', width: '100%', padding: '4px' }}
-          />
-        </label>
-        <label>
-          Category
-          <select
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-            style={{ display: 'block', padding: '4px' }}
-          >
-            <option value="breakfast">Breakfast</option>
-            <option value="dinner">Dinner</option>
-          </select>
-        </label>
-        <label>
-          At-Home Prep
-          <textarea
-            value={form.at_home_prep}
-            onChange={(e) => setForm({ ...form, at_home_prep: e.target.value })}
-            rows={3}
-            style={{ display: 'block', width: '100%' }}
-          />
-        </label>
-        <label>
-          Field Prep
-          <textarea
-            value={form.field_prep}
-            onChange={(e) => setForm({ ...form, field_prep: e.target.value })}
-            rows={3}
-            style={{ display: 'block', width: '100%' }}
-          />
-        </label>
-        <label>
-          Notes
-          <textarea
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            rows={2}
-            style={{ display: 'block', width: '100%' }}
-          />
-        </label>
-      </div>
-
-      <h3 style={{ marginTop: '1.5rem' }}>Ingredients</h3>
-      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-        <thead>
-          <tr>
-            <th style={thStyle}>Ingredient</th>
-            <th style={thStyle}>Amount (oz)</th>
-            <th style={thStyle}>Calories</th>
-            <th style={thStyle}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {recipeIngredients.map((ri, index) => (
-            <tr key={index}>
-              <td style={tdStyle}>{ri.ingredient_name}</td>
-              <td style={tdStyle}>
-                <input
-                  type="number"
-                  step="any"
-                  value={ri.amount_oz}
-                  onChange={(e) => updateIngAmount(index, e.target.value)}
-                  style={{ width: '80px', padding: '4px' }}
-                />
-              </td>
-              <td style={tdStyle}>{Math.round((ri.amount_oz || 0) * (ingLookup[ri.ingredient_id]?.calories_per_oz || 0) * 10) / 10}</td>
-              <td style={tdStyle}>
-                <button onClick={() => removeIngredient(index)}>Remove</button>
-              </td>
-            </tr>
-          ))}
-          <tr>
-            <td style={tdStyle}>
-              <select
-                value={addIngId}
-                onChange={(e) => setAddIngId(e.target.value)}
-                style={{ padding: '4px' }}
-              >
-                <option value="">Add ingredient...</option>
-                {allIngredients.map((ing) => (
-                  <option key={ing.id} value={ing.id}>{ing.name}</option>
-                ))}
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input id="name" value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <select id="category" value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm">
+                <option value="breakfast">Breakfast</option>
+                <option value="dinner">Dinner</option>
               </select>
-            </td>
-            <td style={tdStyle}>
-              <input
-                type="number"
-                step="any"
-                placeholder="oz"
-                value={addAmount}
-                onChange={(e) => setAddAmount(e.target.value)}
-                style={{ width: '80px', padding: '4px' }}
-              />
-            </td>
-            <td style={tdStyle}></td>
-            <td style={tdStyle}>
-              <button onClick={addIngredient} disabled={!addIngId || !addAmount}>Add</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="at-home-prep">At-Home Prep</Label>
+            <textarea id="at-home-prep" value={form.at_home_prep}
+              onChange={(e) => setForm({ ...form, at_home_prep: e.target.value })}
+              rows={3}
+              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="field-prep">Field Prep</Label>
+            <textarea id="field-prep" value={form.field_prep}
+              onChange={(e) => setForm({ ...form, field_prep: e.target.value })}
+              rows={3}
+              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <textarea id="notes" value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              rows={2}
+              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+          </div>
+        </CardContent>
+      </Card>
 
-      <div style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>
-        Total: {totals.total_weight} oz | {totals.total_calories} cal | {totals.cal_per_oz ?? '—'} cal/oz
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Ingredients</h3>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Ingredient</TableHead>
+                <TableHead className="w-28">Amount (oz)</TableHead>
+                <TableHead className="text-right w-24">Calories</TableHead>
+                <TableHead className="w-20"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {recipeIngredients.map((ri, index) => (
+                <TableRow key={index}>
+                  <TableCell>{ri.ingredient_name}</TableCell>
+                  <TableCell>
+                    <Input type="number" step="any" value={ri.amount_oz}
+                      onChange={(e) => updateIngAmount(index, e.target.value)}
+                      className="w-20 h-8" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {Math.round((ri.amount_oz || 0) * (ingLookup[ri.ingredient_id]?.calories_per_oz || 0) * 10) / 10}
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive"
+                      onClick={() => removeIngredient(index)}>Remove</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              <TableRow>
+                <TableCell>
+                  <select value={addIngId} onChange={(e) => setAddIngId(e.target.value)}
+                    className="h-8 rounded-md border border-input bg-background px-2 text-sm w-full">
+                    <option value="">Add ingredient...</option>
+                    {allIngredients.map((ing) => (
+                      <option key={ing.id} value={ing.id}>{ing.name}</option>
+                    ))}
+                  </select>
+                </TableCell>
+                <TableCell>
+                  <Input type="number" step="any" placeholder="oz" value={addAmount}
+                    onChange={(e) => setAddAmount(e.target.value)} className="w-20 h-8" />
+                </TableCell>
+                <TableCell></TableCell>
+                <TableCell>
+                  <Button size="sm" onClick={addIngredient}
+                    disabled={!addIngId || !addAmount}>Add</Button>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="mt-3 text-sm font-semibold">
+          Total: {totals.total_weight} oz &middot; {totals.total_calories} cal &middot; {totals.cal_per_oz ?? '\u2014'} cal/oz
+        </div>
       </div>
 
-      <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem' }}>
-        <button onClick={handleSave}>Save</button>
-        <button onClick={() => navigate('/recipes')}>Cancel</button>
-        {!isNew && <button onClick={handleDelete} style={{ color: 'red' }}>Delete</button>}
+      <div className="flex gap-2">
+        <Button onClick={handleSave}>Save</Button>
+        <Button variant="outline" onClick={() => navigate('/recipes')}>Cancel</Button>
+        {!isNew && (
+          <Button variant="destructive" onClick={() => setDeleteOpen(true)}>Delete</Button>
+        )}
       </div>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Recipe</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &ldquo;{form.name}&rdquo;? This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-const thStyle = {
-  borderBottom: '2px solid #ccc',
-  padding: '8px',
-  textAlign: 'left',
-};
-
-const tdStyle = {
-  borderBottom: '1px solid #eee',
-  padding: '8px',
-};
 
 export default RecipeEditPage;

@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
 import { get, post, put, del } from '../api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
 
 function SnackCatalogPage() {
   const [snacks, setSnacks] = useState([]);
@@ -7,57 +16,38 @@ function SnackCatalogPage() {
   const [error, setError] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
-  const [showAdd, setShowAdd] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
   const [addForm, setAddForm] = useState({
-    ingredient_id: '',
-    weight_per_serving: '',
-    calories_per_serving: '',
-    notes: '',
+    ingredient_id: '', weight_per_serving: '', calories_per_serving: '', notes: '',
   });
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [sortCol, setSortCol] = useState('ingredient_name');
   const [sortAsc, setSortAsc] = useState(true);
 
   useEffect(() => {
     loadSnacks();
-    loadIngredients();
+    get('/ingredients').then(setIngredients).catch(() => {});
   }, []);
 
   async function loadSnacks() {
     try {
       setSnacks(await get('/snacks'));
       setError(null);
-    } catch (err) {
-      setError(err.message);
-    }
+    } catch (err) { setError(err.message); }
   }
 
-  async function loadIngredients() {
-    try {
-      setIngredients(await get('/ingredients'));
-    } catch (err) {
-      // non-critical
-    }
-  }
-
-  // Sorting
   function handleSort(col) {
-    if (sortCol === col) {
-      setSortAsc(!sortAsc);
-    } else {
-      setSortCol(col);
-      setSortAsc(true);
-    }
+    if (sortCol === col) setSortAsc(!sortAsc);
+    else { setSortCol(col); setSortAsc(true); }
   }
 
   function getSorted() {
     return [...snacks].sort((a, b) => {
-      let aVal = a[sortCol];
-      let bVal = b[sortCol];
+      let aVal = a[sortCol], bVal = b[sortCol];
       if (aVal == null) aVal = '';
       if (bVal == null) bVal = '';
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
+      if (typeof aVal === 'number' && typeof bVal === 'number')
         return sortAsc ? aVal - bVal : bVal - aVal;
-      }
       const cmp = String(aVal).localeCompare(String(bVal));
       return sortAsc ? cmp : -cmp;
     });
@@ -65,10 +55,9 @@ function SnackCatalogPage() {
 
   function sortArrow(col) {
     if (sortCol !== col) return '';
-    return sortAsc ? ' ▲' : ' ▼';
+    return sortAsc ? ' \u25B2' : ' \u25BC';
   }
 
-  // Add
   async function handleAdd(e) {
     e.preventDefault();
     try {
@@ -80,14 +69,11 @@ function SnackCatalogPage() {
       });
       setSnacks([...snacks, created]);
       setAddForm({ ingredient_id: '', weight_per_serving: '', calories_per_serving: '', notes: '' });
-      setShowAdd(false);
+      setAddOpen(false);
       setError(null);
-    } catch (err) {
-      setError(err.message);
-    }
+    } catch (err) { setError(err.message); }
   }
 
-  // Edit
   function startEdit(snack) {
     setEditingId(snack.id);
     setEditForm({
@@ -95,11 +81,6 @@ function SnackCatalogPage() {
       calories_per_serving: snack.calories_per_serving ?? '',
       notes: snack.notes ?? '',
     });
-  }
-
-  function cancelEdit() {
-    setEditingId(null);
-    setEditForm({});
   }
 
   async function saveEdit(id) {
@@ -112,171 +93,164 @@ function SnackCatalogPage() {
       setSnacks(snacks.map((s) => (s.id === id ? updated : s)));
       setEditingId(null);
       setError(null);
-    } catch (err) {
-      setError(err.message);
-    }
+    } catch (err) { setError(err.message); }
   }
 
-  // Delete
-  async function handleDelete(id, name) {
-    if (!confirm(`Delete snack "${name}"?`)) return;
+  async function handleDelete() {
+    if (!deleteTarget) return;
     try {
-      await del(`/snacks/${id}`);
-      setSnacks(snacks.filter((s) => s.id !== id));
+      await del(`/snacks/${deleteTarget.id}`);
+      setSnacks(snacks.filter((s) => s.id !== deleteTarget.id));
+      setDeleteTarget(null);
       setError(null);
-    } catch (err) {
-      setError(err.message);
-    }
+    } catch (err) { setError(err.message); }
   }
 
   const sorted = getSorted();
 
   return (
-    <div>
-      <h2>Snack Catalog</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold tracking-tight">Snack Catalog</h2>
+        <Button onClick={() => setAddOpen(true)}>+ Add Snack Item</Button>
+      </div>
 
-      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-        <thead>
-          <tr>
-            <th style={thStyle} onClick={() => handleSort('ingredient_name')}>
-              Ingredient{sortArrow('ingredient_name')}
-            </th>
-            <th style={thStyle} onClick={() => handleSort('weight_per_serving')}>
-              Wt/Serving (oz){sortArrow('weight_per_serving')}
-            </th>
-            <th style={thStyle} onClick={() => handleSort('calories_per_serving')}>
-              Cal/Serving{sortArrow('calories_per_serving')}
-            </th>
-            <th style={thStyle} onClick={() => handleSort('calories_per_oz')}>
-              Cal/oz{sortArrow('calories_per_oz')}
-            </th>
-            <th style={thStyle} onClick={() => handleSort('notes')}>
-              Notes{sortArrow('notes')}
-            </th>
-            <th style={thStyle}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.map((s) =>
-            editingId === s.id ? (
-              <tr key={s.id}>
-                <td style={tdStyle}>{s.ingredient_name}</td>
-                <td style={tdStyle}>
-                  <input
-                    type="number"
-                    step="any"
-                    value={editForm.weight_per_serving}
-                    onChange={(e) => setEditForm({ ...editForm, weight_per_serving: e.target.value })}
-                    style={{ ...inputStyle, width: '80px' }}
-                  />
-                </td>
-                <td style={tdStyle}>
-                  <input
-                    type="number"
-                    step="any"
-                    value={editForm.calories_per_serving}
-                    onChange={(e) => setEditForm({ ...editForm, calories_per_serving: e.target.value })}
-                    style={{ ...inputStyle, width: '80px' }}
-                  />
-                </td>
-                <td style={tdStyle}>—</td>
-                <td style={tdStyle}>
-                  <input
-                    value={editForm.notes}
-                    onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                    style={inputStyle}
-                  />
-                </td>
-                <td style={tdStyle}>
-                  <button onClick={() => saveEdit(s.id)}>Save</button>{' '}
-                  <button onClick={cancelEdit}>Cancel</button>
-                </td>
-              </tr>
-            ) : (
-              <tr key={s.id} onDoubleClick={() => startEdit(s)}>
-                <td style={tdStyle}>{s.ingredient_name}</td>
-                <td style={tdStyle}>{s.weight_per_serving}</td>
-                <td style={tdStyle}>{s.calories_per_serving}</td>
-                <td style={tdStyle}>{s.calories_per_oz}</td>
-                <td style={tdStyle}>{s.notes}</td>
-                <td style={tdStyle}>
-                  <button onClick={() => startEdit(s)}>Edit</button>{' '}
-                  <button onClick={() => handleDelete(s.id, s.ingredient_name)}>Delete</button>
-                </td>
-              </tr>
-            )
-          )}
-        </tbody>
-      </table>
+      {error && <p className="text-destructive text-sm">{error}</p>}
 
-      {showAdd ? (
-        <form onSubmit={handleAdd} style={{ marginTop: '1rem' }}>
-          <select
-            value={addForm.ingredient_id}
-            onChange={(e) => setAddForm({ ...addForm, ingredient_id: e.target.value })}
-            required
-            style={inputStyle}
-          >
-            <option value="">Select ingredient...</option>
-            {ingredients.map((ing) => (
-              <option key={ing.id} value={ing.id}>
-                {ing.name}
-              </option>
-            ))}
-          </select>{' '}
-          <input
-            placeholder="Wt/serving (oz)"
-            type="number"
-            step="any"
-            value={addForm.weight_per_serving}
-            onChange={(e) => setAddForm({ ...addForm, weight_per_serving: e.target.value })}
-            required
-            style={{ ...inputStyle, width: '100px' }}
-          />{' '}
-          <input
-            placeholder="Cal/serving"
-            type="number"
-            step="any"
-            value={addForm.calories_per_serving}
-            onChange={(e) => setAddForm({ ...addForm, calories_per_serving: e.target.value })}
-            required
-            style={{ ...inputStyle, width: '100px' }}
-          />{' '}
-          <input
-            placeholder="Notes"
-            value={addForm.notes}
-            onChange={(e) => setAddForm({ ...addForm, notes: e.target.value })}
-            style={inputStyle}
-          />{' '}
-          <button type="submit">Add</button>{' '}
-          <button type="button" onClick={() => setShowAdd(false)}>Cancel</button>
-        </form>
-      ) : (
-        <button style={{ marginTop: '1rem' }} onClick={() => { setShowAdd(true); loadIngredients(); }}>
-          + Add Snack Item
-        </button>
-      )}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <SortHead col="ingredient_name" label="Ingredient" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} />
+              <SortHead col="weight_per_serving" label="Wt/Serving (oz)" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} className="text-right" />
+              <SortHead col="calories_per_serving" label="Cal/Serving" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} className="text-right" />
+              <SortHead col="calories_per_oz" label="Cal/oz" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} className="text-right" />
+              <SortHead col="notes" label="Notes" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} />
+              <TableHead className="w-28"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sorted.map((s) =>
+              editingId === s.id ? (
+                <TableRow key={s.id}>
+                  <TableCell className="font-medium">{s.ingredient_name}</TableCell>
+                  <TableCell className="text-right">
+                    <Input type="number" step="any" value={editForm.weight_per_serving}
+                      onChange={(e) => setEditForm({ ...editForm, weight_per_serving: e.target.value })}
+                      className="w-20 h-8 ml-auto" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Input type="number" step="any" value={editForm.calories_per_serving}
+                      onChange={(e) => setEditForm({ ...editForm, calories_per_serving: e.target.value })}
+                      className="w-20 h-8 ml-auto" />
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">&mdash;</TableCell>
+                  <TableCell>
+                    <Input value={editForm.notes}
+                      onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                      className="h-8" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <Button size="sm" onClick={() => saveEdit(s.id)}>Save</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>Cancel</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                <TableRow key={s.id} className="even:bg-muted/50">
+                  <TableCell className="font-medium">{s.ingredient_name}</TableCell>
+                  <TableCell className="text-right">{s.weight_per_serving}</TableCell>
+                  <TableCell className="text-right">{s.calories_per_serving}</TableCell>
+                  <TableCell className="text-right">{s.calories_per_oz}</TableCell>
+                  <TableCell className="text-muted-foreground">{s.notes}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => startEdit(s)}>Edit</Button>
+                      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive"
+                        onClick={() => setDeleteTarget(s)}>Delete</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Add Dialog */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent>
+          <form onSubmit={handleAdd}>
+            <DialogHeader>
+              <DialogTitle>Add Snack Item</DialogTitle>
+              <DialogDescription>Select an ingredient and set serving info.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Ingredient</Label>
+                <select value={addForm.ingredient_id}
+                  onChange={(e) => setAddForm({ ...addForm, ingredient_id: e.target.value })}
+                  required
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm">
+                  <option value="">Select ingredient...</option>
+                  {ingredients.map((ing) => (
+                    <option key={ing.id} value={ing.id}>{ing.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Weight/serving (oz)</Label>
+                  <Input type="number" step="any" required value={addForm.weight_per_serving}
+                    onChange={(e) => setAddForm({ ...addForm, weight_per_serving: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Calories/serving</Label>
+                  <Input type="number" step="any" required value={addForm.calories_per_serving}
+                    onChange={(e) => setAddForm({ ...addForm, calories_per_serving: e.target.value })} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Input value={addForm.notes}
+                  onChange={(e) => setAddForm({ ...addForm, notes: e.target.value })} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
+              <Button type="submit">Add</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Snack</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &ldquo;{deleteTarget?.ingredient_name}&rdquo;?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-const thStyle = {
-  borderBottom: '2px solid #ccc',
-  padding: '8px',
-  textAlign: 'left',
-  cursor: 'pointer',
-  userSelect: 'none',
-};
-
-const tdStyle = {
-  borderBottom: '1px solid #eee',
-  padding: '8px',
-};
-
-const inputStyle = {
-  padding: '4px',
-  width: '150px',
-};
+function SortHead({ col, label, sortCol, sortAsc, onClick, className = '' }) {
+  const arrow = sortCol === col ? (sortAsc ? ' \u25B2' : ' \u25BC') : '';
+  return (
+    <TableHead className={`cursor-pointer select-none ${className}`} onClick={() => onClick(col)}>
+      {label}{arrow}
+    </TableHead>
+  );
+}
 
 export default SnackCatalogPage;
