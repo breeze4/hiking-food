@@ -33,6 +33,7 @@ Recipes for breakfasts and dinners. Each recipe has:
 - Category (breakfast or dinner)
 - Ingredients list (each: ingredient reference, amount in oz)
 - At-home prep instructions (free text)
+- Field prep instructions (free text)
 - Computed: total weight, total calories, cal/oz
 
 Recipes can be imported from Skurka's book as starters, then tweaked. They can also be created from scratch. Once imported, recipes are fully independent (no link to original).
@@ -129,7 +130,8 @@ A dedicated view for packing day (at home with Chromebook + scale):
 | id | INTEGER PRIMARY KEY |
 | name | TEXT NOT NULL |
 | category | TEXT (breakfast\|dinner) |
-| prep_instructions | TEXT |
+| at_home_prep | TEXT |
+| field_prep | TEXT |
 | notes | TEXT |
 
 ### recipe_ingredients
