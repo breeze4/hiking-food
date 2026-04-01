@@ -7,7 +7,7 @@ This depends on issues #2-7 being complete (scaffolding, ingredients, snack cata
 
 ## Plan
 
-### Step 1: Backend — PATCH endpoint for trip meals
+### ✅ Step 1: Backend — PATCH endpoint for trip meals
 Add `PATCH /api/trips/{trip_id}/meals/{meal_id}` to update `packed` (bool) and `actual_weight_oz` (float, nullable) on a trip_meal record.
 
 - Pydantic schema: `TripMealPack` with both fields optional
@@ -17,7 +17,7 @@ Add `PATCH /api/trips/{trip_id}/meals/{meal_id}` to update `packed` (bool) and `
 **Files**: `backend/schemas/trip.py` (or new `packing.py`), `backend/routers/trips.py`
 **Verify**: curl PATCH to toggle packed and set weight, confirm persistence
 
-### Step 2: Backend — PATCH endpoint for trip snacks
+### ✅ Step 2: Backend — PATCH endpoint for trip snacks
 Add `PATCH /api/trips/{trip_id}/snacks/{snack_id}` to update `packed` (bool) and `actual_weight_oz` (float, nullable) on a trip_snack record.
 
 - Same pattern as step 1
@@ -26,7 +26,7 @@ Add `PATCH /api/trips/{trip_id}/snacks/{snack_id}` to update `packed` (bool) and
 **Files**: `backend/schemas/trip.py`, `backend/routers/trips.py`
 **Verify**: curl PATCH to toggle packed and set weight, confirm persistence
 
-### Step 3: Backend — Shopping list endpoint
+### ✅ Step 3: Backend — Shopping list endpoint
 Add `GET /api/trips/{trip_id}/shopping-list` that aggregates all ingredients across the trip.
 
 Aggregation logic:
@@ -38,13 +38,13 @@ Aggregation logic:
 **Files**: `backend/routers/trips.py`
 **Verify**: With a trip that has overlapping ingredients across meals/snacks, confirm amounts aggregate correctly
 
-### Step 4: Frontend — Add packing screen route
+### ✅ Step 4: Frontend — Add packing screen route
 Add `/trips/:tripId/packing` route and a nav link/button from the trip planner page to reach it. Render a placeholder component.
 
 **Files**: `frontend/src/App.jsx` (router), `frontend/src/pages/PackingScreen.jsx` (placeholder), trip planner page (add link)
 **Verify**: Navigate to packing screen from trip planner, see placeholder, back navigation works
 
-### Step 5: Frontend — Recipe assembly section
+### ✅ Step 5: Frontend — Recipe assembly section
 Build the recipe assembly section of the packing screen:
 - Fetch trip meals with recipe details (name, ingredient list with amounts, at-home prep)
 - For each meal: display recipe name, ingredient list with target amounts in oz, at-home prep text
@@ -55,7 +55,7 @@ Build the recipe assembly section of the packing screen:
 **Files**: `frontend/src/pages/PackingScreen.jsx` (or extract `RecipeAssembly` component)
 **Verify**: Meals display with ingredient breakdowns, can check packed, can enter actual weight, values persist on reload
 
-### Step 6: Frontend — Snack packing section
+### ✅ Step 6: Frontend — Snack packing section
 Build the snack packing section:
 - Fetch trip snacks with catalog/ingredient details
 - For each snack: show ingredient name, target weight (servings × weight_per_serving), target calories
@@ -65,7 +65,7 @@ Build the snack packing section:
 **Files**: `frontend/src/pages/PackingScreen.jsx` (or extract `SnackPacking` component)
 **Verify**: Snacks display with target weights, can check packed, can enter actual weight, values persist on reload
 
-### Step 7: Frontend — Combined shopping list section
+### ✅ Step 7: Frontend — Combined shopping list section
 Build the shopping list section:
 - Fetch from `GET /api/trips/{trip_id}/shopping-list`
 - Display table: ingredient name, total oz needed

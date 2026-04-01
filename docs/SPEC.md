@@ -183,3 +183,28 @@ A dedicated view for packing day (at home with Chromebook + scale):
 - All Skurka recipes (6 breakfasts, 6 dinners) with ingredients
 - All ingredients from Utah 2026 sheet + Skurka recipes
 - Utah 2026 trip with current snack selections and serving counts
+
+## Deployment
+
+### Target
+Self-hosted on "beebaby" (Linux mini PC), accessible via Tailscale. Develop on ARVELLAT, deploy via rsync + SSH.
+
+### How it runs
+- Single process: uvicorn serves FastAPI (API + built React static files) on port 8000
+- systemd service `hiking-food` auto-starts on boot, restarts on crash
+- SQLite database at `backend/hiking_food.db`
+
+### First-time setup on beebaby
+```
+ssh beebaby 'bash -s' < deploy/setup.sh
+./deploy/deploy.sh
+```
+
+### Deploy updates
+```
+./deploy/deploy.sh
+```
+This rsyncs code to beebaby, installs deps, builds frontend, restarts the service.
+
+### Access
+`http://beebaby:8000` from any Tailscale-connected device.

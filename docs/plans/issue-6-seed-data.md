@@ -18,7 +18,7 @@ This is a backend-only change. No UI work. The seed script must be idempotent �
 
 ## Plan
 
-### Step 1: Extract and commit Utah 2026 snack data to JSON
+### ✅ Step 1: Extract and commit Utah 2026 snack data to JSON
 The Google Sheet data needs to land in `data/utah-2026-snacks.json` as a structured file that the seed script can consume. The file should contain an array of snack items, each with: ingredient name, calories_per_oz, weight_per_serving, calories_per_serving, and servings (the trip-level serving count). Also include the trip metadata (name, day fractions if known).
 
 Manually create this file from the spreadsheet data. Include a top-level verification block with the known totals (~103 oz, ~11,745 cal, ~114 cal/oz) so the seed script can sanity-check itself.
@@ -26,7 +26,7 @@ Manually create this file from the spreadsheet data. Include a top-level verific
 **Files**: `data/utah-2026-snacks.json`
 **Verify**: JSON is valid. Manually confirm the totals from the items match the verification targets.
 
-### Step 2: Create seed script skeleton with DB session and idempotency pattern
+### ✅ Step 2: Create seed script skeleton with DB session and idempotency pattern
 Create `backend/seed.py` that:
 - Imports the SQLAlchemy models and database session
 - Establishes the idempotency pattern: look up by unique natural key (name for ingredients/recipes, ingredient_id for snack catalog items) before inserting
@@ -37,7 +37,7 @@ Create `backend/seed.py` that:
 **Files**: `backend/seed.py`
 **Verify**: Script runs without error against an empty database, prints summary. Run again — prints "already exists" for everything, no duplicates in DB.
 
-### Step 3: Seed all ingredients from Skurka recipes
+### ✅ Step 3: Seed all ingredients from Skurka recipes
 Load `data/skurka-recipes.json`, collect all unique ingredients across all 12 recipes (dedup by name), and insert them using the get-or-create pattern. Each ingredient gets its name, calories_per_oz, and notes from the JSON.
 
 Deduplication note: the same ingredient appears in multiple recipes (e.g., "Butter", "Salt", "Rolled oats"). The JSON has the same name string for shared ingredients, so dedup by exact name match. Some ingredients have different calories_per_oz in different recipe contexts (e.g., "Green chiles" is 23 cal/oz in Cheesy Potatoes but 9 cal/oz in Southwest Egg Burrito) — use the first occurrence or the most common value and note the discrepancy in a comment.
@@ -45,7 +45,7 @@ Deduplication note: the same ingredient appears in multiple recipes (e.g., "Butt
 **Files**: `backend/seed.py`
 **Verify**: Run script. Query ingredients table — all unique Skurka ingredients present with correct cal/oz values. Count matches expected unique ingredient count from JSON.
 
-### Step 4: Seed all 12 Skurka recipes with ingredient lists
+### ✅ Step 4: Seed all 12 Skurka recipes with ingredient lists
 For each recipe in the JSON:
 - Get or create the recipe record (name, category, at_home_prep, field_prep, notes)
 - For each ingredient in the recipe, look up the ingredient by name, then create the recipe_ingredient join record (recipe_id, ingredient_id, amount_oz)
@@ -54,7 +54,7 @@ For each recipe in the JSON:
 **Files**: `backend/seed.py`
 **Verify**: Run script. Hit `GET /api/recipes` — all 12 recipes listed with correct categories (6 breakfast, 6 dinner). Hit `GET /api/recipes/{id}` for Quickstart Cereal — confirm 4.5 oz total, ~617 cal, ~137 cal/oz. Same check for Cheesy Potatoes (4.5 oz, ~537 cal, ~119 cal/oz). Run script again — no duplicates.
 
-### Step 5: Seed Utah 2026 ingredients and snack catalog items
+### ✅ Step 5: Seed Utah 2026 ingredients and snack catalog items
 Load `data/utah-2026-snacks.json`. For each snack item:
 - Get or create the ingredient (name, calories_per_oz) — some may already exist from Skurka recipes
 - Get or create the snack catalog item (ingredient_id, weight_per_serving, calories_per_serving)
@@ -64,7 +64,7 @@ Snack catalog idempotency: look up by ingredient_id. One snack catalog entry per
 **Files**: `backend/seed.py`
 **Verify**: Run script. Hit `GET /api/snacks` — all Utah 2026 snack items present. Ingredient table now contains union of Skurka + Utah 2026 ingredients.
 
-### Step 6: Seed Utah 2026 trip with snack serving selections
+### ✅ Step 6: Seed Utah 2026 trip with snack serving selections
 Create the Utah 2026 trip record and attach snack selections:
 - Create trip: name="Utah 2026", set day fractions if known from spreadsheet
 - For each snack item with servings > 0, create a trip_snack record (trip_id, catalog_item_id, servings)
@@ -72,7 +72,7 @@ Create the Utah 2026 trip record and attach snack selections:
 **Files**: `backend/seed.py`
 **Verify**: Query trip_snacks for Utah 2026 trip. Compute totals: sum(servings * weight_per_serving) should be ~103 oz, sum(servings * calories_per_serving) should be ~11,745 cal. Print these totals at end of seed script as a sanity check.
 
-### Step 7: Add verification assertions to seed script
+### ✅ Step 7: Add verification assertions to seed script
 At the end of the seed script, add optional verification that:
 - Recipe count = 12 (6 breakfast, 6 dinner)
 - Quickstart Cereal totals match (4.5 oz, ~617 cal)

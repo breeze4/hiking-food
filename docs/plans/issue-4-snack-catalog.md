@@ -13,7 +13,7 @@ This is a dependency for trip snack selection (issue #5+), so it needs to be sol
 
 ## Plan
 
-### Step 1: Backend — Pydantic schemas for snack catalog
+### ✅ Step 1: Backend — Pydantic schemas for snack catalog
 Create `backend/schemas/snack.py` with:
 - `SnackBase`: weight_per_serving (float), calories_per_serving (float), notes (optional str)
 - `SnackCreate(SnackBase)`: adds ingredient_id (int)
@@ -23,7 +23,7 @@ Create `backend/schemas/snack.py` with:
 **Files**: `backend/schemas/snack.py`
 **Verify**: Backend still starts without errors
 
-### Step 2: Backend — CRUD router for snack catalog
+### ✅ Step 2: Backend — CRUD router for snack catalog
 Create `backend/routers/snacks.py` with:
 - `GET /api/snacks` — list all, join with ingredients table to include ingredient name, compute calories_per_oz in response
 - `POST /api/snacks` — create, validate ingredient_id exists
@@ -35,13 +35,13 @@ Register router in `backend/main.py`.
 **Files**: `backend/routers/snacks.py`, `backend/main.py`
 **Verify**: `curl` all four endpoints, confirm ingredient name included in GET response, confirm calories_per_oz computed correctly
 
-### Step 3: Frontend — Add Snack Catalog page route and nav link
+### ✅ Step 3: Frontend — Add Snack Catalog page route and nav link
 Add a `/snacks` route and navigation link, rendering a placeholder component. Follow the same pattern as the Ingredients page.
 
 **Files**: `frontend/src/App.jsx` (or router config), nav component, `frontend/src/pages/SnackCatalog.jsx` (placeholder)
 **Verify**: Click nav link, see placeholder page, other pages still work
 
-### Step 4: Frontend — Snack catalog table with data fetching
+### ✅ Step 4: Frontend — Snack catalog table with data fetching
 Build out `SnackCatalog.jsx`:
 - Fetch `GET /api/snacks` on mount
 - Display table with columns: Ingredient Name, Weight/Serving (oz), Cal/Serving, Cal/Oz (computed), Notes
@@ -50,7 +50,7 @@ Build out `SnackCatalog.jsx`:
 **Files**: `frontend/src/pages/SnackCatalog.jsx`
 **Verify**: Page loads, displays snack data (empty table if no data), columns sort correctly
 
-### Step 5: Frontend — Add snack form with ingredient dropdown
+### ✅ Step 5: Frontend — Add snack form with ingredient dropdown
 Add inline form (or modal) for creating a new snack catalog item:
 - Dropdown to select ingredient (fetch `GET /api/ingredients` for options)
 - Inputs for weight_per_serving, calories_per_serving
@@ -60,7 +60,7 @@ Add inline form (or modal) for creating a new snack catalog item:
 **Files**: `frontend/src/pages/SnackCatalog.jsx` (or extract a component)
 **Verify**: Can add a snack item linked to an existing ingredient, it appears in the table with correct cal/oz
 
-### Step 6: Frontend — Inline edit for snack catalog items
+### ✅ Step 6: Frontend — Inline edit for snack catalog items
 Add edit capability to table rows:
 - Click to edit weight_per_serving, calories_per_serving, notes
 - Save calls `PUT /api/snacks/{id}`, refreshes table
@@ -69,7 +69,7 @@ Add edit capability to table rows:
 **Files**: `frontend/src/pages/SnackCatalog.jsx`
 **Verify**: Can edit a snack item's serving size and calories, cal/oz updates correctly
 
-### Step 7: Frontend — Delete snack catalog items
+### ✅ Step 7: Frontend — Delete snack catalog items
 Add delete button per row:
 - Calls `DELETE /api/snacks/{id}`
 - Backend returns warning if item is referenced by active trips

@@ -13,7 +13,7 @@ The recipe library holds breakfast and dinner recipes, each with a nested ingred
 
 ## Plan
 
-### Step 1: Backend — Pydantic schemas for recipes
+### ✅ Step 1: Backend — Pydantic schemas for recipes
 Create `backend/schemas/recipe.py` with:
 - `RecipeIngredientCreate`: ingredient_id (int), amount_oz (float)
 - `RecipeIngredientResponse`: id, ingredient_id, ingredient_name (str), amount_oz, calories (computed: amount_oz × ingredient.calories_per_oz)
@@ -26,7 +26,7 @@ Create `backend/schemas/recipe.py` with:
 **Files**: `backend/schemas/recipe.py`
 **Verify**: Backend starts without errors.
 
-### Step 2: Backend — Recipe computation logic
+### ✅ Step 2: Backend — Recipe computation logic
 Create `backend/services/recipe_calc.py` with pure functions:
 - `compute_recipe_totals(ingredients_with_cal_per_oz)` → returns total_weight, total_calories, cal_per_oz
 - total_weight = sum of amount_oz across all recipe ingredients
@@ -38,7 +38,7 @@ Keep this as standalone functions with no DB dependency so it's easy to unit tes
 **Files**: `backend/services/__init__.py`, `backend/services/recipe_calc.py`
 **Verify**: Backend starts without errors.
 
-### Step 3: Backend — Unit tests for recipe computation
+### ✅ Step 3: Backend — Unit tests for recipe computation
 Write pytest tests in `backend/tests/test_recipe_calc.py`:
 - Empty ingredients list → all zeros
 - Single ingredient → totals match that ingredient's contribution
@@ -48,7 +48,7 @@ Write pytest tests in `backend/tests/test_recipe_calc.py`:
 **Files**: `backend/tests/__init__.py`, `backend/tests/test_recipe_calc.py`
 **Verify**: `pytest backend/tests/test_recipe_calc.py` — all tests pass.
 
-### Step 4: Backend — CRUD router for recipes
+### ✅ Step 4: Backend — CRUD router for recipes
 Create `backend/routers/recipes.py` with:
 - `GET /api/recipes` — list all recipes with computed totals, optional query param `?category=breakfast|dinner` for filtering
 - `GET /api/recipes/{id}` — full detail with nested ingredient list and computed totals, 404 if not found
@@ -61,7 +61,7 @@ Register router in `backend/main.py`.
 **Files**: `backend/routers/recipes.py`, `backend/main.py`
 **Verify**: curl all five endpoints. Create a recipe with ingredients, confirm GET returns correct computed totals. Confirm category filter works on list endpoint.
 
-### Step 5: Frontend — Recipe list page with category tabs
+### ✅ Step 5: Frontend — Recipe list page with category tabs
 Create `frontend/src/pages/RecipesPage.jsx`:
 - Add route `/recipes` and nav link
 - Fetch `GET /api/recipes` on mount
@@ -72,7 +72,7 @@ Create `frontend/src/pages/RecipesPage.jsx`:
 **Files**: `frontend/src/pages/RecipesPage.jsx`, `frontend/src/App.jsx` (add route + nav)
 **Verify**: Navigate to /recipes, see empty state. Create a recipe via curl, refresh, see it in the list. Category tabs filter correctly.
 
-### Step 6: Frontend — Recipe detail/edit page (metadata only)
+### ✅ Step 6: Frontend — Recipe detail/edit page (metadata only)
 Create `frontend/src/pages/RecipeEditPage.jsx`:
 - Route: `/recipes/:id` for editing, `/recipes/new` for creating
 - Form fields: name, category (dropdown: breakfast/dinner), at_home_prep (textarea), field_prep (textarea), notes (textarea)
@@ -83,7 +83,7 @@ Create `frontend/src/pages/RecipeEditPage.jsx`:
 **Files**: `frontend/src/pages/RecipeEditPage.jsx`, `frontend/src/App.jsx` (add routes)
 **Verify**: Create a new recipe via the UI with name and category. Edit an existing recipe's prep instructions. Changes persist on reload.
 
-### Step 7: Frontend — Ingredient list editor within recipe
+### ✅ Step 7: Frontend — Ingredient list editor within recipe
 Add ingredient management to `RecipeEditPage.jsx`:
 - Display current ingredients as a list: ingredient name, amount_oz, computed calories for that line
 - "Add ingredient" row: dropdown of available ingredients (fetched from `GET /api/ingredients`), amount_oz input
@@ -95,7 +95,7 @@ Add ingredient management to `RecipeEditPage.jsx`:
 **Files**: `frontend/src/pages/RecipeEditPage.jsx` (or extract an `IngredientListEditor` component)
 **Verify**: Add ingredients to a recipe, see totals update. Remove an ingredient, totals update. Save, reload, ingredients and totals persist correctly. Verify against Skurka test data if available.
 
-### Step 8: Frontend — Delete recipe
+### ✅ Step 8: Frontend — Delete recipe
 Add delete button on RecipeEditPage (or recipe list):
 - Confirm dialog before delete
 - Calls `DELETE /api/recipes/{id}`

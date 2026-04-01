@@ -13,7 +13,7 @@ The trip calculator uses the Skurka method: first day fraction + full days + las
 
 ## Plan
 
-### Step 1: Backend — Trip calculator as pure function with tests
+### ✅ Step 1: Backend — Trip calculator as pure function with tests
 Create `backend/calculator.py` with a pure function that takes first_day_fraction, full_days, last_day_fraction, and a list of meal weights, and returns a result dict with all computed ranges.
 
 Algorithm:
@@ -34,7 +34,7 @@ Write pytest tests in `backend/tests/test_calculator.py`:
 **Files**: `backend/calculator.py`, `backend/tests/test_calculator.py`
 **Verify**: `pytest backend/tests/test_calculator.py` — all tests pass
 
-### Step 2: Backend — Trip CRUD endpoints
+### ✅ Step 2: Backend — Trip CRUD endpoints
 Create `backend/schemas/trip.py` with:
 - TripBase: name, first_day_fraction, full_days, last_day_fraction
 - TripCreate(TripBase)
@@ -53,7 +53,7 @@ Register router in main.py.
 **Files**: `backend/schemas/trip.py`, `backend/routers/trips.py`, `backend/main.py`
 **Verify**: curl all CRUD endpoints, create/update/delete a trip
 
-### Step 3: Backend — Trip snack management endpoints
+### ✅ Step 3: Backend — Trip snack management endpoints
 Add to `backend/routers/trips.py` (or a sub-router):
 - POST /api/trips/{id}/snacks — add snack to trip (catalog_item_id, servings)
 - PUT /api/trips/{id}/snacks/{snack_id} — update servings, packed, trip_notes
@@ -64,7 +64,7 @@ GET /api/trips/{id} should include trip_snacks with joined snack catalog + ingre
 **Files**: `backend/schemas/trip.py` (add TripSnack schemas), `backend/routers/trips.py`
 **Verify**: curl to add a snack to a trip, update servings, verify GET includes snack details with computed columns
 
-### Step 4: Backend — Trip meal management endpoints
+### ✅ Step 4: Backend — Trip meal management endpoints
 Add to `backend/routers/trips.py`:
 - POST /api/trips/{id}/meals — add meal to trip (recipe_id, quantity)
 - PUT /api/trips/{id}/meals/{meal_id} — update quantity, packed
@@ -75,7 +75,7 @@ GET /api/trips/{id} should include trip_meals with joined recipe data (name, cat
 **Files**: `backend/schemas/trip.py` (add TripMeal schemas), `backend/routers/trips.py`
 **Verify**: curl to add a meal, verify GET includes meal details with recipe weight/calories
 
-### Step 5: Backend — Trip summary endpoint
+### ✅ Step 5: Backend — Trip summary endpoint
 Add GET /api/trips/{id}/summary that computes:
 - Calculator targets (using calculator.py with trip params and meal weights)
 - Snack totals: total weight, total calories, avg cal/oz
@@ -87,7 +87,7 @@ Add GET /api/trips/{id}/summary that computes:
 **Files**: `backend/routers/trips.py`, `backend/schemas/trip.py` (add TripSummary schema)
 **Verify**: curl summary endpoint for a trip with snacks and meals, verify math matches calculator tests
 
-### Step 6: Backend — Clone trip endpoint
+### ✅ Step 6: Backend — Clone trip endpoint
 Add POST /api/trips/{id}/clone:
 - Creates a new trip with same calculator params, name suffixed with "(copy)"
 - Copies all trip_snacks and trip_meals to the new trip
@@ -96,7 +96,7 @@ Add POST /api/trips/{id}/clone:
 **Files**: `backend/routers/trips.py`
 **Verify**: Clone a trip, verify new trip has same snacks/meals/params, different id
 
-### Step 7: Frontend — Trip selector and CRUD in header
+### ✅ Step 7: Frontend — Trip selector and CRUD in header
 Add trip management to the header/nav area:
 - Dropdown listing all trips (GET /api/trips)
 - Selecting a trip sets it as the active trip (React state/context)
@@ -109,7 +109,7 @@ Store active trip id in React context or top-level state so child components can
 **Files**: `frontend/src/components/TripSelector.jsx` (new), `frontend/src/App.jsx` (integrate), `frontend/src/context/TripContext.jsx` (new, or equivalent state management)
 **Verify**: Can create, select, clone, and delete trips via the UI. Active trip persists across nav.
 
-### Step 8: Frontend — Trip calculator config panel
+### ✅ Step 8: Frontend — Trip calculator config panel
 On the trip planner page, show editable inputs for the active trip's calculator params:
 - First day fraction (number input, 0-1 range, 0.25 steps)
 - Full days (integer input)
@@ -121,7 +121,7 @@ On the trip planner page, show editable inputs for the active trip's calculator 
 **Files**: `frontend/src/pages/TripPlanner.jsx` (new), `frontend/src/components/TripCalculator.jsx` (new), `frontend/src/App.jsx` (add route)
 **Verify**: Edit calculator params, see computed ranges update live. Values persist after page reload.
 
-### Step 9: Frontend — Snack selection table
+### ✅ Step 9: Frontend — Snack selection table
 Add snack selection to the trip planner page:
 - "Add Snack" button/dropdown to pick from snack catalog (GET /api/snacks)
 - Table showing trip snacks with columns: Name, Servings (stepper with 0.5 step, also typeable), Weight/Serving, Total Weight, Cal/Serving, Total Cal, Cal/Oz, Packed checkbox, Notes
@@ -132,7 +132,7 @@ Add snack selection to the trip planner page:
 **Files**: `frontend/src/components/SnackSelection.jsx` (new), `frontend/src/pages/TripPlanner.jsx` (integrate)
 **Verify**: Add snacks, adjust servings, verify computed columns. Decrement to 0 removes row. Packed checkbox persists.
 
-### Step 10: Frontend — Meal selection panel
+### ✅ Step 10: Frontend — Meal selection panel
 Add meal selection to the trip planner page:
 - "Add Meal" dropdown showing recipes grouped by category (breakfast/dinner)
 - Table showing trip meals: Recipe Name, Category, Quantity (editable), Weight (per unit), Total Weight, Total Cal
@@ -142,7 +142,7 @@ Add meal selection to the trip planner page:
 **Files**: `frontend/src/components/MealSelection.jsx` (new), `frontend/src/pages/TripPlanner.jsx` (integrate)
 **Verify**: Add breakfast and dinner recipes, adjust quantities, see totals. Repeats work.
 
-### Step 11: Frontend — Summary dashboard
+### ✅ Step 11: Frontend — Summary dashboard
 Add summary dashboard to the trip planner page (sidebar or bottom panel):
 - Fetch GET /api/trips/{id}/summary and display:
   - Snack totals (weight oz/lbs, calories) with actual vs target range

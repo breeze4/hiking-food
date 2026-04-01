@@ -12,13 +12,13 @@ The ingredient table is the shared foundation for recipes and snack catalog item
 
 ## Plan
 
-### Step 1: Backend — Pydantic schemas for ingredients
+### ✅ Step 1: Backend — Pydantic schemas for ingredients
 Create `backend/schemas.py` with IngredientCreate, IngredientUpdate, and IngredientRead pydantic models. IngredientRead includes `id`. IngredientUpdate has all fields optional.
 
 **Files**: `backend/schemas.py`
 **Verify**: Backend still starts cleanly.
 
-### Step 2: Backend — CRUD router for ingredients
+### ✅ Step 2: Backend — CRUD router for ingredients
 Create `backend/routers/ingredients.py` with:
 - `GET /api/ingredients` — list all, returns list of IngredientRead
 - `POST /api/ingredients` — create, returns IngredientRead
@@ -30,37 +30,37 @@ Register the router in `main.py`.
 **Files**: `backend/routers/__init__.py`, `backend/routers/ingredients.py`, `backend/main.py` (add router include)
 **Verify**: `curl` against all 4 endpoints — create, list, update, delete. Confirm 409 on delete when referenced (manually insert a referencing row to test).
 
-### Step 3: Frontend — API client helper
+### ✅ Step 3: Frontend — API client helper
 Create a thin fetch wrapper (`frontend/src/api.js`) that handles base URL, JSON headers, and error responses. All API calls go through this.
 
 **Files**: `frontend/src/api.js`
 **Verify**: Frontend still builds and runs.
 
-### Step 4: Frontend — Ingredients page with read-only table
+### ✅ Step 4: Frontend — Ingredients page with read-only table
 Create `frontend/src/pages/IngredientsPage.jsx`. On mount, fetch `GET /api/ingredients` and render a table with columns: Name, Cal/oz, Notes. Add a route for `/ingredients` in the app router and a nav link.
 
 **Files**: `frontend/src/pages/IngredientsPage.jsx`, `frontend/src/App.jsx` (add route + nav)
 **Verify**: Navigate to /ingredients, see empty table. Manually POST an ingredient via curl, refresh, see it in the table.
 
-### Step 5: Frontend — Add ingredient (inline form)
+### ✅ Step 5: Frontend — Add ingredient (inline form)
 Add an "Add Ingredient" row or button at the bottom/top of the table. On submit, POST to the API and append to the local list. Name is required, cal/oz is required, notes is optional.
 
 **Files**: `frontend/src/pages/IngredientsPage.jsx`
 **Verify**: Add an ingredient through the UI, confirm it appears in the table and persists on reload.
 
-### Step 6: Frontend — Edit ingredient (inline)
+### ✅ Step 6: Frontend — Edit ingredient (inline)
 Click a row to enter edit mode (fields become inputs). Save sends PUT request, updates local state. Cancel reverts. Only one row editable at a time.
 
 **Files**: `frontend/src/pages/IngredientsPage.jsx`
 **Verify**: Edit an ingredient, confirm changes persist on reload.
 
-### Step 7: Frontend — Delete ingredient
+### ✅ Step 7: Frontend — Delete ingredient
 Add delete button per row. On click, confirm dialog, then DELETE request. If 409 (referenced), show a message explaining the ingredient is in use. On success, remove from local list.
 
 **Files**: `frontend/src/pages/IngredientsPage.jsx`
 **Verify**: Delete an unreferenced ingredient — gone on reload. Attempt delete of a referenced ingredient (seed one via curl with a recipe_ingredient FK) — see blocking message.
 
-### Step 8: Frontend — Column sorting
+### ✅ Step 8: Frontend — Column sorting
 Click column header to sort ascending; click again for descending. Client-side sort on the already-fetched list. Visual indicator (arrow) on the active sort column.
 
 **Files**: `frontend/src/pages/IngredientsPage.jsx`
