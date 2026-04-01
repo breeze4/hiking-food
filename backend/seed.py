@@ -114,17 +114,21 @@ def seed_utah_2026_trip(db):
 
     existing = db.query(Trip).filter(Trip.name == trip_data["name"]).first()
     if existing:
-        print(f"Trip '{trip_data['name']}' already exists")
-        return
-
-    trip = Trip(
-        name=trip_data["name"],
-        first_day_fraction=trip_data["first_day_fraction"],
-        full_days=trip_data["full_days"],
-        last_day_fraction=trip_data["last_day_fraction"],
-    )
-    db.add(trip)
-    db.flush()
+        trip = existing
+        existing_snacks = db.query(TripSnack).filter(TripSnack.trip_id == trip.id).count()
+        if existing_snacks > 0:
+            print(f"Trip '{trip_data['name']}' already exists with {existing_snacks} snacks")
+            return
+        print(f"Trip '{trip_data['name']}' exists but has no snacks, adding them")
+    else:
+        trip = Trip(
+            name=trip_data["name"],
+            first_day_fraction=trip_data["first_day_fraction"],
+            full_days=trip_data["full_days"],
+            last_day_fraction=trip_data["last_day_fraction"],
+        )
+        db.add(trip)
+        db.flush()
 
     added = 0
     for snack_data in data["snacks"]:
