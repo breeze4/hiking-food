@@ -1,0 +1,243 @@
+{
+  "recipes": [
+    {
+      "name": "Quickstart Cereal",
+      "category": "breakfast",
+      "weight_oz": 4.5,
+      "total_calories": 617,
+      "calories_per_oz": 137,
+      "ingredients": [
+        { "name": "Cereal (granola or grape nuts)", "amount_oz": 3.5, "calories_per_oz": 140, "notes": "Avoid flakes & puffs. Rotate between granola and grape nuts." },
+        { "name": "Powdered whole milk", "amount_oz": 0.5, "calories_per_oz": 149, "notes": "Nestle Nido recommended. In baking or Hispanic aisle." },
+        { "name": "Protein powder", "amount_oz": 0.5, "calories_per_oz": 104, "notes": "Whey, 22g protein per 1 oz. Can use instead of or alongside milk." }
+      ],
+      "at_home_prep": "Premix the cereal (with optional fixings like crushed walnuts, almond pieces, freeze-dried berries, raisins, or Craisins) and the protein powder (or powdered milk) in a sandwich-sized storage bag. Each bag is one breakfast for one person.",
+      "field_prep": "Add water and eat. Can be consumed hot or cold. Some cereals (notably grape nuts) will soften and absorb water when cooked. Some protein powders may congeal when heated — stirring well and using minimal water helps.",
+      "notes": "Good for quick camp departures and summit days. Portion is 4.5 oz — adjust cereal/protein ratio to preference. Author uses 1.5 oz protein powder + 3.5 oz cereal."
+    },
+    {
+      "name": "Cheesy Potatoes",
+      "category": "breakfast",
+      "weight_oz": 4.5,
+      "total_calories": 537,
+      "calories_per_oz": 119,
+      "ingredients": [
+        { "name": "Instant mashed potatoes", "amount_oz": 1.2, "calories_per_oz": 97, "notes": "Idahoan Honest Earth. Deceptively filling." },
+        { "name": "Nutritional yeast", "amount_oz": 0.15, "calories_per_oz": 105, "notes": "Adds cheesy & savory flavor. Can sub real Parmesan." },
+        { "name": "Dried onion", "amount_oz": 0.05, "calories_per_oz": 95, "notes": null },
+        { "name": "Crumbled bacon", "amount_oz": 1.0, "calories_per_oz": 120, "notes": "Hormel Crumbled. Alt: cured salami, pepperoni. Vegetarian options exist." },
+        { "name": "Green chiles", "amount_oz": 0.3, "calories_per_oz": 23, "notes": "Canned (Ortega) or dried. Dried is more calorie-dense for soloists." },
+        { "name": "Cheese (extra sharp cheddar)", "amount_oz": 1.0, "calories_per_oz": 110, "notes": null },
+        { "name": "Butter", "amount_oz": 0.8, "calories_per_oz": 203, "notes": null }
+      ],
+      "at_home_prep": "Package the potato flakes, nutritional yeast, and dried onion in a sandwich bag. For shorter trips, soloists can add the crumbled bacon too. Put the cheese in another sandwich bag or keep in original packaging. Store butter in a plastic food container to prevent mess if it softens. On group trips, package bacon separately for vegetarians/vegans.",
+      "field_prep": "1. Bring 10 oz (300 ml) of water to a boil.\n2. Add half of the potato flakes bag, then stir.\n3. Add the rest of the bag and stir again (two-step method prevents spills and clumps).\n4. Remove from flame, mix in the butter and bacon. Add cheese and chilies mixed in or on top.\n\nFor soupier consistency, use 12+ oz of water.",
+      "notes": "Top-rated breakfast on guided trips (2.60/3.0). To increase caloric density, use more butter and less potato. Deceptively large meal due to water absorption — reduce potato by 0.5 oz if appetite is suppressed."
+    },
+    {
+      "name": "Southwest Egg Burrito",
+      "category": "breakfast",
+      "weight_oz": 4.6,
+      "total_calories": 474,
+      "calories_per_oz": 103,
+      "ingredients": [
+        { "name": "Scrambled egg mix", "amount_oz": 1.1, "calories_per_oz": 153, "notes": "Augason Farms. Dried whole eggs + powdered milk." },
+        { "name": "Instant beans", "amount_oz": 0.4, "calories_per_oz": 112, "notes": "Santa Fe Bean Co. Whole or refried, vegetarian or not." },
+        { "name": "Powdered cheese", "amount_oz": 0.5, "calories_per_oz": 126, "notes": "Medley Hills Farm. More field-friendly than blocks. Can sub fresh sharp cheddar." },
+        { "name": "Nutritional yeast", "amount_oz": 0.1, "calories_per_oz": 105, "notes": null },
+        { "name": "Dried onion", "amount_oz": 0.1, "calories_per_oz": 95, "notes": null },
+        { "name": "Taco seasoning", "amount_oz": 0.1, "calories_per_oz": 93, "notes": "McCormick. Mix of chili, garlic, cumin & more." },
+        { "name": "Green chiles", "amount_oz": 0.3, "calories_per_oz": 9, "notes": "Hatch Diced. For soloists, dried chiles or hot sauce may be better." },
+        { "name": "Tortilla (burrito sized)", "amount_oz": 2.0, "calories_per_oz": 85, "notes": null }
+      ],
+      "at_home_prep": "Combine ALL dry ingredients for a single serving in a plastic snack bag. Do NOT combine dry ingredients for multiple meals — this recipe requires a very specific water-to-egg ratio and you won't be able to divide precisely in the field.",
+      "field_prep": "1. Combine all dry ingredients and spices with exactly 4 oz (half cup, 120 ml) of COLD water.\n2. Bring to a simmer, scraping the eggs regularly to avoid scorching. Remove pot from flame as needed.\n3. Once fully cooked, remove from heat. Add chilies and cheese, transfer to tortilla.\n\nCRITICAL TIPS:\n- Exactly 4 oz of water. Too much = egg soup.\n- COLD water. Hot water = eggs harden into nuggets.\n- Scrape regularly like cooking scrambled eggs without non-stick. Don't stir so vigorously they become whipped.",
+      "notes": "Fussiest recipe but a personal favorite. Can add crumbled bacon for extra calories/flavor."
+    },
+    {
+      "name": "Coconut Chia Oatmeal",
+      "category": "breakfast",
+      "weight_oz": 4.5,
+      "total_calories": 622,
+      "calories_per_oz": 138,
+      "ingredients": [
+        { "name": "Rolled oats", "amount_oz": 1.0, "calories_per_oz": 105, "notes": "Bob's Red Mill Gluten-Free or Quaker." },
+        { "name": "Chia seeds", "amount_oz": 0.5, "calories_per_oz": 138, "notes": "Nutiva. Filling, nutritionally dense." },
+        { "name": "Coconut milk powder", "amount_oz": 0.5, "calories_per_oz": 191, "notes": "Z Natural Foods. Adds creaminess." },
+        { "name": "Turbinado sugar", "amount_oz": 0.3, "calories_per_oz": 105, "notes": "Less processed form of sugar. Don't skip." },
+        { "name": "Coconut flakes", "amount_oz": 0.5, "calories_per_oz": 204, "notes": "Anthony's Organic. Adds texture, flavor, calories." },
+        { "name": "Sliced almonds", "amount_oz": 1.0, "calories_per_oz": 160, "notes": "365 Everyday. Nutritionally dense. Can sub macadamia for richer flavor." },
+        { "name": "Raisins", "amount_oz": 0.7, "calories_per_oz": 84, "notes": "Sun Maid Organic. Can sub dried blueberries, apple pieces, or strawberries." },
+        { "name": "Salt", "amount_oz": 0.0, "calories_per_oz": 0, "notes": "Critical, don't forget." },
+        { "name": "Cinnamon", "amount_oz": 0.0, "calories_per_oz": 69, "notes": "Very strong, don't need much." }
+      ],
+      "at_home_prep": "For solo trips, combine all ingredients in a small ziplock bag. For bulk prep, mix a large batch and portion individually throughout the season. For groups, combine oats, chia seeds, and coconut milk powder in one bag. Keep sugar and toppings separate for individual preferences.",
+      "field_prep": "1. Bring 8-10 oz of water to a boil.\n2. Take pot off flame. Add bag of ingredients and stir.\n3. Let sit for 3-5 minutes. If putting back on heat, stir constantly to avoid burning.\n\nUsing ~12 oz water gives looser consistency and easier cleanup. Watch for splatters if reheating. Can also do overnight oats method — soak in water the night before.",
+      "notes": "Template recipe — swap fruits, nuts, use protein powder instead of coconut milk powder (vanilla flavor recommended). Don't stray far from 4.5 oz serving weight. Don't skip sugar or salt."
+    },
+    {
+      "name": "Fruit and Cream Porridge",
+      "category": "breakfast",
+      "weight_oz": 4.5,
+      "total_calories": 531,
+      "calories_per_oz": 118,
+      "ingredients": [
+        { "name": "Farina (Cream of Wheat)", "amount_oz": 1.5, "calories_per_oz": 93, "notes": "Nutty flavor. Sub Cream of Rice for gluten-free." },
+        { "name": "Seeds (pumpkin)", "amount_oz": 0.7, "calories_per_oz": 150, "notes": "Gerbs Raw Super 5. Fewer allergies than nuts." },
+        { "name": "Dried apple pieces", "amount_oz": 1.0, "calories_per_oz": 68, "notes": "Gerbs Apple Slices. Can buy rings and cut up." },
+        { "name": "Streusel crumbs", "amount_oz": 0.5, "calories_per_oz": 112, "notes": "Aunt Bessie's. Very calorie dense. Can make your own or crumble a cookie." },
+        { "name": "Butter", "amount_oz": 0.8, "calories_per_oz": 203, "notes": null },
+        { "name": "Cinnamon", "amount_oz": 0.0, "calories_per_oz": 69, "notes": "Very strong, don't need much." },
+        { "name": "Salt", "amount_oz": 0.0, "calories_per_oz": 0, "notes": "Critical, don't forget." }
+      ],
+      "at_home_prep": "For solo trips, combine everything except streusel crumbs into one small snack bag. Keep streusel separate to stay crunchy. On hot trips, double-bag the mixture to prevent butter leaking, or keep butter in a sealable food container. For multi-day trips, bring a larger butter portion in a small Tupperware. For groups, bag apple slices, streusel, and butter separately; divide in field. Everything else bagged together.",
+      "field_prep": "1. Bring 10 oz of water to a boil.\n2. Add all contents except the streusel. Cover and let rehydrate.\n3. After 5 minutes, remove lid and add streusel.\n\nUp to 12 oz of water makes cleanup easier.",
+      "notes": "Slightly nutty, not too sweet. Streusel topping is the unique element. Subs: almond slices, dried strawberries, crumbled walnuts, raisins. For vegan: use vegan cookie for streusel and coconut oil for butter."
+    },
+    {
+      "name": "Banana Chocolate Chip Oatmeal",
+      "category": "breakfast",
+      "weight_oz": 4.5,
+      "total_calories": 612,
+      "calories_per_oz": 136,
+      "ingredients": [
+        { "name": "Rolled oats", "amount_oz": 1.5, "calories_per_oz": 105, "notes": "Bob's Red Mill Gluten-Free or Quaker." },
+        { "name": "Powdered whole milk", "amount_oz": 0.5, "calories_per_oz": 149, "notes": "Nestle Nido. Can sub coconut milk powder for vegan." },
+        { "name": "Banana chips", "amount_oz": 0.5, "calories_per_oz": 140, "notes": "365 Everyday Value. Recipe assumes sweetened; add sugar/honey if unsweetened." },
+        { "name": "Craisins", "amount_oz": 0.5, "calories_per_oz": 91, "notes": "Ocean Spray. Can sub raisins or no-sugar-added dried cranberries." },
+        { "name": "Chopped walnuts", "amount_oz": 0.5, "calories_per_oz": 190, "notes": "Nature's Eats." },
+        { "name": "Chocolate chips", "amount_oz": 0.5, "calories_per_oz": 140, "notes": "Nestle Milk. Milk, dark, or semi-sweet. Can sub cacao nibs for healthier version." },
+        { "name": "Butter", "amount_oz": 0.5, "calories_per_oz": 203, "notes": "Omit and use coconut oil for vegan." },
+        { "name": "Salt", "amount_oz": 0.0, "calories_per_oz": 0, "notes": "Critical, don't forget." },
+        { "name": "Cinnamon", "amount_oz": 0.0, "calories_per_oz": 69, "notes": "Very strong, don't need much." }
+      ],
+      "at_home_prep": "For solo trips, combine all ingredients in a sandwich bag except chocolate chips and maybe butter. Double-bag butter on hot trips or use Tupperware. Keep chocolate chips separate to add at the end. For groups, combine oats, banana chips, Craisins, and maybe milk powder. Keep nuts separate for allergies. Store butter securely. Keep chocolate chips separate.",
+      "field_prep": "1. Bring 10 oz of water to a boil.\n2. Add all contents into the water.\n3. Cover and wait 5-10 minutes. Add cinnamon to taste.\n4. A few minutes before eating, add the chocolate chips so they melt into the oats.\n\nUp to 12 oz water helps cleanup, but melted chocolate needs extra attention. Best cooked (not cold-soaked) so chocolate melts.",
+      "notes": "Rich and decadent. Very fat- and calorie-heavy (milk powder, butter, chocolate, walnuts) which balances the sugar for a slow burn. All ingredients available at standard supermarkets."
+    },
+    {
+      "name": "Beans and Rice",
+      "category": "dinner",
+      "weight_oz": 5.7,
+      "total_calories": 668,
+      "calories_per_oz": 117,
+      "ingredients": [
+        { "name": "Instant beans", "amount_oz": 2.0, "calories_per_oz": 112, "notes": "Santa Fe Bean Co. Whole or refried, vegetarian or not." },
+        { "name": "Instant rice", "amount_oz": 1.5, "calories_per_oz": 103, "notes": "Minute White Rice." },
+        { "name": "Cheese (extra sharp cheddar)", "amount_oz": 1.0, "calories_per_oz": 110, "notes": null },
+        { "name": "Fritos", "amount_oz": 1.0, "calories_per_oz": 160, "notes": "Fritos Scoops. Unflavored (just 3 ingredients)." },
+        { "name": "Taco seasoning", "amount_oz": 0.2, "calories_per_oz": 93, "notes": "McCormick. Critical if beans are plain." },
+        { "name": "Salt", "amount_oz": 0.0, "calories_per_oz": 0, "notes": null },
+        { "name": "Pepper", "amount_oz": 0.0, "calories_per_oz": 0, "notes": null },
+        { "name": "Red pepper flakes", "amount_oz": 0.0, "calories_per_oz": 0, "notes": "For heat." }
+      ],
+      "at_home_prep": "For groups: each member gets one 2.5-oz snack bag of beans and rice mixture. Fritos and cheese kept together, divided in field. Meals individually seasoned. For solo multi-day: pre-spiced snack bag of beans/rice per meal, shared Fritos and cheese supply (delineated so you don't steal tomorrow's calories). For solo single-meal: can combine everything in one bag — ingredients separate fairly easily in the field.",
+      "field_prep": "For soupy consistency:\n1. Add at least 12 oz of water to pot.\n2. Pour in beans, rice, taco seasoning, and spices at any time.\n3. Cook to a simmer for about 60 seconds, stirring to avoid boil-over.\n4. Cut cheese into dice-sized pieces and add.\n5. Add Fritos just before eating — they soften if added too early.\n\nFor perfect at-home consistency: use 10 oz (300 ml) water. Don't add beans/rice/taco seasoning until water is boiling.",
+      "notes": "Author's favorite recipe. Goes on every trip. Rarely does someone struggle to finish. Adjust beans/rice amount (keep ratio) for smaller appetite. Add more Fritos for more calories/density."
+    },
+    {
+      "name": "Peanut Noodles",
+      "category": "dinner",
+      "weight_oz": 5.7,
+      "total_calories": 796,
+      "calories_per_oz": 141,
+      "ingredients": [
+        { "name": "Ramen noodles", "amount_oz": 3.0, "calories_per_oz": 127, "notes": "Maruchan. Discard the seasoning packet. For GF: Lotus Foods Millet and Brown Rice Ramen." },
+        { "name": "Cashews", "amount_oz": 0.7, "calories_per_oz": 150, "notes": "Sincerely Nuts. Can sub raisins or crushed peanuts." },
+        { "name": "Peanut butter", "amount_oz": 1.1, "calories_per_oz": 175, "notes": "Justin's Classic. Add honey weight if sugar-added." },
+        { "name": "Olive oil", "amount_oz": 0.1, "calories_per_oz": 240, "notes": "Bertolli Extra Virgin." },
+        { "name": "Toasted sesame oil", "amount_oz": 0.2, "calories_per_oz": 240, "notes": "La Tourangelle. Strong & distinct flavor." },
+        { "name": "Soy sauce", "amount_oz": 0.2, "calories_per_oz": 30, "notes": "Kikkoman. GF available." },
+        { "name": "Honey", "amount_oz": 0.2, "calories_per_oz": 88, "notes": "L.R. Rice Raw Honey. Skip if PB has added sugar." },
+        { "name": "Coconut milk powder", "amount_oz": 0.1, "calories_per_oz": 191, "notes": "Z Natural Foods." },
+        { "name": "Garlic (granulated)", "amount_oz": 0.04, "calories_per_oz": 93, "notes": "Kirkland. A little goes a long way." },
+        { "name": "Ginger powder", "amount_oz": 0.01, "calories_per_oz": 111, "notes": "Simply Organic. Very strong, a little goes far." }
+      ],
+      "at_home_prep": "Ramen noodles: leave in their packaging normally. For short solo trips, can crush noodles and re-bag with cashews. Cashews (or raisins) bagged separately, divided in field.\n\nSAUCE: Mix all listed ingredients minus noodles and cashews at home. Recommend making big batches with a kitchen mixer. Carry sauce in a 4- or 8-oz Nalgene HDPE container (do NOT use 2-oz bottles — too hard to pour and clean). Per 2-oz serving: ~0.04 oz garlic, ~0.01 oz ginger. Normal kitchen scale won't register these — make a 10-serving batch or use a precision scale.\n\nOptional: add ~0.04 oz Sriracha per 2-oz serving for heat. Field alternative: red pepper flakes.",
+      "field_prep": "1. Optionally crush noodles before opening package.\n2. Remove and discard the MSG \"flavor\" packet.\n3. Bring at least 1.25 cups (10 oz, 300 ml) of water to a boil.\n4. Add ramen and cashews, turn off stove, let noodles sit 5 minutes.\n5. Add the sauce.\n\nIf using more than 1.25 cups water, everything can be added at the start (extra water prevents scorching). To get sauce out of the bottle, add water and shake vigorously. Bottle becomes clean after 2-3 rounds.",
+      "notes": "Perennial crowd favorite, usually ranked just below Beans & Rice. Sauce is good enough for at-home use — keep a bottle in the fridge. The sauce is involved (8 ingredients) so making a big batch is justified."
+    },
+    {
+      "name": "Backcountry Chili",
+      "category": "dinner",
+      "weight_oz": 5.5,
+      "total_calories": 512,
+      "calories_per_oz": 93,
+      "ingredients": [
+        { "name": "Instant beans", "amount_oz": 1.8, "calories_per_oz": 112, "notes": "Santa Fe Bean Co. Whole or refried, vegetarian or not." },
+        { "name": "TVP (textured vegetable protein)", "amount_oz": 0.8, "calories_per_oz": 101, "notes": "Bob's Red Mill. Can be hard to digest — consider more beans/less TVP. Can sub dried beef crumbles (less shelf-stable)." },
+        { "name": "Dried bell peppers", "amount_oz": 0.7, "calories_per_oz": 63, "notes": "It's Delish. Red + green." },
+        { "name": "Tomato powder", "amount_oz": 0.5, "calories_per_oz": 85, "notes": "Naturevibe Botanicals. Vital base ingredient, a little goes a long way. Good for home use too." },
+        { "name": "Vegetable bouillon", "amount_oz": 0.3, "calories_per_oz": 0, "notes": "Casa de Santa. Powders easier to prep." },
+        { "name": "Dried onion", "amount_oz": 0.3, "calories_per_oz": 95, "notes": null },
+        { "name": "Taco seasoning", "amount_oz": 0.1, "calories_per_oz": 93, "notes": "McCormick." },
+        { "name": "Garlic (granulated)", "amount_oz": 0.1, "calories_per_oz": 93, "notes": "Kirkland." },
+        { "name": "Chili powder", "amount_oz": 0.1, "calories_per_oz": 0, "notes": "McCormick Gourmet. Improves taste & flavor depth." },
+        { "name": "Cheese (extra sharp cheddar)", "amount_oz": 1.0, "calories_per_oz": 110, "notes": null }
+      ],
+      "at_home_prep": "For solo trips, mix everything together in a small bag except cheese — keep cheese in its own bag. For groups, carry all ingredients in a single bag and divide in field, or give each member an individual ration. Hold out the cheese. Shake bag before dividing — spices settle to the bottom.",
+      "field_prep": "1. Bring about 12 oz of water to a boil.\n2. Take pot off flame. Add chili mixture.\n3. Cover and let rehydrate ~10 minutes. Can also let simmer, stirring to avoid burning.\n4. Mix in the cheese.\n5. Can add a few extra ounces of water during cooking.\n\nUsing up to 16 oz of water makes cleanup easier.",
+      "notes": "Scored 2.55/3.0 from 84 client evaluations. Close fourth behind Beans & Rice, Peanut Noodles, Pesto Noodles. Most common complaint is TVP digestibility. To increase calories/density: add more cheese, Fritos, or olive oil."
+    },
+    {
+      "name": "Coconut Cashew Curry",
+      "category": "dinner",
+      "weight_oz": 5.7,
+      "total_calories": 644,
+      "calories_per_oz": 113,
+      "ingredients": [
+        { "name": "Instant rice", "amount_oz": 2.0, "calories_per_oz": 103, "notes": "Minute White Rice." },
+        { "name": "Dried vegetables", "amount_oz": 1.0, "calories_per_oz": 80, "notes": "It's Delish. Onions, carrots, peppers, corn." },
+        { "name": "Dried chickpeas", "amount_oz": 0.5, "calories_per_oz": 120, "notes": "The Good Bean. Becoming popular snack. Use within a few weeks of opening." },
+        { "name": "Cashews", "amount_oz": 1.0, "calories_per_oz": 150, "notes": "Sincerely Nuts." },
+        { "name": "Coconut milk powder", "amount_oz": 0.7, "calories_per_oz": 191, "notes": "Z Natural Foods." },
+        { "name": "Ginger powder", "amount_oz": 0.01, "calories_per_oz": 0, "notes": "Simply Organic. Just a pinch." },
+        { "name": "Green curry paste", "amount_oz": 0.4, "calories_per_oz": 19, "notes": "Thai Kitchen. Paste better than powder. Check label for fish sauce/shrimp paste if vegetarian." },
+        { "name": "Tamarind paste", "amount_oz": 0.2, "calories_per_oz": 50, "notes": "Tamicon Organic. Sweet/sour flavor, stores well. If unavailable, sub a pinch of rice wine vinegar and sugar." }
+      ],
+      "at_home_prep": "Mix all dry ingredients together, except: separate chickpeas on longer trips (to stay crunchy), separate cashews on group trips (tree nut allergy). Combine curry paste and tamarind paste, store in a small 1- to 8-oz HDPE bottle. To retrieve sauce, add purified water (hot if available) and shake vigorously. Can also use 8-oz plastic take-out containers (easier access but less leak-proof).",
+      "field_prep": "1. Bring about 12 oz of water to a boil.\n2. Add dry ingredients, curry sauce, and cashews (everything except chickpeas).\n3. Return to boil, then remove from heat and soak about 10 minutes until vegetables are soft.\n4. Once rehydrated, add chickpeas.",
+      "notes": "Completely unique flavor profile. Great variety of textures. Easy to increase calories with olive oil or chunks of protein (dried chicken, tuna pouch, dehydrated beef). Original recipe had green cardamom but it was divisive — omitted."
+    },
+    {
+      "name": "Pesto Noodles",
+      "category": "dinner",
+      "weight_oz": 5.6,
+      "total_calories": 700,
+      "calories_per_oz": 125,
+      "ingredients": [
+        { "name": "Ramen noodles", "amount_oz": 3.0, "calories_per_oz": 127, "notes": "Maruchan. Discard seasoning packet." },
+        { "name": "Olive oil", "amount_oz": 1.0, "calories_per_oz": 240, "notes": "Bertolli Extra Virgin." },
+        { "name": "Parmesan", "amount_oz": 0.75, "calories_per_oz": 93, "notes": "Kraft Grated. Pre-grated is most convenient." },
+        { "name": "Sun-dried tomatoes", "amount_oz": 0.75, "calories_per_oz": 0, "notes": "Bella Sun Luci Julienne Cut. Julienne cut = less field prep." },
+        { "name": "Garlic (granulated)", "amount_oz": 0.05, "calories_per_oz": 93, "notes": "Kirkland." },
+        { "name": "Dried basil", "amount_oz": 0.05, "calories_per_oz": 100, "notes": "McCormick. Alt: fresh basil." }
+      ],
+      "at_home_prep": "Discard MSG-loaded seasoning packet from noodles (at home or in field). For single servings, bag all ingredients together except Parmesan — keep separate. Store olive oil in a Nalgene HDPE bottle (4- to 32-oz). In groups, each member gets their own noodle ration; other ingredients are communally carried and divided in field.",
+      "field_prep": "1. Use 10 oz of water. Add sun-dried tomatoes at the start to soften.\n2. Bring water to a boil or near-boil.\n3. Add all ingredients except Parmesan. Discard ramen seasoning packet.\n4. Stir and let reconstitute. No simmer needed.\n5. Once cooked and pot removed from stove, add Parmesan. Do NOT add Parmesan too early or you'll get a gooey cheese mess.\n6. Add salt, pepper, and red pepper flakes to taste.",
+      "notes": "A sleeper hit — much simpler than Peanut Noodles but rated just as highly. Scored 2.57/3.0. Can alter spices (oregano, rosemary). Add salami chunks, beef jerky, pine nuts, or cashews for extra goodness. Vegan Parmesan: cashews + nutritional yeast + salt."
+    },
+    {
+      "name": "Polenta & Peppers",
+      "category": "dinner",
+      "weight_oz": 5.65,
+      "total_calories": 595,
+      "calories_per_oz": 105,
+      "ingredients": [
+        { "name": "Polenta (quick-cook)", "amount_oz": 2.0, "calories_per_oz": 104, "notes": "Colavita. Similar to grits but more flavor. MUST be quick-cook — traditional takes 40+ min and is inedible if underdone." },
+        { "name": "Dried bell peppers", "amount_oz": 0.5, "calories_per_oz": 63, "notes": "It's Delish. Red + green." },
+        { "name": "Tomato powder", "amount_oz": 0.2, "calories_per_oz": 85, "notes": "Naturevibe Botanicals. Don't skip — adds vital flavor." },
+        { "name": "Garlic (granulated)", "amount_oz": 0.05, "calories_per_oz": 93, "notes": "Kirkland." },
+        { "name": "Dried onion", "amount_oz": 0.1, "calories_per_oz": 95, "notes": null },
+        { "name": "Vegetable bouillon", "amount_oz": 0.3, "calories_per_oz": 0, "notes": "Casa de Santa. Powders easier to prep." },
+        { "name": "Olive oil", "amount_oz": 0.75, "calories_per_oz": 240, "notes": "Bertolli Extra Virgin. Carry in Nalgene HDPE bottle." },
+        { "name": "Parmesan", "amount_oz": 0.75, "calories_per_oz": 93, "notes": "Kraft Grated." },
+        { "name": "Sun-dried tomatoes", "amount_oz": 0.5, "calories_per_oz": 0, "notes": "Bella Sun Luci Julienne Cut." },
+        { "name": "Cashews", "amount_oz": 0.5, "calories_per_oz": 150, "notes": "Sincerely Nuts. Can sub pine nuts for more authentic flavor, or almonds." }
+      ],
+      "at_home_prep": "For solo trips, bag all ingredients together except olive oil. Carry olive oil in a Nalgene HDPE bottle (4- to 32-oz) with reliably tight screw-lid. In groups, each member gets their own bag of polenta, peppers, and tomato powder. Remaining ingredients communally carried and distributed in field.",
+      "field_prep": "1. Add olive oil at any time.\n2. Bring 12 oz of water to a boil.\n3. Add polenta, peppers, and tomato powder. Return to simmer for 30-60 seconds.\n4. Remove from heat and let sit 5-10 minutes until polenta fully cooked.\n5. Add olive oil (if not already) and Parmesan.\n\nUsing 16+ oz water: add all ingredients at start, bring to boil. Be careful of splatter as polenta cooks, stir regularly to avoid burning.",
+      "notes": "Very filling — ideal for long days and late in a trip when appetites are big. Italian-themed. Polenta absorbs water at 4:1 ratio so it cooks bigger than the 2-oz serving suggests. Dry salami chunks are a wonderful addition. For more calories/density: increase olive oil, Parmesan, or nuts."
+    }
+  ]
+}
