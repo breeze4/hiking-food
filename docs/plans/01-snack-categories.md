@@ -2,7 +2,7 @@
 
 ## Parent PRD
 
-`docs/SPEC.md` — Snack Categories section (L187-196), Future Feature Request #1
+`docs/prd-meal-slots-and-planning-agent.md` — User stories 1-2
 
 ## What to build
 

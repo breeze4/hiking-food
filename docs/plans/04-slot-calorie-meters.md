@@ -2,7 +2,7 @@
 
 ## Parent PRD
 
-`docs/SPEC.md` — Meal Slots section (L210, "per-slot calorie meters and heatmap"), Future Feature Request #3
+`docs/prd-meal-slots-and-planning-agent.md` — User stories 6, 8-9
 
 ## What to build
 

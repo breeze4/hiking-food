@@ -2,7 +2,7 @@
 
 ## Parent PRD
 
-`docs/SPEC.md` — Meal Slots section (L198-210), Future Feature Request #2
+`docs/prd-meal-slots-and-planning-agent.md` — User stories 3-5, 7
 
 ## What to build
 

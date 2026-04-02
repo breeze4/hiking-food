@@ -2,7 +2,7 @@
 
 ## Parent PRD
 
-`docs/SPEC.md` — Food Planning Agent section (L212-244)
+`docs/prd-meal-slots-and-planning-agent.md` — User stories 15-26
 
 ## What to build
 

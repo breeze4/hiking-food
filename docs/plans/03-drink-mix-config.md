@@ -2,7 +2,7 @@
 
 ## Parent PRD
 
-`docs/SPEC.md` — Meal Slots section (L206, "Drink mixes — separate daily quantity"), Future Feature Request #4
+`docs/prd-meal-slots-and-planning-agent.md` — User stories 10-12
 
 ## What to build
 

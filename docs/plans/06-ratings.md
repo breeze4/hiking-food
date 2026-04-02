@@ -2,7 +2,7 @@
 
 ## Parent PRD
 
-`docs/SPEC.md` — Preference system (L236-239), Future Feature Request #6
+`docs/prd-meal-slots-and-planning-agent.md` — User stories 13-14
 
 ## What to build
 
