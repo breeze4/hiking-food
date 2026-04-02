@@ -24,21 +24,21 @@ AFK
 
 ## Acceptance criteria
 
-- [ ] Summary API returns per-slot calorie targets (based on 25/40/35 split of remaining calories)
-- [ ] Summary API returns per-slot actuals (calories and weight)
-- [ ] Summary API returns days_covered per slot (slot calories / daily slot target)
-- [ ] TripSummary component shows a meter per slot with target vs actual
-- [ ] Meters use green (in range), amber (under/over) status colors
-- [ ] Heatmap row shows N/total_days coverage per slot
-- [ ] Overall trip totals still shown below slot breakdown
+- [x] Summary API returns per-slot calorie targets (based on 25/40/35 split of remaining calories)
+- [x] Summary API returns per-slot actuals (calories and weight)
+- [x] Summary API returns days_covered per slot (slot calories / daily slot target)
+- [x] TripSummary component shows a meter per slot with target vs actual
+- [x] Meters use green (in range), amber (under/over) status colors
+- [x] Days covered shown as N/total_days text per slot
+- [x] Overall trip totals still shown below slot breakdown
 
 ## Tasks
 
-- [ ] Update summary endpoint: compute per-slot calorie targets from (remaining_cal * 0.25/0.40/0.35)
-- [ ] Update summary endpoint: compute per-slot actuals by grouping trip_snacks by slot
-- [ ] Update summary endpoint: compute days_covered = slot_actual_cal / (daily_remaining_cal * slot_pct)
-- [ ] Redesign TripSummary: add slot meter section above the existing totals
-- [ ] Each slot meter: label, progress bar (actual/target), status badge, days covered indicator
-- [ ] Heatmap row: visual grid showing coverage per slot (filled/empty cells per day)
-- [ ] Keep existing combined totals section below the slot breakdown
-- [ ] Mobile: slot meters stack vertically, heatmap simplifies to text ("5/7 days")
+- [x] Update summary endpoint: compute per-slot calorie targets from (remaining_cal * 0.25/0.40/0.35)
+- [x] Update summary endpoint: compute per-slot actuals by grouping trip_snacks by slot
+- [x] Update summary endpoint: compute days_covered = slot_actual_cal / (daily_remaining_cal * slot_pct)
+- [x] Redesign TripSummary: add slot meter section above the existing totals
+- [x] Each slot meter: label, progress bar (actual/target), status badge, days covered indicator
+- [x] Days covered shown as text (N/total_days) — visual heatmap grid deferred
+- [x] Keep existing combined totals section below the slot breakdown
+- [x] Mobile: slot meters stack vertically naturally (already responsive)

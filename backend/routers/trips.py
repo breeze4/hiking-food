@@ -306,8 +306,24 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
             slot_subtotals[slot]["weight"] += w
             slot_subtotals[slot]["calories"] += c
 
-    # Round slot subtotals
-    for st in slot_subtotals.values():
+    # Compute per-slot targets and days_covered
+    # Slot percentages: morning 25%, lunch 40%, afternoon 35%
+    slot_pcts = {"morning_snack": 0.25, "lunch": 0.40, "afternoon_snack": 0.35}
+    # Remaining calories = daytime minus drink mixes
+    remaining_cal_low = targets["daytime_cal_low"] - drink_mix_calories
+    remaining_cal_high = targets["daytime_cal_high"] - drink_mix_calories
+    total_days = targets["total_days"]
+
+    for slot_name in ("morning_snack", "lunch", "afternoon_snack"):
+        if slot_name not in slot_subtotals:
+            slot_subtotals[slot_name] = {"weight": 0, "calories": 0}
+        st = slot_subtotals[slot_name]
+        pct = slot_pcts[slot_name]
+        st["target_cal_low"] = round(remaining_cal_low * pct, 1)
+        st["target_cal_high"] = round(remaining_cal_high * pct, 1)
+        # days_covered: actual calories / daily slot target (using midpoint)
+        daily_target_mid = ((remaining_cal_low + remaining_cal_high) / 2 * pct / total_days) if total_days > 0 else 0
+        st["days_covered"] = round(st["calories"] / daily_target_mid, 1) if daily_target_mid > 0 else None
         st["weight"] = round(st["weight"], 2)
         st["calories"] = round(st["calories"], 1)
 
@@ -315,7 +331,6 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
 
     combined_weight = snack_weight + meal_weight_actual
     combined_calories = snack_calories + meal_calories_actual
-    total_days = targets["total_days"]
 
     return {
         **targets,

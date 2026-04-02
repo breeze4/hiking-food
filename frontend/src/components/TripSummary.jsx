@@ -36,6 +36,28 @@ function TripSummary() {
         <CardTitle className="text-lg">Summary</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
+        {/* Per-slot calorie meters */}
+        {summary.slot_subtotals && (
+          <>
+            <div className="space-y-3">
+              {SLOT_ORDER.map(({ value, label }) => {
+                const st = summary.slot_subtotals[value];
+                if (!st) return null;
+                return <SlotMeter key={value} label={label} slot={st} totalDays={summary.total_days} />;
+              })}
+            </div>
+
+            {summary.drink_mix_weight > 0 && (
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Drink mixes</span>
+                <span>{summary.drink_mix_weight} oz / {summary.drink_mix_calories.toLocaleString()} cal</span>
+              </div>
+            )}
+
+            <Separator />
+          </>
+        )}
+
         {/* Snack totals */}
         <div>
           <div className="flex items-center justify-between">
@@ -62,26 +84,6 @@ function TripSummary() {
           <span className="text-muted-foreground">Snack cal/oz</span>
           <span className="font-medium">{summary.snack_cal_per_oz ?? '\u2014'}</span>
         </div>
-
-        {(summary.slot_subtotals || summary.drink_mix_weight > 0) && (
-          <div className="space-y-1 pl-2 border-l-2 border-muted">
-            {summary.drink_mix_weight > 0 && (
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Drink mixes</span>
-                <span>{summary.drink_mix_weight} oz / {summary.drink_mix_calories.toLocaleString()} cal</span>
-              </div>
-            )}
-            {SLOT_ORDER.filter(s => summary.slot_subtotals?.[s.value]).map(({ value, label }) => {
-              const st = summary.slot_subtotals[value];
-              return (
-                <div key={value} className="flex justify-between text-xs text-muted-foreground">
-                  <span>{label}</span>
-                  <span>{st.weight} oz / {st.calories.toLocaleString()} cal</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
 
         <Separator />
 
@@ -126,6 +128,37 @@ function TripSummary() {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function SlotMeter({ label, slot, totalDays }) {
+  const midTarget = (slot.target_cal_low + slot.target_cal_high) / 2;
+  const pct = midTarget > 0 ? Math.min((slot.calories / midTarget) * 100, 100) : 0;
+  const inRange = slot.calories >= slot.target_cal_low && slot.calories <= slot.target_cal_high;
+  const status = inRange ? 'success' : 'warning';
+  const barColor = status === 'success' ? 'bg-success' : 'bg-warning';
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium">{label}</span>
+        <div className="flex items-center gap-2">
+          {slot.days_covered != null && (
+            <span className="text-[10px] text-muted-foreground">
+              {slot.days_covered}/{totalDays} days
+            </span>
+          )}
+          <StatusBadge status={{ variant: status, label: inRange ? 'ok' : (slot.calories < slot.target_cal_low ? 'low' : 'high') }} />
+        </div>
+      </div>
+      <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${pct}%` }} />
+      </div>
+      <div className="flex justify-between text-[10px] text-muted-foreground">
+        <span>{slot.calories.toLocaleString()} cal / {slot.weight} oz</span>
+        <span>{slot.target_cal_low.toLocaleString()}&ndash;{slot.target_cal_high.toLocaleString()}</span>
+      </div>
+    </div>
   );
 }
 
