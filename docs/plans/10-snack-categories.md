@@ -24,21 +24,21 @@ None - can start immediately
 
 ## Acceptance criteria
 
-- [ ] `snack_catalog` table has a `category` TEXT column with allowed values: drink_mix, lunch, salty, sweet, bars_energy
-- [ ] All existing catalog items are migrated to the correct category
-- [ ] `GET /api/snacks` response includes `category` field
-- [ ] `POST /api/snacks` and `PUT /api/snacks/:id` accept `category` field
-- [ ] Snack Catalog page shows category for each item, allows editing
-- [ ] Add-snack search panel in trip planner shows category and can filter by it
-- [ ] Seed script assigns categories to all seeded items
+- [x] `snack_catalog` table has a `category` TEXT column with allowed values: drink_mix, lunch, salty, sweet, bars_energy
+- [x] All existing catalog items are migrated to the correct category
+- [x] `GET /api/snacks` response includes `category` field
+- [x] `POST /api/snacks` and `PUT /api/snacks/:id` accept `category` field
+- [x] Snack Catalog page shows category for each item, allows editing
+- [x] Add-snack search panel in trip planner shows category and can filter by it
+- [x] Seed script assigns categories to all seeded items
 
 ## Tasks
 
-- [ ] Add `category` column to `SnackCatalogItem` model (TEXT, nullable initially for migration)
-- [ ] Write migration to add column and populate existing items with correct categories
-- [ ] Update seed script to assign categories to all seeded snack items
-- [ ] Update snack API schemas to include `category` in request/response
-- [ ] Update `GET /api/snacks` to support optional `?category=` query filter
-- [ ] Update Snack Catalog page: show category column, editable via dropdown in edit mode
-- [ ] Update add-snack search panel in SnackSelection: show category badge, add filter tabs/buttons
-- [ ] Run seed script on existing DB to populate categories
+- [x] Add `category` column to `SnackCatalogItem` model (TEXT, nullable initially for migration)
+- [x] Write migration to add column and populate existing items with correct categories
+- [x] Update seed script to assign categories to all seeded snack items
+- [x] Update snack API schemas to include `category` in request/response
+- [x] Update `GET /api/snacks` to support optional `?category=` query filter
+- [x] Update Snack Catalog page: show category column, editable via dropdown in edit mode
+- [x] Update add-snack search panel in SnackSelection: show category badge, add filter tabs/buttons
+- [x] Run seed script on existing DB to populate categories

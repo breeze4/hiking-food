@@ -39,6 +39,7 @@ def _build_trip_snack(ts: TripSnack, db: Session) -> dict:
         "weight_per_serving": cat_item.weight_per_serving,
         "calories_per_serving": cat_item.calories_per_serving,
         "calories_per_oz": cal_per_oz,
+        "category": cat_item.category,
         "servings": ts.servings,
         "total_weight": round(ts.servings * wps, 2),
         "total_calories": round(ts.servings * cps, 1),

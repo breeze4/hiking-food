@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from database import SessionLocal
@@ -27,17 +29,20 @@ def _to_response(item: SnackCatalogItem, ingredient_name: str) -> dict:
         "weight_per_serving": item.weight_per_serving,
         "calories_per_serving": item.calories_per_serving,
         "calories_per_oz": cal_per_oz,
+        "category": item.category,
         "notes": item.notes,
+        "rating": item.rating,
     }
 
 
 @router.get("", response_model=list[SnackRead])
-def list_snacks(db: Session = Depends(get_db)):
-    rows = (
-        db.query(SnackCatalogItem, Ingredient.name)
-        .join(Ingredient, SnackCatalogItem.ingredient_id == Ingredient.id)
-        .all()
+def list_snacks(category: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    q = db.query(SnackCatalogItem, Ingredient.name).join(
+        Ingredient, SnackCatalogItem.ingredient_id == Ingredient.id
     )
+    if category:
+        q = q.filter(SnackCatalogItem.category == category)
+    rows = q.all()
     return [_to_response(item, name) for item, name in rows]
 
 

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
+import { StarRating } from '@/components/ui/star-rating';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
@@ -18,7 +19,7 @@ function RecipeEditPage() {
   const isNew = id === 'new';
 
   const [form, setForm] = useState({
-    name: '', category: 'breakfast', at_home_prep: '', field_prep: '', notes: '',
+    name: '', category: 'breakfast', at_home_prep: '', field_prep: '', notes: '', rating: null,
   });
   const [recipeIngredients, setRecipeIngredients] = useState([]);
   const [allIngredients, setAllIngredients] = useState([]);
@@ -37,6 +38,7 @@ function RecipeEditPage() {
           at_home_prep: data.at_home_prep || '',
           field_prep: data.field_prep || '',
           notes: data.notes || '',
+          rating: data.rating ?? null,
         });
         setRecipeIngredients(data.ingredients || []);
       }).catch((err) => setError(err.message));
@@ -94,6 +96,7 @@ function RecipeEditPage() {
       at_home_prep: form.at_home_prep || null,
       field_prep: form.field_prep || null,
       notes: form.notes || null,
+      rating: form.rating,
       ingredients: recipeIngredients.map((ri) => ({
         ingredient_id: ri.ingredient_id, amount_oz: ri.amount_oz,
       })),
@@ -139,6 +142,12 @@ function RecipeEditPage() {
                 <option value="breakfast">Breakfast</option>
                 <option value="dinner">Dinner</option>
               </select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Rating</Label>
+            <div>
+              <StarRating value={form.rating} onChange={(r) => setForm({ ...form, rating: r })} size="md" />
             </div>
           </div>
           <div className="space-y-2">

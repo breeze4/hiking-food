@@ -29,13 +29,17 @@ class SnackCreate(BaseModel):
     ingredient_id: int
     weight_per_serving: float
     calories_per_serving: float
+    category: Optional[str] = None
     notes: Optional[str] = None
+    rating: Optional[int] = None
 
 
 class SnackUpdate(BaseModel):
     weight_per_serving: Optional[float] = None
     calories_per_serving: Optional[float] = None
+    category: Optional[str] = None
     notes: Optional[str] = None
+    rating: Optional[int] = None
 
 
 class SnackRead(BaseModel):
@@ -45,7 +49,9 @@ class SnackRead(BaseModel):
     weight_per_serving: Optional[float] = None
     calories_per_serving: Optional[float] = None
     calories_per_oz: Optional[float] = None
+    category: Optional[str] = None
     notes: Optional[str] = None
+    rating: Optional[int] = None
 
 
 # --- Recipes ---
@@ -69,6 +75,7 @@ class RecipeCreate(BaseModel):
     at_home_prep: Optional[str] = None
     field_prep: Optional[str] = None
     notes: Optional[str] = None
+    rating: Optional[int] = None
     ingredients: list[RecipeIngredientCreate] = []
 
 
@@ -78,6 +85,7 @@ class RecipeUpdate(BaseModel):
     at_home_prep: Optional[str] = None
     field_prep: Optional[str] = None
     notes: Optional[str] = None
+    rating: Optional[int] = None
     ingredients: Optional[list[RecipeIngredientCreate]] = None
 
 
@@ -85,6 +93,7 @@ class RecipeListRead(BaseModel):
     id: int
     name: str
     category: Optional[str] = None
+    rating: Optional[int] = None
     total_weight: float
     total_calories: float
     cal_per_oz: Optional[float] = None
@@ -94,6 +103,7 @@ class RecipeDetailRead(BaseModel):
     id: int
     name: str
     category: Optional[str] = None
+    rating: Optional[int] = None
     at_home_prep: Optional[str] = None
     field_prep: Optional[str] = None
     notes: Optional[str] = None
@@ -133,6 +143,7 @@ class TripSnackRead(BaseModel):
     weight_per_serving: Optional[float] = None
     calories_per_serving: Optional[float] = None
     calories_per_oz: Optional[float] = None
+    category: Optional[str] = None
     servings: float
     total_weight: Optional[float] = None
     total_calories: Optional[float] = None

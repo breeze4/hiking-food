@@ -13,21 +13,22 @@
 | 07 | [Packing Screen](07-packing-screen.md) | Packing checklist with actual weights + shopping list |
 | 08 | [Deployment](08-beebaby-deployment.md) | Deploy to beebaby via rsync + systemd |
 | 09 | [Frontend Redesign](09-frontend-redesign-shadcn.md) | shadcn/ui + Tailwind CSS v4 redesign |
+| 10 | [Snack Categories](10-snack-categories.md) | Add category column to snack catalog (5 types) |
+| 15 | [Ratings](15-ratings.md) | 1-5 ratings on snacks and recipes |
 
 ## In Progress
 
-(none)
+| # | Plan | Description | Blocked by |
+|---|------|-------------|------------|
+| 14 | [Food Planning Agent](14-food-planning-agent.md) | CLI agent that plans trip food via API (definition done, needs testing) | None |
 
 ## Not Started
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
-| 10 | [Snack Categories](10-snack-categories.md) | Add category column to snack catalog (5 types) | None |
-| 11 | [Meal Slots](11-meal-slots.md) | Assign trip snacks to time-of-day slots | 10 |
+| 11 | [Meal Slots](11-meal-slots.md) | Assign trip snacks to time-of-day slots | None |
 | 12 | [Drink Mix Config](12-drink-mix-config.md) | Configurable drink mixes per day on trips | 11 |
 | 13 | [Slot Calorie Meters](13-slot-calorie-meters.md) | Per-slot calorie meters + heatmap in summary | 11 |
-| 14 | [Food Planning Agent](14-food-planning-agent.md) | CLI agent that plans trip food via API | None |
-| 15 | [Ratings](15-ratings.md) | 1-5 ratings on snacks and recipes | None |
 
 ## PRDs
 

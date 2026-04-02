@@ -44,7 +44,7 @@ None - can start immediately (v1 uses existing API)
 
 ## Tasks
 
-- [ ] Create agent definition file with system prompt covering:
+- [x] Create agent definition file with system prompt covering:
   - API base URL and available endpoints
   - Meal selection rules (breakfast minimal variety, dinner 2-3 unique, max half rule)
   - Snack slot logic (category-to-slot mapping, 25/40/35 calorie split)
@@ -52,9 +52,9 @@ None - can start immediately (v1 uses existing API)
   - Anomaly detection (flag problems in existing plan before changing it)
   - Preference reading (catalog notes, memory)
   - Shopping list minimization (ingredient overlap as tiebreaker)
-- [ ] Include hardcoded category assignments for all current catalog items in prompt
-- [ ] Include the full category-to-slot mapping in prompt
-- [ ] Define the agent's workflow: read state → propose changes → write via API → summarize
+- [x] Include hardcoded category assignments for all current catalog items in prompt
+- [x] Include the full category-to-slot mapping in prompt
+- [x] Define the agent's workflow: read state → propose changes → write via API → summarize
 - [ ] Test: agent can plan a fresh trip end-to-end
 - [ ] Test: agent can refine an existing trip with feedback
 - [ ] Test: agent saves preference learnings to memory

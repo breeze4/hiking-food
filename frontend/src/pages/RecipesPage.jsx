@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { get } from '../api';
+import { get, put } from '../api';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { StarRating } from '@/components/ui/star-rating';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -45,6 +46,7 @@ function RecipesPage() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
+              <TableHead>Rating</TableHead>
               <TableHead className="text-right">Weight (oz)</TableHead>
               <TableHead className="text-right">Calories</TableHead>
               <TableHead className="text-right">Cal/oz</TableHead>
@@ -61,6 +63,14 @@ function RecipesPage() {
                 <TableCell>
                   <Badge variant="outline" className="text-xs">{r.category}</Badge>
                 </TableCell>
+                <TableCell>
+                  <StarRating value={r.rating} onChange={async (rating) => {
+                    try {
+                      await put(`/recipes/${r.id}`, { rating });
+                      setRecipes(recipes.map((x) => (x.id === r.id ? { ...x, rating } : x)));
+                    } catch (err) { setError(err.message); }
+                  }} />
+                </TableCell>
                 <TableCell className="text-right">{r.total_weight}</TableCell>
                 <TableCell className="text-right">{r.total_calories}</TableCell>
                 <TableCell className="text-right">{r.cal_per_oz}</TableCell>
@@ -68,7 +78,7 @@ function RecipesPage() {
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                   No recipes found.
                 </TableCell>
               </TableRow>

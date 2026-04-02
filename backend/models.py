@@ -18,7 +18,9 @@ class SnackCatalogItem(Base):
     ingredient_id = Column(Integer, ForeignKey("ingredients.id"), nullable=False)
     weight_per_serving = Column(Float)
     calories_per_serving = Column(Float)
+    category = Column(Text)  # drink_mix, lunch, salty, sweet, bars_energy
     notes = Column(Text)
+    rating = Column(Integer)
 
 
 class Recipe(Base):
@@ -30,6 +32,7 @@ class Recipe(Base):
     at_home_prep = Column(Text)
     field_prep = Column(Text)
     notes = Column(Text)
+    rating = Column(Integer)
 
 
 class RecipeIngredient(Base):

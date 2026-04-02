@@ -3,6 +3,7 @@ import { get, post, put, del } from '../api';
 import { useTrip } from '../context/TripContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { StarRating } from '@/components/ui/star-rating';
 import { Input } from '@/components/ui/input';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -17,11 +18,25 @@ function SortHead({ col, label, sortCol, sortAsc, onClick, className = '' }) {
   );
 }
 
+const CATEGORY_FILTERS = [
+  { value: '', label: 'All' },
+  { value: 'drink_mix', label: 'Drink Mix' },
+  { value: 'lunch', label: 'Lunch' },
+  { value: 'salty', label: 'Salty' },
+  { value: 'sweet', label: 'Sweet' },
+  { value: 'bars_energy', label: 'Bars/Energy' },
+];
+
+const CATEGORY_LABELS = Object.fromEntries(
+  CATEGORY_FILTERS.filter(c => c.value).map(c => [c.value, c.label])
+);
+
 function SnackSelection() {
   const { tripDetail, refreshTrip } = useTrip();
   const [catalog, setCatalog] = useState([]);
   const [adding, setAdding] = useState(false);
   const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [sortCol, setSortCol] = useState(null);
   const [sortAsc, setSortAsc] = useState(true);
   const searchRef = useRef(null);
@@ -71,6 +86,7 @@ function SnackSelection() {
     });
     setAdding(false);
     setSearch('');
+    setCategoryFilter('');
     // Reset sort so new item appears at top
     setSortCol(null);
     refreshTrip();
@@ -92,9 +108,11 @@ function SnackSelection() {
 
   const usedCatalogIds = new Set(snacks.map((s) => s.catalog_item_id));
   const available = catalog.filter((c) => !usedCatalogIds.has(c.id));
-  const filtered = search
-    ? available.filter((c) => c.ingredient_name.toLowerCase().includes(search.toLowerCase()))
-    : available;
+  const filtered = available.filter((c) => {
+    if (search && !c.ingredient_name.toLowerCase().includes(search.toLowerCase())) return false;
+    if (categoryFilter && c.category !== categoryFilter) return false;
+    return true;
+  });
 
   return (
     <Card>
@@ -120,12 +138,25 @@ function SnackSelection() {
                 placeholder="Search snacks..."
                 className="flex-1"
                 onKeyDown={(e) => {
-                  if (e.key === 'Escape') { setAdding(false); setSearch(''); }
+                  if (e.key === 'Escape') { setAdding(false); setSearch(''); setCategoryFilter(''); }
                 }}
               />
-              <Button size="sm" variant="ghost" onClick={() => { setAdding(false); setSearch(''); }}>
+              <Button size="sm" variant="ghost" onClick={() => { setAdding(false); setSearch(''); setCategoryFilter(''); }}>
                 Cancel
               </Button>
+            </div>
+            <div className="p-2 border-b flex flex-wrap gap-1">
+              {CATEGORY_FILTERS.map((cf) => (
+                <Button
+                  key={cf.value}
+                  size="sm"
+                  variant={categoryFilter === cf.value ? 'default' : 'outline'}
+                  className="h-7 text-xs px-2"
+                  onClick={() => setCategoryFilter(cf.value)}
+                >
+                  {cf.label}
+                </Button>
+              ))}
             </div>
             <div className="max-h-80 overflow-y-auto">
               {filtered.length === 0 && (
@@ -137,7 +168,15 @@ function SnackSelection() {
                   onClick={() => handleAdd(c.id)}
                   className="w-full text-left px-3 py-2 hover:bg-accent transition-colors flex items-center justify-between gap-4 border-b last:border-b-0"
                 >
-                  <span className="font-medium text-sm">{c.ingredient_name}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-medium text-sm truncate">{c.ingredient_name}</span>
+                    {c.category && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+                        {CATEGORY_LABELS[c.category] || c.category}
+                      </span>
+                    )}
+                  </div>
+                  {c.rating && <StarRating value={c.rating} readOnly size="xs" />}
                   <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
                     {c.weight_per_serving} oz &middot; {c.calories_per_serving} cal &middot; {c.calories_per_oz} c/oz
                   </span>

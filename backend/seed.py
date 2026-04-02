@@ -15,6 +15,19 @@ from models import (
 DATA_DIR = Path(__file__).parent.parent / "data"
 
 
+def migrate_add_category_column(db):
+    """Add category column to snack_catalog if it doesn't exist."""
+    from sqlalchemy import text, inspect
+    inspector = inspect(engine)
+    columns = [col["name"] for col in inspector.get_columns("snack_catalog")]
+    if "category" not in columns:
+        db.execute(text("ALTER TABLE snack_catalog ADD COLUMN category TEXT"))
+        db.commit()
+        print("Migration: added category column to snack_catalog")
+    else:
+        print("Migration: category column already exists")
+
+
 def get_or_create_ingredient(db, name, calories_per_oz, notes=None):
     existing = db.query(Ingredient).filter(Ingredient.name == name).first()
     if existing:
@@ -96,11 +109,16 @@ def seed_utah_2026_snacks(db):
         existing = db.query(SnackCatalogItem).filter(
             SnackCatalogItem.ingredient_id == ing.id
         ).first()
-        if not existing:
+        if existing:
+            # Update category on existing items if not already set
+            if snack_data.get("category") and not existing.category:
+                existing.category = snack_data["category"]
+        else:
             db.add(SnackCatalogItem(
                 ingredient_id=ing.id,
                 weight_per_serving=snack_data["weight_per_serving"],
                 calories_per_serving=snack_data["calories_per_serving"],
+                category=snack_data.get("category"),
                 notes=snack_data.get("notes"),
             ))
             created_catalog += 1
@@ -203,6 +221,7 @@ def main():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
+        migrate_add_category_column(db)
         seed_skurka_recipes(db)
         seed_utah_2026_snacks(db)
         seed_utah_2026_trip(db)

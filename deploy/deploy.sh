@@ -23,6 +23,9 @@ rsync -az --delete \
 echo "==> Installing Python deps"
 ssh "$HOST" "cd ~/$APP_DIR/backend && venv/bin/pip install -q -r requirements.txt"
 
+echo "==> Running migrations"
+ssh "$HOST" "cd ~/$APP_DIR/backend && venv/bin/python migrate_add_ratings.py"
+
 echo "==> Seeding database"
 ssh "$HOST" "cd ~/$APP_DIR/backend && venv/bin/python seed.py"
 

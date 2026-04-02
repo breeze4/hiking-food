@@ -126,6 +126,7 @@ A dedicated view for packing day (at home with Chromebook + scale):
 | ingredient_id | INTEGER FK |
 | weight_per_serving | REAL |
 | calories_per_serving | REAL |
+| category | TEXT (drink_mix\|lunch\|salty\|sweet\|bars_energy) |
 | notes | TEXT |
 
 ### recipes
@@ -252,7 +253,7 @@ A Claude Code agent that builds complete trip food plans via the API.
 
 ## Future Feature Requests
 
-- Snack categories in data model (category column on snack_catalog)
+- ~~Snack categories in data model (category column on snack_catalog)~~ (done)
 - Meal slot assignment on trip_snacks (slot column)
 - Per-slot calorie meters with heatmap showing days covered
 - Drink mixes as daily quantity config on trips table

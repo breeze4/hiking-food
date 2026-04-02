@@ -51,6 +51,7 @@ def _build_detail(recipe: Recipe, ingredients_data: list) -> dict:
         "id": recipe.id,
         "name": recipe.name,
         "category": recipe.category,
+        "rating": recipe.rating,
         "at_home_prep": recipe.at_home_prep,
         "field_prep": recipe.field_prep,
         "notes": recipe.notes,
@@ -99,6 +100,7 @@ def list_recipes(category: Optional[str] = Query(None), db: Session = Depends(ge
             "id": recipe.id,
             "name": recipe.name,
             "category": recipe.category,
+            "rating": recipe.rating,
             **totals,
         })
     return result
@@ -121,6 +123,7 @@ def create_recipe(data: RecipeCreate, db: Session = Depends(get_db)):
         at_home_prep=data.at_home_prep,
         field_prep=data.field_prep,
         notes=data.notes,
+        rating=data.rating,
     )
     db.add(recipe)
     db.flush()
