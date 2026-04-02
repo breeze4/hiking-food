@@ -2,7 +2,7 @@
 
 ## Parent PRD
 
-`docs/prd-meal-slots-and-planning-agent.md` — User stories 1-2
+`docs/specs/03-prd-meal-slots-and-planning-agent.md` — User stories 1-2
 
 ## What to build
 

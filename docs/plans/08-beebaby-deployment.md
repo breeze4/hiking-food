@@ -91,4 +91,4 @@ Add a "Deployment" section documenting how to set up, deploy, and manage the ser
 - `deploy/hiking-food.service` — new, systemd unit
 - `deploy/deploy.sh` — new, update + restart script
 - `deploy/setup.sh` — new, one-time setup script
-- `docs/SPEC.md` — add Deployment section
+- `docs/specs/02-app-spec.md` — add Deployment section

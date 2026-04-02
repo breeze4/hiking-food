@@ -31,7 +31,7 @@
 
 ## PRDs
 
-- [Meal Slots, Snack Categories, and Food Planning Agent](../prd-meal-slots-and-planning-agent.md) — covers plans 10-15
+- [Meal Slots, Snack Categories, and Food Planning Agent](../specs/03-prd-meal-slots-and-planning-agent.md) — covers plans 10-15
 
 ## Design Sessions
 
