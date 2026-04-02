@@ -87,11 +87,13 @@ function SnackSelection() {
   }
 
   async function updateServings(snackId, newServings) {
-    if (newServings <= 0) {
-      await del(`/trips/${tripDetail.id}/snacks/${snackId}`);
-    } else {
-      await put(`/trips/${tripDetail.id}/snacks/${snackId}`, { servings: newServings });
-    }
+    if (newServings < 0) newServings = 0;
+    await put(`/trips/${tripDetail.id}/snacks/${snackId}`, { servings: newServings });
+    refreshTrip();
+  }
+
+  async function removeSnack(snackId) {
+    await del(`/trips/${tripDetail.id}/snacks/${snackId}`);
     refreshTrip();
   }
 
@@ -149,7 +151,7 @@ function SnackSelection() {
           onStartAdd={() => openAddPanel('drink_mix')}
           onCancelAdd={closeAddPanel}
           onAdd={(catalogId) => handleAdd(catalogId, 'snacks')}
-          onRemove={(snackId) => del(`/trips/${tripDetail.id}/snacks/${snackId}`).then(refreshTrip)}
+          onRemove={removeSnack}
           onUpdateServings={updateServings}
           onUpdateNotes={updateNotes}
           search={search}
@@ -174,6 +176,7 @@ function SnackSelection() {
             onUpdateServings={updateServings}
             onUpdateNotes={updateNotes}
             onUpdateSlot={updateSlot}
+            onRemove={removeSnack}
             search={search}
             setSearch={setSearch}
             categoryFilter={categoryFilter}
@@ -209,7 +212,7 @@ function SlotMeters({ slot, summary }) {
 function SlotSection({
   slot, label, snacks, summary, isAdding,
   onStartAdd, onCancelAdd, onAdd,
-  onUpdateServings, onUpdateNotes, onUpdateSlot,
+  onUpdateServings, onUpdateNotes, onUpdateSlot, onRemove,
   search, setSearch, categoryFilter, setCategoryFilter,
   filtered, searchRef,
 }) {
@@ -257,6 +260,7 @@ function SlotSection({
                     <TableHead className="text-right">Cal/oz</TableHead>
                     <TableHead>Notes</TableHead>
                     <TableHead className="w-32">Slot</TableHead>
+                    <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -266,19 +270,19 @@ function SlotSection({
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Button variant="outline" size="icon" className="h-7 w-7"
-                            onClick={() => onUpdateServings(s.id, s.servings - 0.5)}>-</Button>
+                            onClick={() => onUpdateServings(s.id, s.servings - 1)}>-</Button>
                           <Input
                             type="number"
                             step="0.5"
                             value={s.servings}
                             onChange={(e) => {
                               const val = parseFloat(e.target.value);
-                              if (!isNaN(val)) onUpdateServings(s.id, val);
+                              if (!isNaN(val) && val >= 0) onUpdateServings(s.id, val);
                             }}
                             className="w-14 text-center h-7"
                           />
                           <Button variant="outline" size="icon" className="h-7 w-7"
-                            onClick={() => onUpdateServings(s.id, s.servings + 0.5)}>+</Button>
+                            onClick={() => onUpdateServings(s.id, s.servings + 1)}>+</Button>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">{s.total_weight}</TableCell>
@@ -304,6 +308,10 @@ function SlotSection({
                           </SelectContent>
                         </Select>
                       </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                          onClick={() => onRemove(s.id)}>×</Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -317,24 +325,28 @@ function SlotSection({
               <div key={s.id} className="border rounded-lg p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-sm">{s.ingredient_name}</span>
-                  <Select value={s.slot || slot} onValueChange={(v) => onUpdateSlot(s.id, v)}>
-                    <SelectTrigger className="h-7 text-xs w-28">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SLOTS.map((sl) => (
-                        <SelectItem key={sl.value} value={sl.value}>{sl.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-1">
+                    <Select value={s.slot || slot} onValueChange={(v) => onUpdateSlot(s.id, v)}>
+                      <SelectTrigger className="h-7 text-xs w-28">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SLOTS.map((sl) => (
+                          <SelectItem key={sl.value} value={sl.value}>{sl.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                      onClick={() => onRemove(s.id)}>×</Button>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     <Button variant="outline" size="icon" className="h-8 w-8"
-                      onClick={() => onUpdateServings(s.id, s.servings - 0.5)}>-</Button>
+                      onClick={() => onUpdateServings(s.id, s.servings - 1)}>-</Button>
                     <span className="w-10 text-center font-medium">{s.servings}</span>
                     <Button variant="outline" size="icon" className="h-8 w-8"
-                      onClick={() => onUpdateServings(s.id, s.servings + 0.5)}>+</Button>
+                      onClick={() => onUpdateServings(s.id, s.servings + 1)}>+</Button>
                   </div>
                   <div className="text-xs text-muted-foreground text-right">
                     {s.total_weight} oz &middot; {s.total_calories} cal &middot; {s.calories_per_oz} c/oz
