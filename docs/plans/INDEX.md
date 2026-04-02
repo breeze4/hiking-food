@@ -20,6 +20,7 @@
 | 15 | [Ratings](15-ratings.md) | 1-5 ratings on snacks and recipes |
 | 16 | [Slot Simplification](16-slot-simplification.md) | Collapse 3 snack slots to 2 (lunch + snacks) with 40/60 split |
 | 14 | [Food Planning Agent](14-food-planning-agent.md) | CLI agent that plans trip food via API |
+| 17 | [Drink Mix Manual Control](17-drink-mix-manual-control.md) | Manual drink mix servings with budget meter |
 
 ## In Progress
 
@@ -30,7 +31,6 @@
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
-| 17 | [Drink Mix Manual Control](17-drink-mix-manual-control.md) | Manual drink mix servings with budget meter | None |
 | 18 | [Progress Bar Meters](18-progress-bar-meters.md) | Replace badges with color-coded progress bars for cal/weight | 16 |
 | 19 | [Zebra Striping + Mobile Audit](19-zebra-striping-mobile-audit.md) | Table striping + mobile layout fixes across all screens | None |
 

@@ -142,11 +142,13 @@ function SnackSelection() {
         {/* Drink Mixes section */}
         <DrinkMixSection
           snacks={drinkMixes}
+          tripDetail={tripDetail}
           isAdding={addingSlot === 'drink_mix'}
           onStartAdd={() => openAddPanel('drink_mix')}
           onCancelAdd={closeAddPanel}
           onAdd={(catalogId) => handleAdd(catalogId, 'snacks')}
           onRemove={(snackId) => del(`/trips/${tripDetail.id}/snacks/${snackId}`).then(refreshTrip)}
+          onUpdateServings={updateServings}
           onUpdateNotes={updateNotes}
           search={search}
           setSearch={setSearch}
@@ -327,9 +329,22 @@ function SlotSection({
 }
 
 function DrinkMixSection({
-  snacks, isAdding, onStartAdd, onCancelAdd, onAdd, onRemove, onUpdateNotes,
+  snacks, tripDetail, isAdding, onStartAdd, onCancelAdd, onAdd, onRemove,
+  onUpdateServings, onUpdateNotes,
   search, setSearch, categoryFilter, setCategoryFilter, filtered, searchRef,
 }) {
+  const totalServings = snacks.reduce((sum, s) => sum + s.servings, 0);
+  const mixesPerDay = tripDetail.drink_mixes_per_day || 2;
+  const totalDays = (tripDetail.first_day_fraction || 0) + (tripDetail.full_days || 0) + (tripDetail.last_day_fraction || 0);
+  const budget = mixesPerDay * totalDays;
+
+  let budgetColor = 'text-green-600';
+  if (budget > 0) {
+    if (totalServings > budget * 1.2) budgetColor = 'text-red-600';
+    else if (totalServings > budget * 1.1) budgetColor = 'text-orange-500';
+    else if (totalServings > budget) budgetColor = 'text-yellow-600';
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -366,7 +381,7 @@ function DrinkMixSection({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead className="text-right">Servings</TableHead>
+                    <TableHead className="w-36">Servings</TableHead>
                     <TableHead className="text-right">Wt</TableHead>
                     <TableHead className="text-right">Cal</TableHead>
                     <TableHead>Notes</TableHead>
@@ -377,7 +392,15 @@ function DrinkMixSection({
                   {snacks.map((s) => (
                     <TableRow key={s.id} className="even:bg-muted/50">
                       <TableCell className="font-medium">{s.ingredient_name}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">{s.servings}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button variant="outline" size="icon" className="h-7 w-7"
+                            onClick={() => onUpdateServings(s.id, s.servings - 1)}>-</Button>
+                          <span className="w-10 text-center font-medium">{s.servings}</span>
+                          <Button variant="outline" size="icon" className="h-7 w-7"
+                            onClick={() => onUpdateServings(s.id, s.servings + 1)}>+</Button>
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right">{s.total_weight}</TableCell>
                       <TableCell className="text-right">{s.total_calories}</TableCell>
                       <TableCell>
@@ -400,14 +423,23 @@ function DrinkMixSection({
           </div>
           <div className="md:hidden space-y-2">
             {snacks.map((s) => (
-              <div key={s.id} className="border rounded-lg p-3 space-y-1">
+              <div key={s.id} className="border rounded-lg p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-sm">{s.ingredient_name}</span>
                   <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
                     onClick={() => onRemove(s.id)}>×</Button>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {s.servings} servings &middot; {s.total_weight} oz &middot; {s.total_calories} cal
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <Button variant="outline" size="icon" className="h-8 w-8"
+                      onClick={() => onUpdateServings(s.id, s.servings - 1)}>-</Button>
+                    <span className="w-10 text-center font-medium">{s.servings}</span>
+                    <Button variant="outline" size="icon" className="h-8 w-8"
+                      onClick={() => onUpdateServings(s.id, s.servings + 1)}>+</Button>
+                  </div>
+                  <div className="text-xs text-muted-foreground text-right">
+                    {s.total_weight} oz &middot; {s.total_calories} cal
+                  </div>
                 </div>
               </div>
             ))}
@@ -417,7 +449,11 @@ function DrinkMixSection({
           </div>
         </>
       )}
-      <p className="text-xs text-muted-foreground mt-1">Servings auto-calculated from mixes/day setting.</p>
+      {budget > 0 && snacks.length > 0 && (
+        <p className={`text-xs font-medium mt-1 ${budgetColor}`}>
+          {totalServings} of {Math.round(budget * 10) / 10} budget servings
+        </p>
+      )}
     </div>
   );
 }

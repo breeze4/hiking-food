@@ -1,3 +1,5 @@
+import math
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -108,23 +110,6 @@ def _get_total_days(trip: Trip) -> float:
     return (trip.first_day_fraction or 0) + (trip.full_days or 0) + (trip.last_day_fraction or 0)
 
 
-def _recalc_drink_mix_servings(trip: Trip, db: Session):
-    """Recalculate servings for all drink_mix snacks on a trip."""
-    total_days = _get_total_days(trip)
-    mixes_per_day = trip.drink_mixes_per_day if trip.drink_mixes_per_day is not None else 2
-    target_servings = mixes_per_day * total_days
-    drink_snacks = (
-        db.query(TripSnack)
-        .join(SnackCatalogItem, TripSnack.catalog_item_id == SnackCatalogItem.id)
-        .filter(TripSnack.trip_id == trip.id, SnackCatalogItem.category == "drink_mix")
-        .all()
-    )
-    if drink_snacks:
-        per_item = target_servings / len(drink_snacks)
-        for ts in drink_snacks:
-            ts.servings = per_item
-
-
 # --- Trip CRUD ---
 
 @router.get("", response_model=list[TripListRead])
@@ -155,13 +140,8 @@ def update_trip(trip_id: int, data: TripUpdate, db: Session = Depends(get_db)):
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
     updates = data.model_dump(exclude_unset=True)
-    recalc_drinks = any(k in updates for k in (
-        "drink_mixes_per_day", "first_day_fraction", "full_days", "last_day_fraction"
-    ))
     for key, value in updates.items():
         setattr(trip, key, value)
-    if recalc_drinks:
-        _recalc_drink_mix_servings(trip, db)
     db.commit()
     db.refresh(trip)
     return _build_trip_detail(trip, db)
@@ -191,6 +171,8 @@ def add_trip_snack(trip_id: int, data: TripSnackCreate, db: Session = Depends(ge
     fields = data.model_dump()
     if not fields.get("slot"):
         fields["slot"] = CATEGORY_TO_SLOT.get(cat_item.category, "snacks")
+    if cat_item.category == "drink_mix":
+        fields["servings"] = max(1, math.ceil(fields.get("servings") or 1))
     ts = TripSnack(trip_id=trip_id, **fields)
     db.add(ts)
     db.commit()
@@ -203,7 +185,12 @@ def update_trip_snack(trip_id: int, snack_id: int, data: TripSnackUpdate, db: Se
     ts = db.get(TripSnack, snack_id)
     if not ts or ts.trip_id != trip_id:
         raise HTTPException(status_code=404, detail="Trip snack not found")
-    for key, value in data.model_dump(exclude_unset=True).items():
+    updates = data.model_dump(exclude_unset=True)
+    if "servings" in updates:
+        cat_item = db.get(SnackCatalogItem, ts.catalog_item_id)
+        if cat_item and cat_item.category == "drink_mix":
+            updates["servings"] = math.ceil(updates["servings"])
+    for key, value in updates.items():
         setattr(ts, key, value)
     db.commit()
     db.refresh(ts)
