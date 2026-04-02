@@ -64,7 +64,7 @@ function MealSelection() {
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -78,7 +78,7 @@ function MealSelection() {
               </TableHeader>
               <TableBody>
                 {meals.map((m) => (
-                  <TableRow key={m.id}>
+                  <TableRow key={m.id} className="even:bg-muted/50">
                     <TableCell className="font-medium">{m.recipe_name}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-xs">

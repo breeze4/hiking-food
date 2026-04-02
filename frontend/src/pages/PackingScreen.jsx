@@ -113,7 +113,7 @@ function PackingScreen() {
                     <span className="text-sm text-muted-foreground">oz</span>
                   </div>
                 </div>
-                <Table className="mt-2">
+                <div className="overflow-x-auto mt-2"><Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-xs">Ingredient</TableHead>
@@ -128,7 +128,7 @@ function PackingScreen() {
                       </TableRow>
                     ))}
                   </TableBody>
-                </Table>
+                </Table></div>
                 {meal.at_home_prep && (
                   <Collapsible className="mt-2">
                     <CollapsibleTrigger className="text-sm text-muted-foreground hover:text-foreground cursor-pointer">
@@ -165,7 +165,7 @@ function PackingScreen() {
               return (
                 <div key={value}>
                   <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">{label}</h4>
-                  <Card>
+                  <Card className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -222,7 +222,7 @@ function PackingScreen() {
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent>
-          <Card>
+          <Card className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

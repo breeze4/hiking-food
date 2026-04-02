@@ -176,7 +176,7 @@ function RecipeEditPage() {
 
       <div>
         <h3 className="text-lg font-semibold mb-3">Ingredients</h3>
-        <div className="rounded-md border">
+        <div className="rounded-md border overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -188,7 +188,7 @@ function RecipeEditPage() {
             </TableHeader>
             <TableBody>
               {recipeIngredients.map((ri, index) => (
-                <TableRow key={index}>
+                <TableRow key={index} className="even:bg-muted/50">
                   <TableCell>{ri.ingredient_name}</TableCell>
                   <TableCell>
                     <Input type="number" step="any" value={ri.amount_oz}

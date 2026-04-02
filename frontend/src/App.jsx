@@ -62,7 +62,7 @@ function AppHeader() {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-64">
-            <nav className="flex flex-col gap-4 mt-8">
+            <nav className="flex flex-col gap-4 mt-8 px-4">
               <NavLinks onClick={() => setOpen(false)} />
               <Separator />
               <TripSelector />

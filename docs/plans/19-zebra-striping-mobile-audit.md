@@ -24,21 +24,21 @@ None - can start immediately
 
 ## Acceptance criteria
 
-- [ ] Recipe ingredient table rows have `even:bg-muted/50` zebra striping
-- [ ] Meal selection table rows have `even:bg-muted/50` zebra striping
-- [ ] Navigation Sheet has proper left padding on text
-- [ ] No horizontal overflow on any screen at mobile widths
-- [ ] Consistent card/content padding across all screens
-- [ ] Touch targets are adequately sized on mobile
+- [x] Recipe ingredient table rows have `even:bg-muted/50` zebra striping
+- [x] Meal selection table rows have `even:bg-muted/50` zebra striping
+- [x] Navigation Sheet has proper left padding on text
+- [x] No horizontal overflow on any screen at mobile widths
+- [x] Consistent card/content padding across all screens
+- [x] Touch targets are adequately sized on mobile
 
 ## Tasks
 
-- [ ] Add `even:bg-muted/50` to recipe ingredient table rows in `RecipeEditPage.jsx`
-- [ ] Add `even:bg-muted/50` to meal selection table rows
-- [ ] Fix navigation Sheet padding in `App.jsx` SheetContent
-- [ ] Audit trip planner screen for mobile issues and fix
-- [ ] Audit snack selection screen for mobile issues and fix
-- [ ] Audit meal selection screen for mobile issues and fix
-- [ ] Audit recipe library and recipe edit screens for mobile issues and fix
-- [ ] Audit ingredient database screen for mobile issues and fix
-- [ ] Audit packing screen and trip summary for mobile issues and fix
+- [x] Add `even:bg-muted/50` to recipe ingredient table rows in `RecipeEditPage.jsx`
+- [x] Add `even:bg-muted/50` to meal selection table rows
+- [x] Fix navigation Sheet padding in `App.jsx` SheetContent
+- [x] Audit trip planner screen for mobile issues and fix
+- [x] Audit snack selection screen for mobile issues and fix
+- [x] Audit meal selection screen for mobile issues and fix
+- [x] Audit recipe library and recipe edit screens for mobile issues and fix
+- [x] Audit ingredient database screen for mobile issues and fix
+- [x] Audit packing screen and trip summary for mobile issues and fix

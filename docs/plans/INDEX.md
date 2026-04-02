@@ -22,6 +22,7 @@
 | 14 | [Food Planning Agent](14-food-planning-agent.md) | CLI agent that plans trip food via API |
 | 17 | [Drink Mix Manual Control](17-drink-mix-manual-control.md) | Manual drink mix servings with budget meter |
 | 18 | [Progress Bar Meters](18-progress-bar-meters.md) | Replace badges with color-coded progress bars for cal/weight |
+| 19 | [Zebra Striping + Mobile Audit](19-zebra-striping-mobile-audit.md) | Table striping + mobile layout fixes across all screens |
 
 ## In Progress
 
@@ -32,7 +33,6 @@
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
-| 19 | [Zebra Striping + Mobile Audit](19-zebra-striping-mobile-audit.md) | Table striping + mobile layout fixes across all screens | None |
 
 ## PRDs
 
