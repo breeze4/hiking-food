@@ -11,6 +11,12 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 
+const SNACK_SLOTS = [
+  { value: 'morning_snack', label: 'Morning Snack' },
+  { value: 'lunch', label: 'Lunch' },
+  { value: 'afternoon_snack', label: 'Afternoon Snack' },
+];
+
 function PackingScreen() {
   const { tripId } = useParams();
   const navigate = useNavigate();
@@ -153,47 +159,58 @@ function PackingScreen() {
         {packing.snacks.length === 0 ? (
           <p className="text-muted-foreground text-sm">No snacks selected for this trip.</p>
         ) : (
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10"></TableHead>
-                  <TableHead>Item</TableHead>
-                  <TableHead className="text-right">Servings</TableHead>
-                  <TableHead className="text-right">Target (oz)</TableHead>
-                  <TableHead className="text-right">Target Cal</TableHead>
-                  <TableHead className="text-right">Actual (oz)</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {packing.snacks.map((s) => (
-                  <TableRow key={s.id} className={s.packed ? 'opacity-60' : ''}>
-                    <TableCell>
-                      <Checkbox
-                        checked={s.packed}
-                        onCheckedChange={(checked) => toggleSnackPacked(s.id, checked)}
-                      />
-                    </TableCell>
-                    <TableCell className={`font-medium ${s.packed ? 'line-through' : ''}`}>
-                      {s.ingredient_name}
-                    </TableCell>
-                    <TableCell className="text-right">{s.servings}</TableCell>
-                    <TableCell className="text-right">{s.target_weight}</TableCell>
-                    <TableCell className="text-right">{s.target_calories}</TableCell>
-                    <TableCell className="text-right">
-                      <Input
-                        type="number"
-                        step="any"
-                        defaultValue={s.actual_weight_oz || ''}
-                        onBlur={(e) => setSnackWeight(s.id, e.target.value)}
-                        className="w-20 h-7 ml-auto"
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
+          <div className="space-y-4">
+            {SNACK_SLOTS.map(({ value, label }) => {
+              const slotSnacks = packing.snacks.filter(s => (s.slot || 'afternoon_snack') === value);
+              if (slotSnacks.length === 0) return null;
+              return (
+                <div key={value}>
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">{label}</h4>
+                  <Card>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-10"></TableHead>
+                          <TableHead>Item</TableHead>
+                          <TableHead className="text-right">Servings</TableHead>
+                          <TableHead className="text-right">Target (oz)</TableHead>
+                          <TableHead className="text-right">Target Cal</TableHead>
+                          <TableHead className="text-right">Actual (oz)</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {slotSnacks.map((s) => (
+                          <TableRow key={s.id} className={s.packed ? 'opacity-60' : ''}>
+                            <TableCell>
+                              <Checkbox
+                                checked={s.packed}
+                                onCheckedChange={(checked) => toggleSnackPacked(s.id, checked)}
+                              />
+                            </TableCell>
+                            <TableCell className={`font-medium ${s.packed ? 'line-through' : ''}`}>
+                              {s.ingredient_name}
+                            </TableCell>
+                            <TableCell className="text-right">{s.servings}</TableCell>
+                            <TableCell className="text-right">{s.target_weight}</TableCell>
+                            <TableCell className="text-right">{s.target_calories}</TableCell>
+                            <TableCell className="text-right">
+                              <Input
+                                type="number"
+                                step="any"
+                                defaultValue={s.actual_weight_oz || ''}
+                                onBlur={(e) => setSnackWeight(s.id, e.target.value)}
+                                className="w-20 h-7 ml-auto"
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Card>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 

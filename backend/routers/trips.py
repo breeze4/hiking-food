@@ -17,6 +17,14 @@ from services.recipe_calc import compute_recipe_totals
 
 router = APIRouter(prefix="/api/trips", tags=["trips"])
 
+CATEGORY_TO_SLOT = {
+    "drink_mix": "morning_snack",
+    "bars_energy": "morning_snack",
+    "lunch": "lunch",
+    "salty": "afternoon_snack",
+    "sweet": "afternoon_snack",
+}
+
 
 def get_db():
     db = SessionLocal()
@@ -40,6 +48,7 @@ def _build_trip_snack(ts: TripSnack, db: Session) -> dict:
         "calories_per_serving": cat_item.calories_per_serving,
         "calories_per_oz": cal_per_oz,
         "category": cat_item.category,
+        "slot": ts.slot,
         "servings": ts.servings,
         "total_weight": round(ts.servings * wps, 2),
         "total_calories": round(ts.servings * cps, 1),
@@ -148,9 +157,13 @@ def add_trip_snack(trip_id: int, data: TripSnackCreate, db: Session = Depends(ge
     trip = db.get(Trip, trip_id)
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
-    if not db.get(SnackCatalogItem, data.catalog_item_id):
+    cat_item = db.get(SnackCatalogItem, data.catalog_item_id)
+    if not cat_item:
         raise HTTPException(status_code=400, detail="Snack catalog item not found")
-    ts = TripSnack(trip_id=trip_id, **data.model_dump())
+    fields = data.model_dump()
+    if not fields.get("slot"):
+        fields["slot"] = CATEGORY_TO_SLOT.get(cat_item.category, "afternoon_snack")
+    ts = TripSnack(trip_id=trip_id, **fields)
     db.add(ts)
     db.commit()
     db.refresh(ts)
@@ -246,10 +259,23 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
     trip_snacks = db.query(TripSnack).filter(TripSnack.trip_id == trip_id).all()
     snack_weight = 0
     snack_calories = 0
+    slot_subtotals = {}
     for ts in trip_snacks:
         cat_item = db.get(SnackCatalogItem, ts.catalog_item_id)
-        snack_weight += ts.servings * (cat_item.weight_per_serving or 0)
-        snack_calories += ts.servings * (cat_item.calories_per_serving or 0)
+        w = ts.servings * (cat_item.weight_per_serving or 0)
+        c = ts.servings * (cat_item.calories_per_serving or 0)
+        snack_weight += w
+        snack_calories += c
+        slot = ts.slot or "afternoon_snack"
+        if slot not in slot_subtotals:
+            slot_subtotals[slot] = {"weight": 0, "calories": 0}
+        slot_subtotals[slot]["weight"] += w
+        slot_subtotals[slot]["calories"] += c
+
+    # Round slot subtotals
+    for st in slot_subtotals.values():
+        st["weight"] = round(st["weight"], 2)
+        st["calories"] = round(st["calories"], 1)
 
     snack_cal_per_oz = round(snack_calories / snack_weight, 1) if snack_weight > 0 else None
 
@@ -262,6 +288,7 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
         "snack_weight": round(snack_weight, 2),
         "snack_calories": round(snack_calories, 1),
         "snack_cal_per_oz": snack_cal_per_oz,
+        "slot_subtotals": slot_subtotals,
         "meal_weight_actual": round(meal_weight_actual, 2),
         "meal_calories_actual": round(meal_calories_actual, 1),
         "combined_weight": round(combined_weight, 2),
@@ -310,6 +337,7 @@ def get_packing_detail(trip_id: int, db: Session = Depends(get_db)):
         snacks.append({
             "id": ts.id,
             "ingredient_name": ingredient.name,
+            "slot": ts.slot,
             "target_weight": round(ts.servings * (cat_item.weight_per_serving or 0), 2),
             "target_calories": round(ts.servings * (cat_item.calories_per_serving or 0), 1),
             "servings": ts.servings,
@@ -381,6 +409,7 @@ def clone_trip(trip_id: int, db: Session = Depends(get_db)):
             trip_id=new_trip.id,
             catalog_item_id=ts.catalog_item_id,
             servings=ts.servings,
+            slot=ts.slot,
             trip_notes=ts.trip_notes,
         ))
 

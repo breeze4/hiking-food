@@ -144,6 +144,7 @@ class TripSnackRead(BaseModel):
     calories_per_serving: Optional[float] = None
     calories_per_oz: Optional[float] = None
     category: Optional[str] = None
+    slot: Optional[str] = None
     servings: float
     total_weight: Optional[float] = None
     total_calories: Optional[float] = None
@@ -155,10 +156,12 @@ class TripSnackRead(BaseModel):
 class TripSnackCreate(BaseModel):
     catalog_item_id: int
     servings: float
+    slot: Optional[str] = None
 
 
 class TripSnackUpdate(BaseModel):
     servings: Optional[float] = None
+    slot: Optional[str] = None
     packed: Optional[bool] = None
     actual_weight_oz: Optional[float] = None
     trip_notes: Optional[str] = None
@@ -198,6 +201,11 @@ class TripDetailRead(BaseModel):
     meals: list[TripMealRead] = []
 
 
+class SlotSubtotal(BaseModel):
+    weight: float
+    calories: float
+
+
 class TripSummaryRead(BaseModel):
     total_days: float
     total_weight_low: float
@@ -213,6 +221,7 @@ class TripSummaryRead(BaseModel):
     snack_weight: float
     snack_calories: float
     snack_cal_per_oz: Optional[float] = None
+    slot_subtotals: dict[str, SlotSubtotal] = {}
     meal_weight_actual: float
     meal_calories_actual: float
     combined_weight: float

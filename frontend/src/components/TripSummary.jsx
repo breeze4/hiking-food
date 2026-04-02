@@ -5,6 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
+const SLOT_ORDER = [
+  { value: 'morning_snack', label: 'Morning' },
+  { value: 'lunch', label: 'Lunch' },
+  { value: 'afternoon_snack', label: 'Afternoon' },
+];
+
 function TripSummary() {
   const { tripDetail } = useTrip();
   const [summary, setSummary] = useState(null);
@@ -56,6 +62,20 @@ function TripSummary() {
           <span className="text-muted-foreground">Snack cal/oz</span>
           <span className="font-medium">{summary.snack_cal_per_oz ?? '\u2014'}</span>
         </div>
+
+        {summary.slot_subtotals && Object.keys(summary.slot_subtotals).length > 0 && (
+          <div className="space-y-1 pl-2 border-l-2 border-muted">
+            {SLOT_ORDER.filter(s => summary.slot_subtotals[s.value]).map(({ value, label }) => {
+              const st = summary.slot_subtotals[value];
+              return (
+                <div key={value} className="flex justify-between text-xs text-muted-foreground">
+                  <span>{label}</span>
+                  <span>{st.weight} oz / {st.calories.toLocaleString()} cal</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <Separator />
 

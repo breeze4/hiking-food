@@ -72,6 +72,7 @@ class TripSnack(Base):
     trip_id = Column(Integer, ForeignKey("trips.id"), nullable=False)
     catalog_item_id = Column(Integer, ForeignKey("snack_catalog.id"), nullable=False)
     servings = Column(Float)
+    slot = Column(Text)  # morning_snack, lunch, afternoon_snack
     packed = Column(Boolean, default=False)
     actual_weight_oz = Column(Float)
     trip_notes = Column(Text)
