@@ -14,7 +14,7 @@ AFK
 
 ## Blocked by
 
-- Blocked by `02-meal-slots.md` (needs slot assignments on trip_snacks and per-slot subtotals from API)
+- Blocked by `11-meal-slots.md` (needs slot assignments on trip_snacks and per-slot subtotals from API)
 
 ## User stories addressed
 

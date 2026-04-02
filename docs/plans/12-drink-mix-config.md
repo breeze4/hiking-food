@@ -14,7 +14,7 @@ AFK
 
 ## Blocked by
 
-- Blocked by `02-meal-slots.md` (drink mixes need to be visually separated from slot-based snacks)
+- Blocked by `11-meal-slots.md` (drink mixes need to be visually separated from slot-based snacks)
 
 ## User stories addressed
 

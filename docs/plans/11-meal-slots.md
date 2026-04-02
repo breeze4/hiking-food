@@ -14,7 +14,7 @@ AFK
 
 ## Blocked by
 
-- Blocked by `01-snack-categories.md` (category drives default slot assignment)
+- Blocked by `10-snack-categories.md` (category drives default slot assignment)
 
 ## User stories addressed
 

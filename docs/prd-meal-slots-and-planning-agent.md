@@ -141,11 +141,11 @@ All meals are packed into individual ziplocks. This doesn't change the data mode
 
 ### Implementation plans
 Six implementation plans already exist in `docs/plans/`:
-- `01-snack-categories.md` — stories 1-2
-- `02-meal-slots.md` — stories 3-5, 7
-- `03-drink-mix-config.md` — stories 10-12
-- `04-slot-calorie-meters.md` — stories 6, 8-9
-- `05-food-planning-agent.md` — stories 15-26
-- `06-ratings.md` — stories 13-14
+- `10-snack-categories.md` — stories 1-2
+- `11-meal-slots.md` — stories 3-5, 7
+- `12-drink-mix-config.md` — stories 10-12
+- `13-slot-calorie-meters.md` — stories 6, 8-9
+- `14-food-planning-agent.md` — stories 15-26
+- `15-ratings.md` — stories 13-14
 
-Dependency order: 01 → 02 → 03, 04 (parallel). Plans 05 and 06 can start immediately.
+Dependency order: 10 → 11 → 12, 13 (parallel). Plans 14 and 15 can start immediately.
