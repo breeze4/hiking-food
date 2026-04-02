@@ -17,18 +17,20 @@ function ProgressMeter({ label, actual, targetLow, targetHigh, unit, compact = f
 
   const formatVal = (v) => unit === 'cal' ? v.toLocaleString() : v.toFixed(1);
   const barHeight = compact ? 'h-1.5' : 'h-2';
+  const actualStr = typeof actual === 'number' ? formatVal(actual) : '\u2014';
+  const midStr = formatVal(mid);
 
   if (compact) {
     return (
       <div className="space-y-0.5">
-        <div className="flex items-center justify-between text-[10px]">
-          <span className="font-medium text-muted-foreground">{label}</span>
-          <span className="text-muted-foreground tabular-nums">
-            {typeof actual === 'number' ? formatVal(actual) : '\u2014'} / {formatVal(mid)} {unit}
+        <span className="text-[10px] font-medium text-muted-foreground">{label}</span>
+        <div className="flex items-center gap-2">
+          <div className={`flex-[3] ${barHeight} bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden`}>
+            <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+          </div>
+          <span className="flex-1 text-xs text-right text-muted-foreground tabular-nums whitespace-nowrap">
+            {actualStr} / {midStr} {unit}
           </span>
-        </div>
-        <div className={`${barHeight} bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden`}>
-          <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
         </div>
       </div>
     );
@@ -40,11 +42,13 @@ function ProgressMeter({ label, actual, targetLow, targetHigh, unit, compact = f
         <span className="font-medium">{label}</span>
         <span className="text-muted-foreground">{deltaText}</span>
       </div>
-      <div className={`${barHeight} bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden`}>
-        <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
-      </div>
-      <div className="text-[10px] text-muted-foreground">
-        {typeof actual === 'number' ? formatVal(actual) : '\u2014'} / {formatVal(mid)} {unit}
+      <div className="flex items-center gap-3">
+        <div className={`flex-[3] ${barHeight} bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden`}>
+          <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+        </div>
+        <span className="flex-1 text-xs text-right text-muted-foreground tabular-nums whitespace-nowrap">
+          {actualStr} / {midStr} {unit}
+        </span>
       </div>
     </div>
   );
