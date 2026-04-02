@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { get, post, put, del } from '../api';
 import { useTrip } from '../context/TripContext';
+import ProgressMeter from './ProgressMeter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StarRating } from '@/components/ui/star-rating';
@@ -39,7 +40,7 @@ const SLOT_DEFAULT_CATEGORIES = {
 };
 
 function SnackSelection() {
-  const { tripDetail, refreshTrip } = useTrip();
+  const { tripDetail, refreshTrip, summary } = useTrip();
   const [catalog, setCatalog] = useState([]);
   const [addingSlot, setAddingSlot] = useState(null); // which slot's add panel is open
   const [search, setSearch] = useState('');
@@ -143,6 +144,7 @@ function SnackSelection() {
         <DrinkMixSection
           snacks={drinkMixes}
           tripDetail={tripDetail}
+          summary={summary}
           isAdding={addingSlot === 'drink_mix'}
           onStartAdd={() => openAddPanel('drink_mix')}
           onCancelAdd={closeAddPanel}
@@ -164,6 +166,7 @@ function SnackSelection() {
             slot={slotValue}
             label={slotLabel}
             snacks={bySlot[slotValue]}
+            summary={summary}
             isAdding={addingSlot === slotValue}
             onStartAdd={() => openAddPanel(slotValue)}
             onCancelAdd={closeAddPanel}
@@ -184,8 +187,27 @@ function SnackSelection() {
   );
 }
 
+function SlotMeters({ slot, summary }) {
+  if (!summary) return null;
+  const st = summary.slot_subtotals?.[slot];
+  if (!st) return null;
+
+  const slotPct = slot === 'lunch' ? 0.40 : 0.60;
+  const remainingWeightLow = summary.daytime_weight_low - summary.drink_mix_weight;
+  const remainingWeightHigh = summary.daytime_weight_high - summary.drink_mix_weight;
+  const weightLow = remainingWeightLow * slotPct * 0.9;
+  const weightHigh = remainingWeightHigh * slotPct * 1.1;
+
+  return (
+    <div className="mb-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <ProgressMeter label="Cal" actual={st.calories} targetLow={st.target_cal_low} targetHigh={st.target_cal_high} unit="cal" compact />
+      <ProgressMeter label="Wt" actual={st.weight} targetLow={weightLow} targetHigh={weightHigh} unit="oz" compact />
+    </div>
+  );
+}
+
 function SlotSection({
-  slot, label, snacks, isAdding,
+  slot, label, snacks, summary, isAdding,
   onStartAdd, onCancelAdd, onAdd,
   onUpdateServings, onUpdateNotes, onUpdateSlot,
   search, setSearch, categoryFilter, setCategoryFilter,
@@ -201,6 +223,8 @@ function SlotSection({
           </Button>
         )}
       </div>
+
+      <SlotMeters slot={slot} summary={summary} />
 
       {isAdding && (
         <AddPanel
@@ -328,8 +352,28 @@ function SlotSection({
   );
 }
 
+function DrinkMixMeters({ snacks, summary, budget }) {
+  if (!summary || snacks.length === 0 || budget <= 0) return null;
+
+  const totalServings = snacks.reduce((sum, s) => sum + s.servings, 0);
+
+  // Cal/weight targets from average per-serving × budget
+  const avgCalPerServing = snacks.reduce((s, m) => s + (m.total_calories / m.servings), 0) / snacks.length;
+  const avgWeightPerServing = snacks.reduce((s, m) => s + (m.total_weight / m.servings), 0) / snacks.length;
+  const targetCal = avgCalPerServing * budget;
+  const targetWeight = avgWeightPerServing * budget;
+
+  return (
+    <div className="mb-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <ProgressMeter label="Cal" actual={summary.drink_mix_calories} targetLow={targetCal * 0.9} targetHigh={targetCal * 1.1} unit="cal" compact />
+      <ProgressMeter label="Wt" actual={summary.drink_mix_weight} targetLow={targetWeight * 0.9} targetHigh={targetWeight * 1.1} unit="oz" compact />
+      <ProgressMeter label="Servings" actual={totalServings} targetLow={budget * 0.9} targetHigh={budget * 1.1} unit="srv" compact />
+    </div>
+  );
+}
+
 function DrinkMixSection({
-  snacks, tripDetail, isAdding, onStartAdd, onCancelAdd, onAdd, onRemove,
+  snacks, tripDetail, summary, isAdding, onStartAdd, onCancelAdd, onAdd, onRemove,
   onUpdateServings, onUpdateNotes,
   search, setSearch, categoryFilter, setCategoryFilter, filtered, searchRef,
 }) {
@@ -337,13 +381,6 @@ function DrinkMixSection({
   const mixesPerDay = tripDetail.drink_mixes_per_day || 2;
   const totalDays = (tripDetail.first_day_fraction || 0) + (tripDetail.full_days || 0) + (tripDetail.last_day_fraction || 0);
   const budget = mixesPerDay * totalDays;
-
-  let budgetColor = 'text-green-600';
-  if (budget > 0) {
-    if (totalServings > budget * 1.2) budgetColor = 'text-red-600';
-    else if (totalServings > budget * 1.1) budgetColor = 'text-orange-500';
-    else if (totalServings > budget) budgetColor = 'text-yellow-600';
-  }
 
   return (
     <div>
@@ -355,6 +392,8 @@ function DrinkMixSection({
           </Button>
         )}
       </div>
+
+      <DrinkMixMeters snacks={snacks} summary={summary} budget={budget} />
 
       {isAdding && (
         <AddPanel
@@ -448,11 +487,6 @@ function DrinkMixSection({
             )}
           </div>
         </>
-      )}
-      {budget > 0 && snacks.length > 0 && (
-        <p className={`text-xs font-medium mt-1 ${budgetColor}`}>
-          {totalServings} of {Math.round(budget * 10) / 10} budget servings
-        </p>
       )}
     </div>
   );

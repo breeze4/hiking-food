@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { get, post, put, del } from '../api';
 import { useTrip } from '../context/TripContext';
+import ProgressMeter from './ProgressMeter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,8 +10,50 @@ import {
 } from '@/components/ui/table';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
+function MealMeters({ summary }) {
+  if (!summary) return null;
+  const { breakfast_weight, breakfast_calories, breakfast_count, dinner_weight, dinner_calories, dinner_count, total_days } = summary;
+
+  function targets(weight, calories, count) {
+    if (count === 0 && weight === 0) return null;
+    const avgW = count > 0 ? weight / count : 0;
+    const avgC = count > 0 ? calories / count : 0;
+    const tw = avgW * total_days;
+    const tc = avgC * total_days;
+    return { calLow: tc * 0.9, calHigh: tc * 1.1, weightLow: tw * 0.9, weightHigh: tw * 1.1 };
+  }
+
+  const bkf = targets(breakfast_weight, breakfast_calories, breakfast_count);
+  const din = targets(dinner_weight, dinner_calories, dinner_count);
+
+  if (!bkf && !din) return null;
+
+  return (
+    <div className="px-6 pb-2 space-y-2">
+      {bkf && (
+        <div className="space-y-1">
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Breakfast</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <ProgressMeter label="Cal" actual={breakfast_calories} targetLow={bkf.calLow} targetHigh={bkf.calHigh} unit="cal" compact />
+            <ProgressMeter label="Wt" actual={breakfast_weight} targetLow={bkf.weightLow} targetHigh={bkf.weightHigh} unit="oz" compact />
+          </div>
+        </div>
+      )}
+      {din && (
+        <div className="space-y-1">
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Dinner</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <ProgressMeter label="Cal" actual={dinner_calories} targetLow={din.calLow} targetHigh={din.calHigh} unit="cal" compact />
+            <ProgressMeter label="Wt" actual={dinner_weight} targetLow={din.weightLow} targetHigh={din.weightHigh} unit="oz" compact />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MealSelection() {
-  const { tripDetail, refreshTrip } = useTrip();
+  const { tripDetail, refreshTrip, summary } = useTrip();
   const [recipes, setRecipes] = useState([]);
   const [addRecipeId, setAddRecipeId] = useState('');
   const [open, setOpen] = useState(true);
@@ -63,6 +106,7 @@ function MealSelection() {
             </div>
           </CardHeader>
         </CollapsibleTrigger>
+        <MealMeters summary={summary} />
         <CollapsibleContent>
           <CardContent className="pt-0 overflow-x-auto">
             <Table>

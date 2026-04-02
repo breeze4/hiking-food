@@ -23,25 +23,11 @@ function TripPlannerPage() {
         </Button>
       </div>
 
-      <div className="flex gap-6 items-start">
-        {/* Left column: calculator + meals + snacks */}
-        <div className="flex-1 min-w-0 space-y-4">
-          <TripCalculator />
-          <MealSelection />
-          <SnackSelection />
-        </div>
-
-        {/* Right column: sticky summary */}
-        <div className="hidden lg:block w-80 shrink-0">
-          <div className="sticky top-20">
-            <TripSummary />
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile summary: shown below content on smaller screens */}
-      <div className="lg:hidden mt-6">
+      <div className="space-y-4">
+        <TripCalculator />
         <TripSummary />
+        <MealSelection />
+        <SnackSelection />
       </div>
     </div>
   );

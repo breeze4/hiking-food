@@ -7,6 +7,7 @@ export function TripProvider({ children }) {
   const [trips, setTrips] = useState([]);
   const [activeTripId, setActiveTripId] = useState(null);
   const [tripDetail, setTripDetail] = useState(null);
+  const [summary, setSummary] = useState(null);
 
   const loadTrips = useCallback(async () => {
     try {
@@ -32,8 +33,18 @@ export function TripProvider({ children }) {
     }
   }, [activeTripId]);
 
+  const loadSummary = useCallback(async () => {
+    if (!activeTripId) { setSummary(null); return; }
+    try {
+      setSummary(await get(`/trips/${activeTripId}/summary`));
+    } catch (err) {
+      console.error('Failed to load summary', err);
+    }
+  }, [activeTripId]);
+
   useEffect(() => { loadTrips(); }, []);
   useEffect(() => { loadTripDetail(); }, [activeTripId]);
+  useEffect(() => { loadSummary(); }, [activeTripId]);
 
   const selectTrip = (id) => setActiveTripId(id);
 
@@ -60,11 +71,16 @@ export function TripProvider({ children }) {
     setActiveTripId(remaining.length > 0 ? remaining[0].id : null);
   };
 
+  const refreshTrip = useCallback(async () => {
+    await loadTripDetail();
+    await loadSummary();
+  }, [loadTripDetail, loadSummary]);
+
   return (
     <TripContext.Provider value={{
-      trips, activeTripId, tripDetail,
+      trips, activeTripId, tripDetail, summary,
       selectTrip, createTrip, cloneTrip, deleteTrip,
-      refreshTrip: loadTripDetail, refreshTrips: loadTrips,
+      refreshTrip, refreshTrips: loadTrips,
     }}>
       {children}
     </TripContext.Provider>

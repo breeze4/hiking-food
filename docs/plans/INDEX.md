@@ -23,6 +23,7 @@
 | 17 | [Drink Mix Manual Control](17-drink-mix-manual-control.md) | Manual drink mix servings with budget meter |
 | 18 | [Progress Bar Meters](18-progress-bar-meters.md) | Replace badges with color-coded progress bars for cal/weight |
 | 19 | [Zebra Striping + Mobile Audit](19-zebra-striping-mobile-audit.md) | Table striping + mobile layout fixes across all screens |
+| 20 | [Per-Section Meters](20-per-section-meters.md) | Per-section meters + summary relayout |
 
 ## In Progress
 
