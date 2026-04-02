@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 
 from database import engine, Base
 import models  # noqa: F401 — ensures all models are registered with Base
@@ -17,14 +17,14 @@ FRONTEND_DIR = Path(__file__).parent / ".." / "frontend" / "dist"
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(inner_app: FastAPI):
     Base.metadata.create_all(bind=engine)
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+inner = FastAPI(lifespan=lifespan)
 
-app.add_middleware(
+inner.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
@@ -32,25 +32,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(ingredients_router)
-app.include_router(snacks_router)
-app.include_router(recipes_router)
-app.include_router(trips_router)
+inner.include_router(ingredients_router)
+inner.include_router(snacks_router)
+inner.include_router(recipes_router)
+inner.include_router(trips_router)
 
 
-@app.get("/api/health")
+@inner.get("/api/health")
 def health_check():
     return {"status": "ok"}
 
 
 # Serve frontend static files in production (when dist/ exists)
 if FRONTEND_DIR.is_dir():
-    app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="assets")
+    inner.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="assets")
 
-    @app.get("/{full_path:path}")
+    @inner.get("/{full_path:path}")
     async def serve_spa(full_path: str):
         """Serve index.html for all non-API routes (SPA client-side routing)."""
         file_path = FRONTEND_DIR / full_path
         if file_path.is_file():
             return FileResponse(file_path)
         return FileResponse(FRONTEND_DIR / "index.html")
+
+
+# Mount the app under /hiking-food and redirect bare path
+app = FastAPI()
+
+
+@app.get("/hiking-food")
+async def redirect_to_trailing_slash():
+    return RedirectResponse(url="/hiking-food/")
+
+
+app.mount("/hiking-food", inner)

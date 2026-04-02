@@ -1,4 +1,4 @@
-const BASE_URL = '/api';
+const BASE_URL = '/hiking-food/api';
 
 async function request(path, options = {}) {
   const url = `${BASE_URL}${path}`;

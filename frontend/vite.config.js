@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
+  base: '/hiking-food/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
@@ -12,7 +13,10 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://localhost:8000',
+      '/hiking-food/api': {
+        target: 'http://localhost:8000',
+        rewrite: (path) => path.replace(/^\/hiking-food/, ''),
+      },
     },
   },
 })

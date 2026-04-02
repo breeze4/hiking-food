@@ -86,7 +86,7 @@ function AppHeader() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/hiking-food">
       <TripProvider>
         <div className="min-h-screen bg-background font-sans antialiased">
           <AppHeader />
