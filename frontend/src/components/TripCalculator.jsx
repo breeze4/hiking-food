@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 
 function TripCalculator() {
   const { tripDetail, refreshTrip } = useTrip();
-  const [form, setForm] = useState({ first_day_fraction: 1, full_days: 0, last_day_fraction: 0 });
+  const [form, setForm] = useState({ first_day_fraction: 1, full_days: 0, last_day_fraction: 0, drink_mixes_per_day: 2 });
   const [open, setOpen] = useState(true);
   const saveTimer = useRef(null);
 
@@ -19,6 +19,7 @@ function TripCalculator() {
         first_day_fraction: tripDetail.first_day_fraction ?? 1,
         full_days: tripDetail.full_days ?? 0,
         last_day_fraction: tripDetail.last_day_fraction ?? 0,
+        drink_mixes_per_day: tripDetail.drink_mixes_per_day ?? 2,
       });
     }
   }, [tripDetail?.id]);
@@ -90,6 +91,17 @@ function TripCalculator() {
                   min="0" max="1" step="0.25"
                   value={form.last_day_fraction}
                   onChange={(e) => handleChange('last_day_fraction', parseFloat(e.target.value) || 0)}
+                  className="w-20"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="drink-mixes">Mixes/day</Label>
+                <Input
+                  id="drink-mixes"
+                  type="number"
+                  min="0" step="1"
+                  value={form.drink_mixes_per_day}
+                  onChange={(e) => handleChange('drink_mixes_per_day', parseInt(e.target.value) || 0)}
                   className="w-20"
                 />
               </div>

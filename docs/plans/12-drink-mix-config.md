@@ -23,19 +23,19 @@ AFK
 
 ## Acceptance criteria
 
-- [ ] `trips` table has `drink_mixes_per_day` INTEGER column (default 2)
-- [ ] Trip calculator UI shows a "Drink mixes/day" input
-- [ ] Changing drink_mixes_per_day recalculates servings for all drink_mix snacks on the trip
-- [ ] Drink mix snacks shown in their own section in the trip planner, separate from slot sections
-- [ ] Summary includes drink mix weight/calories as a separate line item
+- [x] `trips` table has `drink_mixes_per_day` INTEGER column (default 2)
+- [x] Trip calculator UI shows a "Drink mixes/day" input
+- [x] Changing drink_mixes_per_day recalculates servings for all drink_mix snacks on the trip
+- [x] Drink mix snacks shown in their own section in the trip planner, separate from slot sections
+- [x] Summary includes drink mix weight/calories as a separate line item
 
 ## Tasks
 
-- [ ] Add `drink_mixes_per_day` column to Trip model (INTEGER, default 2)
-- [ ] Migration to add column with default value
-- [ ] Update `PUT /api/trips/:id` to accept `drink_mixes_per_day`
-- [ ] Update `GET /api/trips/:id` to return `drink_mixes_per_day`
-- [ ] Add logic: when drink_mixes_per_day changes, update servings for all drink_mix snacks on trip
-- [ ] Add drink mixes/day input to TripCalculator component
-- [ ] Render drink mix snacks in a separate "Drink Mixes" section in trip planner
-- [ ] Update summary endpoint to break out drink mix totals separately
+- [x] Add `drink_mixes_per_day` column to Trip model (INTEGER, default 2)
+- [x] Migration to add column with default value
+- [x] Update `PUT /api/trips/:id` to accept `drink_mixes_per_day`
+- [x] Update `GET /api/trips/:id` to return `drink_mixes_per_day`
+- [x] Add logic: when drink_mixes_per_day changes, update servings for all drink_mix snacks on trip
+- [x] Add drink mixes/day input to TripCalculator component
+- [x] Render drink mix snacks in a separate "Drink Mixes" section in trip planner
+- [x] Update summary endpoint to break out drink mix totals separately

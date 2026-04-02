@@ -35,7 +35,7 @@ const CATEGORY_LABELS = Object.fromEntries(
 
 // Default category filter when adding to a specific slot
 const SLOT_DEFAULT_CATEGORIES = {
-  morning_snack: new Set(['drink_mix', 'bars_energy']),
+  morning_snack: new Set(['bars_energy']),
   lunch: new Set(['lunch']),
   afternoon_snack: new Set(['salty', 'sweet']),
 };
@@ -61,10 +61,14 @@ function SnackSelection() {
   const snacks = tripDetail.snacks || [];
   const usedCatalogIds = new Set(snacks.map((s) => s.catalog_item_id));
 
-  // Group snacks by slot
+  // Separate drink mixes from slot snacks
+  const drinkMixes = snacks.filter(s => s.category === 'drink_mix');
+  const slotSnacks = snacks.filter(s => s.category !== 'drink_mix');
+
+  // Group non-drink-mix snacks by slot
   const bySlot = {};
   for (const slot of SLOTS) bySlot[slot.value] = [];
-  for (const s of snacks) {
+  for (const s of slotSnacks) {
     const key = s.slot || 'afternoon_snack';
     if (!bySlot[key]) bySlot[key] = [];
     bySlot[key].push(s);
@@ -117,10 +121,14 @@ function SnackSelection() {
 
   const available = catalog.filter((c) => !usedCatalogIds.has(c.id));
   const filtered = available.filter((c) => {
+    // Exclude drink_mix from slot add panels (they have their own section)
+    if (addingSlot !== 'drink_mix' && c.category === 'drink_mix') return false;
+    // For drink mix add panel, only show drink_mix items
+    if (addingSlot === 'drink_mix' && c.category !== 'drink_mix') return false;
     if (search && !c.ingredient_name.toLowerCase().includes(search.toLowerCase())) return false;
     if (categoryFilter && c.category !== categoryFilter) return false;
     // When no explicit filter, default to slot-relevant categories
-    if (!categoryFilter && !search && addingSlot) {
+    if (!categoryFilter && !search && addingSlot && addingSlot !== 'drink_mix') {
       const defaults = SLOT_DEFAULT_CATEGORIES[addingSlot];
       if (defaults && c.category) return defaults.has(c.category);
     }
@@ -133,6 +141,23 @@ function SnackSelection() {
         <CardTitle className="text-base">Snacks</CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-4">
+        {/* Drink Mixes section */}
+        <DrinkMixSection
+          snacks={drinkMixes}
+          isAdding={addingSlot === 'drink_mix'}
+          onStartAdd={() => openAddPanel('drink_mix')}
+          onCancelAdd={closeAddPanel}
+          onAdd={(catalogId) => handleAdd(catalogId, 'morning_snack')}
+          onRemove={(snackId) => del(`/trips/${tripDetail.id}/snacks/${snackId}`).then(refreshTrip)}
+          onUpdateNotes={updateNotes}
+          search={search}
+          setSearch={setSearch}
+          categoryFilter={categoryFilter}
+          setCategoryFilter={setCategoryFilter}
+          filtered={filtered}
+          searchRef={searchRef}
+        />
+
         {SLOTS.map(({ value: slotValue, label: slotLabel }) => (
           <SlotSection
             key={slotValue}
@@ -303,7 +328,103 @@ function SlotSection({
   );
 }
 
-function AddPanel({ slot, onAdd, onCancel, search, setSearch, categoryFilter, setCategoryFilter, filtered, searchRef }) {
+function DrinkMixSection({
+  snacks, isAdding, onStartAdd, onCancelAdd, onAdd, onRemove, onUpdateNotes,
+  search, setSearch, categoryFilter, setCategoryFilter, filtered, searchRef,
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Drink Mixes</h3>
+        {!isAdding && (
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onStartAdd}>
+            + Add
+          </Button>
+        )}
+      </div>
+
+      {isAdding && (
+        <AddPanel
+          slot="drink_mix"
+          onAdd={onAdd}
+          onCancel={onCancelAdd}
+          search={search}
+          setSearch={setSearch}
+          categoryFilter={categoryFilter}
+          setCategoryFilter={setCategoryFilter}
+          filtered={filtered}
+          searchRef={searchRef}
+          hideCategoryFilter
+        />
+      )}
+
+      {!isAdding && (
+        <>
+          <div className="hidden md:block">
+            {snacks.length === 0 ? (
+              <p className="text-muted-foreground text-xs py-2">No drink mixes added.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="text-right">Servings</TableHead>
+                    <TableHead className="text-right">Wt</TableHead>
+                    <TableHead className="text-right">Cal</TableHead>
+                    <TableHead>Notes</TableHead>
+                    <TableHead className="w-10"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {snacks.map((s) => (
+                    <TableRow key={s.id} className="even:bg-muted/50">
+                      <TableCell className="font-medium">{s.ingredient_name}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">{s.servings}</TableCell>
+                      <TableCell className="text-right">{s.total_weight}</TableCell>
+                      <TableCell className="text-right">{s.total_calories}</TableCell>
+                      <TableCell>
+                        <Input
+                          defaultValue={s.trip_notes || ''}
+                          onBlur={(e) => onUpdateNotes(s.id, e.target.value)}
+                          placeholder="notes..."
+                          className="h-7 text-xs w-28"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                          onClick={() => onRemove(s.id)}>×</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+          <div className="md:hidden space-y-2">
+            {snacks.map((s) => (
+              <div key={s.id} className="border rounded-lg p-3 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm">{s.ingredient_name}</span>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                    onClick={() => onRemove(s.id)}>×</Button>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {s.servings} servings &middot; {s.total_weight} oz &middot; {s.total_calories} cal
+                </div>
+              </div>
+            ))}
+            {snacks.length === 0 && (
+              <p className="text-muted-foreground text-xs py-2">No drink mixes added.</p>
+            )}
+          </div>
+        </>
+      )}
+      <p className="text-xs text-muted-foreground mt-1">Servings auto-calculated from mixes/day setting.</p>
+    </div>
+  );
+}
+
+function AddPanel({ slot, onAdd, onCancel, search, setSearch, categoryFilter, setCategoryFilter, filtered, searchRef, hideCategoryFilter }) {
   return (
     <div className="mb-4 border rounded-lg bg-muted/30">
       <div className="p-3 border-b flex items-center gap-2">
@@ -319,19 +440,21 @@ function AddPanel({ slot, onAdd, onCancel, search, setSearch, categoryFilter, se
         />
         <Button size="sm" variant="ghost" onClick={onCancel}>Cancel</Button>
       </div>
-      <div className="p-2 border-b flex flex-wrap gap-1">
-        {CATEGORY_FILTERS.map((cf) => (
-          <Button
-            key={cf.value}
-            size="sm"
-            variant={categoryFilter === cf.value ? 'default' : 'outline'}
-            className="h-7 text-xs px-2"
-            onClick={() => setCategoryFilter(cf.value)}
-          >
-            {cf.label}
-          </Button>
-        ))}
-      </div>
+      {!hideCategoryFilter && (
+        <div className="p-2 border-b flex flex-wrap gap-1">
+          {CATEGORY_FILTERS.map((cf) => (
+            <Button
+              key={cf.value}
+              size="sm"
+              variant={categoryFilter === cf.value ? 'default' : 'outline'}
+              className="h-7 text-xs px-2"
+              onClick={() => setCategoryFilter(cf.value)}
+            >
+              {cf.label}
+            </Button>
+          ))}
+        </div>
+      )}
       <div className="max-h-80 overflow-y-auto">
         {filtered.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-4">No snacks found.</p>

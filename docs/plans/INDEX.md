@@ -15,6 +15,7 @@
 | 09 | [Frontend Redesign](09-frontend-redesign-shadcn.md) | shadcn/ui + Tailwind CSS v4 redesign |
 | 10 | [Snack Categories](10-snack-categories.md) | Add category column to snack catalog (5 types) |
 | 11 | [Meal Slots](11-meal-slots.md) | Assign trip snacks to time-of-day slots |
+| 12 | [Drink Mix Config](12-drink-mix-config.md) | Configurable drink mixes per day on trips |
 | 15 | [Ratings](15-ratings.md) | 1-5 ratings on snacks and recipes |
 
 ## In Progress
@@ -27,7 +28,6 @@
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
-| 12 | [Drink Mix Config](12-drink-mix-config.md) | Configurable drink mixes per day on trips | None |
 | 13 | [Slot Calorie Meters](13-slot-calorie-meters.md) | Per-slot calorie meters + heatmap in summary | None |
 
 ## PRDs

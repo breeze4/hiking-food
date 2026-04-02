@@ -63,9 +63,15 @@ function TripSummary() {
           <span className="font-medium">{summary.snack_cal_per_oz ?? '\u2014'}</span>
         </div>
 
-        {summary.slot_subtotals && Object.keys(summary.slot_subtotals).length > 0 && (
+        {(summary.slot_subtotals || summary.drink_mix_weight > 0) && (
           <div className="space-y-1 pl-2 border-l-2 border-muted">
-            {SLOT_ORDER.filter(s => summary.slot_subtotals[s.value]).map(({ value, label }) => {
+            {summary.drink_mix_weight > 0 && (
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Drink mixes</span>
+                <span>{summary.drink_mix_weight} oz / {summary.drink_mix_calories.toLocaleString()} cal</span>
+              </div>
+            )}
+            {SLOT_ORDER.filter(s => summary.slot_subtotals?.[s.value]).map(({ value, label }) => {
               const st = summary.slot_subtotals[value];
               return (
                 <div key={value} className="flex justify-between text-xs text-muted-foreground">

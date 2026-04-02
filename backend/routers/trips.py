@@ -98,9 +98,31 @@ def _build_trip_detail(trip: Trip, db: Session) -> dict:
         "first_day_fraction": trip.first_day_fraction,
         "full_days": trip.full_days,
         "last_day_fraction": trip.last_day_fraction,
+        "drink_mixes_per_day": trip.drink_mixes_per_day if trip.drink_mixes_per_day is not None else 2,
         "snacks": [_build_trip_snack(ts, db) for ts in snacks],
         "meals": [_build_trip_meal(tm, db) for tm in meals],
     }
+
+
+def _get_total_days(trip: Trip) -> float:
+    return (trip.first_day_fraction or 0) + (trip.full_days or 0) + (trip.last_day_fraction or 0)
+
+
+def _recalc_drink_mix_servings(trip: Trip, db: Session):
+    """Recalculate servings for all drink_mix snacks on a trip."""
+    total_days = _get_total_days(trip)
+    mixes_per_day = trip.drink_mixes_per_day if trip.drink_mixes_per_day is not None else 2
+    target_servings = mixes_per_day * total_days
+    drink_snacks = (
+        db.query(TripSnack)
+        .join(SnackCatalogItem, TripSnack.catalog_item_id == SnackCatalogItem.id)
+        .filter(TripSnack.trip_id == trip.id, SnackCatalogItem.category == "drink_mix")
+        .all()
+    )
+    if drink_snacks:
+        per_item = target_servings / len(drink_snacks)
+        for ts in drink_snacks:
+            ts.servings = per_item
 
 
 # --- Trip CRUD ---
@@ -132,8 +154,14 @@ def update_trip(trip_id: int, data: TripUpdate, db: Session = Depends(get_db)):
     trip = db.get(Trip, trip_id)
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
-    for key, value in data.model_dump(exclude_unset=True).items():
+    updates = data.model_dump(exclude_unset=True)
+    recalc_drinks = any(k in updates for k in (
+        "drink_mixes_per_day", "first_day_fraction", "full_days", "last_day_fraction"
+    ))
+    for key, value in updates.items():
         setattr(trip, key, value)
+    if recalc_drinks:
+        _recalc_drink_mix_servings(trip, db)
     db.commit()
     db.refresh(trip)
     return _build_trip_detail(trip, db)
@@ -259,6 +287,8 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
     trip_snacks = db.query(TripSnack).filter(TripSnack.trip_id == trip_id).all()
     snack_weight = 0
     snack_calories = 0
+    drink_mix_weight = 0
+    drink_mix_calories = 0
     slot_subtotals = {}
     for ts in trip_snacks:
         cat_item = db.get(SnackCatalogItem, ts.catalog_item_id)
@@ -266,11 +296,15 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
         c = ts.servings * (cat_item.calories_per_serving or 0)
         snack_weight += w
         snack_calories += c
-        slot = ts.slot or "afternoon_snack"
-        if slot not in slot_subtotals:
-            slot_subtotals[slot] = {"weight": 0, "calories": 0}
-        slot_subtotals[slot]["weight"] += w
-        slot_subtotals[slot]["calories"] += c
+        if cat_item.category == "drink_mix":
+            drink_mix_weight += w
+            drink_mix_calories += c
+        else:
+            slot = ts.slot or "afternoon_snack"
+            if slot not in slot_subtotals:
+                slot_subtotals[slot] = {"weight": 0, "calories": 0}
+            slot_subtotals[slot]["weight"] += w
+            slot_subtotals[slot]["calories"] += c
 
     # Round slot subtotals
     for st in slot_subtotals.values():
@@ -288,6 +322,8 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
         "snack_weight": round(snack_weight, 2),
         "snack_calories": round(snack_calories, 1),
         "snack_cal_per_oz": snack_cal_per_oz,
+        "drink_mix_weight": round(drink_mix_weight, 2),
+        "drink_mix_calories": round(drink_mix_calories, 1),
         "slot_subtotals": slot_subtotals,
         "meal_weight_actual": round(meal_weight_actual, 2),
         "meal_calories_actual": round(meal_calories_actual, 1),
@@ -400,6 +436,7 @@ def clone_trip(trip_id: int, db: Session = Depends(get_db)):
         first_day_fraction=trip.first_day_fraction,
         full_days=trip.full_days,
         last_day_fraction=trip.last_day_fraction,
+        drink_mixes_per_day=trip.drink_mixes_per_day,
     )
     db.add(new_trip)
     db.flush()

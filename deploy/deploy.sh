@@ -26,6 +26,7 @@ ssh "$HOST" "cd ~/$APP_DIR/backend && venv/bin/pip install -q -r requirements.tx
 echo "==> Running migrations"
 ssh "$HOST" "cd ~/$APP_DIR/backend && venv/bin/python migrate_add_ratings.py"
 ssh "$HOST" "cd ~/$APP_DIR/backend && venv/bin/python migrate_add_slots.py"
+ssh "$HOST" "cd ~/$APP_DIR/backend && venv/bin/python migrate_add_drink_mixes.py"
 
 echo "==> Seeding database"
 ssh "$HOST" "cd ~/$APP_DIR/backend && venv/bin/python seed.py"

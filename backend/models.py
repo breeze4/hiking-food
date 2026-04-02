@@ -52,6 +52,7 @@ class Trip(Base):
     first_day_fraction = Column(Float)
     full_days = Column(Integer)
     last_day_fraction = Column(Float)
+    drink_mixes_per_day = Column(Integer, default=2)
 
 
 class TripMeal(Base):
