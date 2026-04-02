@@ -27,7 +27,7 @@ function ProgressMeter({ label, actual, targetLow, targetHigh, unit, compact = f
             {typeof actual === 'number' ? formatVal(actual) : '\u2014'} / {formatVal(mid)} {unit}
           </span>
         </div>
-        <div className={`${barHeight} bg-muted rounded-full overflow-hidden`}>
+        <div className={`${barHeight} bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden`}>
           <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
         </div>
       </div>
@@ -40,7 +40,7 @@ function ProgressMeter({ label, actual, targetLow, targetHigh, unit, compact = f
         <span className="font-medium">{label}</span>
         <span className="text-muted-foreground">{deltaText}</span>
       </div>
-      <div className={`${barHeight} bg-muted rounded-full overflow-hidden`}>
+      <div className={`${barHeight} bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden`}>
         <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
       </div>
       <div className="text-[10px] text-muted-foreground">

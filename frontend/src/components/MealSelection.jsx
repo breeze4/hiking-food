@@ -29,7 +29,7 @@ function MealMeters({ summary }) {
   if (!bkf && !din) return null;
 
   return (
-    <div className="px-6 pb-2 space-y-2">
+    <div className="mx-6 mb-2 p-3 rounded-md bg-muted/60 space-y-2">
       {bkf && (
         <div className="space-y-1">
           <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Breakfast</span>

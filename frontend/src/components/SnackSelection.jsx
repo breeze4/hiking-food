@@ -199,7 +199,7 @@ function SlotMeters({ slot, summary }) {
   const weightHigh = remainingWeightHigh * slotPct * 1.1;
 
   return (
-    <div className="mb-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <div className="mb-2 p-2 rounded-md bg-muted/60 grid grid-cols-1 sm:grid-cols-2 gap-2">
       <ProgressMeter label="Cal" actual={st.calories} targetLow={st.target_cal_low} targetHigh={st.target_cal_high} unit="cal" compact />
       <ProgressMeter label="Wt" actual={st.weight} targetLow={weightLow} targetHigh={weightHigh} unit="oz" compact />
     </div>
@@ -364,7 +364,7 @@ function DrinkMixMeters({ snacks, summary, budget }) {
   const targetWeight = avgWeightPerServing * budget;
 
   return (
-    <div className="mb-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
+    <div className="mb-2 p-2 rounded-md bg-muted/60 grid grid-cols-1 sm:grid-cols-3 gap-2">
       <ProgressMeter label="Cal" actual={summary.drink_mix_calories} targetLow={targetCal * 0.9} targetHigh={targetCal * 1.1} unit="cal" compact />
       <ProgressMeter label="Wt" actual={summary.drink_mix_weight} targetLow={targetWeight * 0.9} targetHigh={targetWeight * 1.1} unit="oz" compact />
       <ProgressMeter label="Servings" actual={totalServings} targetLow={budget * 0.9} targetHigh={budget * 1.1} unit="srv" compact />
