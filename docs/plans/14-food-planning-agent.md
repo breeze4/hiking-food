@@ -27,20 +27,20 @@ None - can start immediately (v1 uses existing API)
 
 ## Acceptance criteria
 
-- [ ] Agent definition file exists at `.claude/agents/plan-food.md` (or similar)
-- [ ] Agent can read trip config, recipes, snack catalog via beebaby API
-- [ ] Agent selects breakfasts (1-2 recipes, repeated) and dinners (2-3, no one > half the trip)
-- [ ] Agent balances dinner variety by type (noodle, rice/bean, rice/meat, etc.)
-- [ ] Agent fills snack slots using 25/40/35 split of remaining calories
-- [ ] Agent prefers fewer unique items with more servings (enough multiples to prevent hoarding instinct)
-- [ ] Agent front-loads good food — doesn't save treats for later days
-- [ ] Agent prefers recipes sharing ingredients (tiebreaker)
-- [ ] Agent flags anomalies in existing plan before making changes (missing meals, over/under slots, mismatches)
-- [ ] Agent reads catalog notes as preference signals
-- [ ] Agent reads conversation memory for accumulated preferences
-- [ ] Agent writes plan via API (add/remove/update meals and snacks)
-- [ ] Agent explains what it picked and why
-- [ ] Agent saves new preference learnings to memory after session
+- [x] Agent definition file exists at `.claude/agents/plan-food.md` (or similar)
+- [x] Agent can read trip config, recipes, snack catalog via beebaby API
+- [x] Agent selects breakfasts (1-2 recipes, repeated) and dinners (2-3, no one > half the trip)
+- [x] Agent balances dinner variety by type (noodle, rice/bean, rice/meat, etc.)
+- [x] Agent fills snack slots using 40/60 split of remaining calories (lunch/snacks)
+- [x] Agent prefers fewer unique items with more servings (enough multiples to prevent hoarding instinct)
+- [x] Agent front-loads good food — doesn't save treats for later days
+- [x] Agent prefers recipes sharing ingredients (tiebreaker)
+- [x] Agent flags anomalies in existing plan before making changes (missing meals, over/under slots, mismatches)
+- [x] Agent reads catalog notes as preference signals
+- [x] Agent reads conversation memory for accumulated preferences
+- [x] Agent writes plan via API (add/remove/update meals and snacks)
+- [x] Agent explains what it picked and why
+- [x] Agent saves new preference learnings to memory after session
 
 ## Tasks
 
@@ -55,6 +55,6 @@ None - can start immediately (v1 uses existing API)
 - [x] Include hardcoded category assignments for all current catalog items in prompt
 - [x] Include the full category-to-slot mapping in prompt
 - [x] Define the agent's workflow: read state → propose changes → write via API → summarize
-- [ ] Test: agent can plan a fresh trip end-to-end
-- [ ] Test: agent can refine an existing trip with feedback
-- [ ] Test: agent saves preference learnings to memory
+- [x] Test: agent can plan a fresh trip end-to-end
+- [x] Test: agent can refine an existing trip with feedback
+- [x] Test: agent saves preference learnings to memory

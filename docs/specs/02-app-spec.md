@@ -204,15 +204,25 @@ Categories are stored on the snack_catalog table. Used by the meal slot system a
 
 Each hiking day has structured time slots for food:
 - **Breakfast** — recipe from trip_meals
-- **Morning snack** (25% of remaining daily calories after meals)
-- **Lunch** (40% of remaining daily calories)
-- **Afternoon snack** (35% of remaining daily calories)
+- **Lunch** (40% of remaining daily calories after meals)
+- **Snacks** (60% of remaining daily calories after meals)
 - **Dinner** — recipe from trip_meals
-- **Drink mixes** — separate daily quantity, not tied to a slot
+- **Drink mixes** — daily budget quantity, manually allocated
 
-Snack items on a trip are assigned to a slot (morning_snack, lunch, afternoon_snack). The slot calorie split (25/40/35) is the default, configurable per trip in the future.
+Snack items on a trip are assigned to a slot (`lunch` or `snacks`). The slot calorie split (40/60) is the default, configurable per trip in the future.
 
-The UI shows per-slot calorie meters and a heatmap of which days have food allocated for each slot. As items are added/removed, meters update in real time.
+### Drink Mixes
+- `drink_mixes_per_day` on the trip is a budget indicator, not an auto-fill control
+- Servings are manually set per item, always whole numbers (packets)
+- New drink mixes added to a trip start at 1 serving
+- UI shows a budget meter: current total vs mixes_per_day * total_days
+
+### Summary Meters
+The UI shows per-category progress bars for calories and weight (snacks, breakfast, dinner). Each bar:
+- Fills relative to target range midpoint, caps at 100%
+- Color-coded by deviation: green (within 5%), yellow (10%), orange (20%), red (>20%)
+- Shows delta text: "+10 oz", "-80 cal"
+- Overall cal/oz number displayed across all categories
 
 ## Food Planning Agent
 
@@ -235,7 +245,7 @@ A Claude Code agent that builds complete trip food plans via the API.
 - Prefer recipes that share ingredients (tiebreaker, not primary driver)
 
 ### Snack selection logic
-- Fills three slot buckets (morning snack, lunch, afternoon snack) plus drink mixes
+- Fills two slot buckets (lunch, snacks) plus drink mixes
 - Slot calorie targets derived from: (total daily target - breakfast cal - dinner cal) x slot percentage
 - Fewer unique items, more servings of each — enough of each item that you don't feel the need to hoard them (scarcity of an item causes hoarding; multiples remove that instinct)
 - Front-load the good food — don't save treats for later days, eat well from day one
@@ -254,11 +264,11 @@ A Claude Code agent that builds complete trip food plans via the API.
 ## Future Feature Requests
 
 - ~~Snack categories in data model (category column on snack_catalog)~~ (done)
-- Meal slot assignment on trip_snacks (slot column)
-- Per-slot calorie meters with heatmap showing days covered
-- Drink mixes as daily quantity config on trips table
-- Configurable slot calorie split per trip (default 25/40/35)
-- Snack and meal ratings (1-5 or thumbs up/down)
+- ~~Meal slot assignment on trip_snacks (slot column)~~ (done, simplified to lunch/snacks)
+- ~~Per-slot calorie meters with heatmap showing days covered~~ (done, replaced with progress bars)
+- ~~Drink mixes as daily quantity config on trips table~~ (done, budget indicator with manual servings)
+- Configurable slot calorie split per trip (default 40/60)
+- ~~Snack and meal ratings (1-5 or thumbs up/down)~~ (done)
 - Plan alternates — swap options within a proposed plan
 
 ## Deployment

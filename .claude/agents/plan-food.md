@@ -48,7 +48,7 @@ Every time you plan a trip, follow this sequence:
 ### 2. Analyze and flag anomalies
 Before making any changes, report what you see:
 - Missing meals? (e.g. "7-day trip with 0 breakfasts and 0 dinners")
-- Slot imbalances? (e.g. "afternoon snacks are 3x the target, morning has nothing")
+- Slot imbalances? (e.g. "snacks slot is 3x the target, lunch has nothing")
 - Items with very low servings? (1 serving of something = hoarding risk)
 - Items that conflict with known preferences? (check catalog notes)
 - Overall weight/calorie status vs targets
@@ -57,15 +57,14 @@ Before making any changes, report what you see:
 Make API calls to add/remove/adjust meals and snacks. Work in this order:
 1. **Breakfasts** first (drives remaining calorie budget)
 2. **Dinners** second (drives remaining calorie budget)
-3. **Drink mixes** (fixed daily quantity)
-4. **Morning snacks** (25% of remaining calories)
-5. **Lunch items** (40% of remaining calories)
-6. **Afternoon snacks** (35% of remaining calories)
+3. **Drink mixes** (daily budget, manually allocated)
+4. **Lunch items** (40% of remaining calories — slot `lunch`)
+5. **Snacks** (60% of remaining calories — slot `snacks`, includes bars/energy, salty, sweet)
 
 ### 4. Summarize
 After writing changes, GET the updated summary and present:
 - What you picked and why
-- Per-slot breakdown (morning/lunch/afternoon)
+- Per-slot breakdown (lunch/snacks)
 - Total weight and calories vs targets
 - Shopping list item count
 - Any trade-offs you made
@@ -75,7 +74,7 @@ Wait for user feedback. Adjust as requested. Re-summarize after each round.
 
 ### 6. Save preferences
 After the user approves, save any new preference learnings to memory. Examples:
-- "Matt liked having 7x Honey Stingers for morning snacks"
+- "Matt liked having 7x Honey Stingers for snacks"
 - "Matt said no more Range bars — confirmed doesn't like them"
 - "Matt prefers Peanut Noodles over Backcountry Chili"
 
@@ -113,17 +112,17 @@ After selecting meals, compute remaining daily calories:
 remaining_cal_per_day = total_daily_target - breakfast_cal_per_day - dinner_cal_per_day
 ```
 
-Split across slots:
-- **Morning snack**: 25% of remaining (~350 cal/day typical)
-- **Lunch**: 40% of remaining (~560 cal/day typical)
-- **Afternoon snack**: 35% of remaining (~490 cal/day typical)
+Split across two slots:
+- **Lunch**: 40% of remaining (slot `lunch` — lunch category items)
+- **Snacks**: 60% of remaining (slot `snacks` — bars_energy, salty, sweet categories)
 
 Use the midpoint of the low/high calorie target range.
 
 ### Drink mixes
-- Default 2 per day (configurable)
-- Filled separately from slot math
-- Assign servings = drink_mixes_per_day × total_days, split across drink mix items
+- Budget indicator: `drink_mixes_per_day` on the trip (default 2)
+- Servings are manually set per item, always whole numbers (packets)
+- New drink mixes start at 1 serving
+- Filled separately from slot math — not counted in lunch/snacks calorie targets
 
 ## Snack Category Assignments
 
@@ -144,7 +143,7 @@ Use these categories to decide which slot each snack belongs to:
 - Pita chips
 - Babybel
 
-### salty → afternoon_snack
+### salty → snacks slot
 - Goldfish
 - Chips (mixed)
 - Pretzel sticks
@@ -152,7 +151,7 @@ Use these categories to decide which slot each snack belongs to:
 - Quest protein chips
 - Beef jerky (Kroger steak strips)
 
-### sweet → afternoon_snack
+### sweet → snacks slot
 - M&M nut covered
 - Ghirardelli dark chocolate bar
 - Welches fruit snack
@@ -172,7 +171,7 @@ Use these categories to decide which slot each snack belongs to:
 - Lil Debbies honey bun
 - Lil Debbies apple cinnamon sticks
 
-### bars_energy → morning_snack
+### bars_energy → snacks slot
 - Kind bar
 - Honey Stinger Waffle
 - Clif nut butter bar

@@ -19,12 +19,12 @@
 | 13 | [Slot Calorie Meters](13-slot-calorie-meters.md) | Per-slot calorie meters + days covered in summary |
 | 15 | [Ratings](15-ratings.md) | 1-5 ratings on snacks and recipes |
 | 16 | [Slot Simplification](16-slot-simplification.md) | Collapse 3 snack slots to 2 (lunch + snacks) with 40/60 split |
+| 14 | [Food Planning Agent](14-food-planning-agent.md) | CLI agent that plans trip food via API |
 
 ## In Progress
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
-| 14 | [Food Planning Agent](14-food-planning-agent.md) | CLI agent that plans trip food via API (definition done, needs testing) | None |
 
 ## Not Started
 
