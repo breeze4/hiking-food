@@ -105,6 +105,10 @@ A dedicated view for packing day (at home with Chromebook + scale):
 ### Packed Checkbox
 - Visual checklist only, does not affect totals
 
+### Packing Format
+- Recipes are packed into individual ziplocks (one per meal)
+- Packing screen workflow assumes ziplock-based assembly
+
 ## Data Model (SQLite)
 
 ### ingredients
@@ -217,20 +221,23 @@ A Claude Code agent that builds complete trip food plans via the API.
 1. User invokes from Claude Code, specifies which trip
 2. Agent reads trip config (days, targets), recipe library, snack catalog, and preferences
 3. Agent starts from current trip state and refines the whole plan — adds, removes, adjusts servings
-4. Agent writes changes via API (trip_meals and trip_snacks endpoints)
-5. User reviews in the app, gives feedback
-6. Agent adjusts, loop until satisfied
-7. Agent saves new preference learnings to memory
+4. Agent flags anomalies it finds (e.g. "you have 22 snacks but no meals", "afternoon slot is 3x over target", mismatched serving counts)
+5. Agent writes changes via API (trip_meals and trip_snacks endpoints)
+6. User reviews in the app, gives feedback
+7. Agent adjusts, loop until satisfied
+8. Agent saves new preference learnings to memory
 
 ### Meal selection logic
 - Breakfast: minimal variety (1-2 recipes repeated across the trip)
 - Dinner: 2-3 unique recipes, no single recipe more than half the trip days
+- Dinner variety by type: balance across noodle-based, rice/bean, rice/dehydrated meat (or whatever types exist in the library)
 - Prefer recipes that share ingredients (tiebreaker, not primary driver)
 
 ### Snack selection logic
 - Fills three slot buckets (morning snack, lunch, afternoon snack) plus drink mixes
 - Slot calorie targets derived from: (total daily target - breakfast cal - dinner cal) x slot percentage
-- Fewer unique items, more servings of each — avoids the variety/hoarding trap
+- Fewer unique items, more servings of each — enough of each item that you don't feel the need to hoard them (scarcity of an item causes hoarding; multiples remove that instinct)
+- Front-load the good food — don't save treats for later days, eat well from day one
 - Drink mixes: configured as X per day (default 2), filled separately
 
 ### Preference system (3-tier, highest weight first)
