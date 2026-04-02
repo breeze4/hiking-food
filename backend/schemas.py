@@ -232,6 +232,12 @@ class TripSummaryRead(BaseModel):
     slot_subtotals: dict[str, SlotSubtotal] = {}
     meal_weight_actual: float
     meal_calories_actual: float
+    breakfast_weight: float = 0
+    breakfast_calories: float = 0
+    breakfast_count: int = 0
+    dinner_weight: float = 0
+    dinner_calories: float = 0
+    dinner_count: int = 0
     combined_weight: float
     combined_calories: float
     weight_per_day: Optional[float] = None

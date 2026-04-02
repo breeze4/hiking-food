@@ -26,19 +26,19 @@ AFK
 
 ## Acceptance criteria
 
-- [ ] Three category sections (Breakfast, Dinner, Snacks) each show calories and weight progress bars
-- [ ] Progress bars fill relative to target range midpoint
-- [ ] Bars cap visually at 100% even when over target
-- [ ] Color thresholds: green (within 5%), yellow (10%), orange (20%), red (>20%)
-- [ ] Delta text shown next to each bar: "+10 oz", "-80 cal", or "on target"
-- [ ] Overall cal/oz number displayed in summary
-- [ ] StatusBadge component removed or no longer used for calorie/weight indicators
+- [x] Three category sections (Breakfast, Dinner, Snacks) each show calories and weight progress bars
+- [x] Progress bars fill relative to target range midpoint
+- [x] Bars cap visually at 100% even when over target
+- [x] Color thresholds: green (within 5%), yellow (10%), orange (20%), red (>20%)
+- [x] Delta text shown next to each bar: "+10 oz", "-80 cal", or "on target"
+- [x] Overall cal/oz number displayed in summary
+- [x] StatusBadge component removed or no longer used for calorie/weight indicators
 
 ## Tasks
 
-- [ ] Create a reusable ProgressMeter component with fill %, color thresholds, delta text, and 100% cap
-- [ ] Compute per-category (breakfast, dinner, snacks) actual vs target values in TripSummary
-- [ ] Replace StatusBadge usage with ProgressMeter for each category's calories and weight
-- [ ] Add overall cal/oz calculation and display (total calories / total weight)
-- [ ] Verify color thresholds match spec: green ≤5%, yellow ≤10%, orange ≤20%, red >20%
-- [ ] Visual check on mobile and desktop layouts
+- [x] Create a reusable ProgressMeter component with fill %, color thresholds, delta text, and 100% cap
+- [x] Compute per-category (breakfast, dinner, snacks) actual vs target values in TripSummary
+- [x] Replace StatusBadge usage with ProgressMeter for each category's calories and weight
+- [x] Add overall cal/oz calculation and display (total calories / total weight)
+- [x] Verify color thresholds match spec: green ≤5%, yellow ≤10%, orange ≤20%, red >20%
+- [x] Visual check on mobile and desktop layouts

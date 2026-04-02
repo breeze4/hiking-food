@@ -256,12 +256,29 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
     meal_weights = []
     meal_weight_actual = 0
     meal_calories_actual = 0
+    breakfast_weight = 0
+    breakfast_cal = 0
+    breakfast_count = 0
+    dinner_weight = 0
+    dinner_cal = 0
+    dinner_count = 0
     for tm in trip_meals:
+        recipe = db.get(Recipe, tm.recipe_id)
         totals = _get_recipe_totals(db, tm.recipe_id)
+        w = totals["total_weight"] * tm.quantity
+        c = totals["total_calories"] * tm.quantity
+        if recipe.category == "breakfast":
+            breakfast_weight += w
+            breakfast_cal += c
+            breakfast_count += tm.quantity
+        else:
+            dinner_weight += w
+            dinner_cal += c
+            dinner_count += tm.quantity
         for _ in range(tm.quantity):
             meal_weights.append(totals["total_weight"])
-        meal_weight_actual += totals["total_weight"] * tm.quantity
-        meal_calories_actual += totals["total_calories"] * tm.quantity
+        meal_weight_actual += w
+        meal_calories_actual += c
 
     targets = compute_trip_targets(
         trip.first_day_fraction or 0,
@@ -329,6 +346,12 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
         "slot_subtotals": slot_subtotals,
         "meal_weight_actual": round(meal_weight_actual, 2),
         "meal_calories_actual": round(meal_calories_actual, 1),
+        "breakfast_weight": round(breakfast_weight, 2),
+        "breakfast_calories": round(breakfast_cal, 1),
+        "breakfast_count": breakfast_count,
+        "dinner_weight": round(dinner_weight, 2),
+        "dinner_calories": round(dinner_cal, 1),
+        "dinner_count": dinner_count,
         "combined_weight": round(combined_weight, 2),
         "combined_calories": round(combined_calories, 1),
         "weight_per_day": round(combined_weight / total_days, 1) if total_days > 0 else None,
