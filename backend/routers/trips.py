@@ -18,11 +18,11 @@ from services.recipe_calc import compute_recipe_totals
 router = APIRouter(prefix="/api/trips", tags=["trips"])
 
 CATEGORY_TO_SLOT = {
-    "drink_mix": "morning_snack",
-    "bars_energy": "morning_snack",
+    "drink_mix": "snacks",
+    "bars_energy": "snacks",
     "lunch": "lunch",
-    "salty": "afternoon_snack",
-    "sweet": "afternoon_snack",
+    "salty": "snacks",
+    "sweet": "snacks",
 }
 
 
@@ -190,7 +190,7 @@ def add_trip_snack(trip_id: int, data: TripSnackCreate, db: Session = Depends(ge
         raise HTTPException(status_code=400, detail="Snack catalog item not found")
     fields = data.model_dump()
     if not fields.get("slot"):
-        fields["slot"] = CATEGORY_TO_SLOT.get(cat_item.category, "afternoon_snack")
+        fields["slot"] = CATEGORY_TO_SLOT.get(cat_item.category, "snacks")
     ts = TripSnack(trip_id=trip_id, **fields)
     db.add(ts)
     db.commit()
@@ -300,21 +300,21 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
             drink_mix_weight += w
             drink_mix_calories += c
         else:
-            slot = ts.slot or "afternoon_snack"
+            slot = ts.slot or "snacks"
             if slot not in slot_subtotals:
                 slot_subtotals[slot] = {"weight": 0, "calories": 0}
             slot_subtotals[slot]["weight"] += w
             slot_subtotals[slot]["calories"] += c
 
     # Compute per-slot targets and days_covered
-    # Slot percentages: morning 25%, lunch 40%, afternoon 35%
-    slot_pcts = {"morning_snack": 0.25, "lunch": 0.40, "afternoon_snack": 0.35}
+    # Slot percentages: lunch 40%, snacks 60%
+    slot_pcts = {"lunch": 0.40, "snacks": 0.60}
     # Remaining calories = daytime minus drink mixes
     remaining_cal_low = targets["daytime_cal_low"] - drink_mix_calories
     remaining_cal_high = targets["daytime_cal_high"] - drink_mix_calories
     total_days = targets["total_days"]
 
-    for slot_name in ("morning_snack", "lunch", "afternoon_snack"):
+    for slot_name in ("lunch", "snacks"):
         if slot_name not in slot_subtotals:
             slot_subtotals[slot_name] = {"weight": 0, "calories": 0}
         st = slot_subtotals[slot_name]

@@ -13,9 +13,8 @@ import {
 } from '@/components/ui/select';
 
 const SLOTS = [
-  { value: 'morning_snack', label: 'Morning Snack' },
   { value: 'lunch', label: 'Lunch' },
-  { value: 'afternoon_snack', label: 'Afternoon Snack' },
+  { value: 'snacks', label: 'Snacks' },
 ];
 
 const SLOT_LABELS = Object.fromEntries(SLOTS.map(s => [s.value, s.label]));
@@ -35,9 +34,8 @@ const CATEGORY_LABELS = Object.fromEntries(
 
 // Default category filter when adding to a specific slot
 const SLOT_DEFAULT_CATEGORIES = {
-  morning_snack: new Set(['bars_energy']),
   lunch: new Set(['lunch']),
-  afternoon_snack: new Set(['salty', 'sweet']),
+  snacks: new Set(['bars_energy', 'salty', 'sweet']),
 };
 
 function SnackSelection() {
@@ -69,7 +67,7 @@ function SnackSelection() {
   const bySlot = {};
   for (const slot of SLOTS) bySlot[slot.value] = [];
   for (const s of slotSnacks) {
-    const key = s.slot || 'afternoon_snack';
+    const key = s.slot || 'snacks';
     if (!bySlot[key]) bySlot[key] = [];
     bySlot[key].push(s);
   }
@@ -147,7 +145,7 @@ function SnackSelection() {
           isAdding={addingSlot === 'drink_mix'}
           onStartAdd={() => openAddPanel('drink_mix')}
           onCancelAdd={closeAddPanel}
-          onAdd={(catalogId) => handleAdd(catalogId, 'morning_snack')}
+          onAdd={(catalogId) => handleAdd(catalogId, 'snacks')}
           onRemove={(snackId) => del(`/trips/${tripDetail.id}/snacks/${snackId}`).then(refreshTrip)}
           onUpdateNotes={updateNotes}
           search={search}

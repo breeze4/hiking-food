@@ -12,9 +12,8 @@ import {
 } from '@/components/ui/table';
 
 const SNACK_SLOTS = [
-  { value: 'morning_snack', label: 'Morning Snack' },
   { value: 'lunch', label: 'Lunch' },
-  { value: 'afternoon_snack', label: 'Afternoon Snack' },
+  { value: 'snacks', label: 'Snacks' },
 ];
 
 function PackingScreen() {
@@ -161,7 +160,7 @@ function PackingScreen() {
         ) : (
           <div className="space-y-4">
             {SNACK_SLOTS.map(({ value, label }) => {
-              const slotSnacks = packing.snacks.filter(s => (s.slot || 'afternoon_snack') === value);
+              const slotSnacks = packing.snacks.filter(s => (s.slot || 'snacks') === value);
               if (slotSnacks.length === 0) return null;
               return (
                 <div key={value}>

@@ -6,9 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
 const SLOT_ORDER = [
-  { value: 'morning_snack', label: 'Morning' },
   { value: 'lunch', label: 'Lunch' },
-  { value: 'afternoon_snack', label: 'Afternoon' },
+  { value: 'snacks', label: 'Snacks' },
 ];
 
 function TripSummary() {
