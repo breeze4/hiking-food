@@ -184,6 +184,75 @@ A dedicated view for packing day (at home with Chromebook + scale):
 - All ingredients from Utah 2026 sheet + Skurka recipes
 - Utah 2026 trip with current snack selections and serving counts
 
+## Snack Categories
+
+Five categories for snack catalog items:
+- **Drink mixes**: Electrolytes, greens, coffee/tea — daily quantity config (default 2/day)
+- **Lunch**: Tortillas, PB, cheese, couscous, tuna/chicken packets, pita chips — assembled meals
+- **Salty**: Goldfish, chips, pretzels, jerky, quest chips, babybel
+- **Sweet**: Cookies, candy, chocolate, fruit snacks, donettes, Pop Tarts
+- **Bars/Energy**: Kind bars, Clif bars, RX bars, Honey Stingers, Larabars
+
+Categories are stored on the snack_catalog table. Used by the meal slot system and the planning agent.
+
+## Meal Slots
+
+Each hiking day has structured time slots for food:
+- **Breakfast** — recipe from trip_meals
+- **Morning snack** (25% of remaining daily calories after meals)
+- **Lunch** (40% of remaining daily calories)
+- **Afternoon snack** (35% of remaining daily calories)
+- **Dinner** — recipe from trip_meals
+- **Drink mixes** — separate daily quantity, not tied to a slot
+
+Snack items on a trip are assigned to a slot (morning_snack, lunch, afternoon_snack). The slot calorie split (25/40/35) is the default, configurable per trip in the future.
+
+The UI shows per-slot calorie meters and a heatmap of which days have food allocated for each slot. As items are added/removed, meters update in real time.
+
+## Food Planning Agent
+
+A Claude Code agent that builds complete trip food plans via the API.
+
+### How it works
+1. User invokes from Claude Code, specifies which trip
+2. Agent reads trip config (days, targets), recipe library, snack catalog, and preferences
+3. Agent starts from current trip state and refines the whole plan — adds, removes, adjusts servings
+4. Agent writes changes via API (trip_meals and trip_snacks endpoints)
+5. User reviews in the app, gives feedback
+6. Agent adjusts, loop until satisfied
+7. Agent saves new preference learnings to memory
+
+### Meal selection logic
+- Breakfast: minimal variety (1-2 recipes repeated across the trip)
+- Dinner: 2-3 unique recipes, no single recipe more than half the trip days
+- Prefer recipes that share ingredients (tiebreaker, not primary driver)
+
+### Snack selection logic
+- Fills three slot buckets (morning snack, lunch, afternoon snack) plus drink mixes
+- Slot calorie targets derived from: (total daily target - breakfast cal - dinner cal) x slot percentage
+- Fewer unique items, more servings of each — avoids the variety/hoarding trap
+- Drink mixes: configured as X per day (default 2), filled separately
+
+### Preference system (3-tier, highest weight first)
+1. App ratings (future feature)
+2. Catalog notes (e.g. "Range bars aren't pleasant to eat")
+3. Conversation memory (accumulated across sessions)
+
+### V1 constraints
+- Works with existing API — no app changes required
+- Agent carries snack category and slot knowledge in its prompt/memory
+- When app features (categories, slots, meters) are built, agent adopts the API
+
+## Future Feature Requests
+
+- Snack categories in data model (category column on snack_catalog)
+- Meal slot assignment on trip_snacks (slot column)
+- Per-slot calorie meters with heatmap showing days covered
+- Drink mixes as daily quantity config on trips table
+- Configurable slot calorie split per trip (default 25/40/35)
+- Snack and meal ratings (1-5 or thumbs up/down)
+- Plan alternates — swap options within a proposed plan
+
 ## Deployment
 
 ### Target
