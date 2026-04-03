@@ -30,6 +30,7 @@ def _to_response(item: SnackCatalogItem, ingredient_name: str) -> dict:
         "calories_per_serving": item.calories_per_serving,
         "calories_per_oz": cal_per_oz,
         "category": item.category,
+        "drink_mix_type": item.drink_mix_type,
         "notes": item.notes,
         "rating": item.rating,
     }

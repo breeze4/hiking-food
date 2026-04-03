@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
 
+from sqlalchemy import text, inspect
+
 from database import engine, Base
 import models  # noqa: F401 — ensures all models are registered with Base
 from routers.ingredients import router as ingredients_router
@@ -16,9 +18,46 @@ from routers.trips import router as trips_router
 FRONTEND_DIR = Path(__file__).parent / ".." / "frontend" / "dist"
 
 
+def _add_column_if_missing(conn, table: str, column: str, col_type: str = "TEXT"):
+    cols = [c["name"] for c in inspect(conn).get_columns(table)]
+    if column not in cols:
+        conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"))
+
+
+def _migrate_drink_mix_types(conn):
+    """Classify existing drink mix items by type based on ingredient name."""
+    try:
+        rows = conn.execute(text(
+            "SELECT sc.id, i.name FROM snack_catalog sc"
+            " JOIN ingredients i ON sc.ingredient_id = i.id"
+            " WHERE sc.category = 'drink_mix' AND sc.drink_mix_type IS NULL"
+        )).fetchall()
+    except Exception:
+        return
+    for row_id, name in rows:
+        lower = name.lower()
+        if any(k in lower for k in ("coffee", "carnation", "greens")):
+            dmt = "breakfast"
+        elif "tea" in lower:
+            dmt = "dinner"
+        else:
+            dmt = "all_day"
+        conn.execute(text(
+            "UPDATE snack_catalog SET drink_mix_type = :dmt WHERE id = :id"
+        ), {"dmt": dmt, "id": row_id})
+
+
+def _run_migrations(conn):
+    _add_column_if_missing(conn, "snack_catalog", "drink_mix_type")
+    _migrate_drink_mix_types(conn)
+
+
 @asynccontextmanager
 async def lifespan(inner_app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    with engine.connect() as conn:
+        _run_migrations(conn)
+        conn.commit()
     yield
 
 

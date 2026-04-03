@@ -30,6 +30,7 @@ class SnackCreate(BaseModel):
     weight_per_serving: float
     calories_per_serving: float
     category: Optional[str] = None
+    drink_mix_type: Optional[str] = None
     notes: Optional[str] = None
     rating: Optional[int] = None
 
@@ -38,6 +39,7 @@ class SnackUpdate(BaseModel):
     weight_per_serving: Optional[float] = None
     calories_per_serving: Optional[float] = None
     category: Optional[str] = None
+    drink_mix_type: Optional[str] = None
     notes: Optional[str] = None
     rating: Optional[int] = None
 
@@ -50,6 +52,7 @@ class SnackRead(BaseModel):
     calories_per_serving: Optional[float] = None
     calories_per_oz: Optional[float] = None
     category: Optional[str] = None
+    drink_mix_type: Optional[str] = None
     notes: Optional[str] = None
     rating: Optional[int] = None
 

@@ -22,6 +22,15 @@ const CATEGORIES = [
 
 const CATEGORY_LABELS = Object.fromEntries(CATEGORIES.filter(c => c.value).map(c => [c.value, c.label]));
 
+const DRINK_MIX_TYPES = [
+  { value: '', label: 'None' },
+  { value: 'breakfast', label: 'Breakfast' },
+  { value: 'dinner', label: 'Dinner' },
+  { value: 'all_day', label: 'All Day' },
+];
+
+const DRINK_MIX_TYPE_LABELS = Object.fromEntries(DRINK_MIX_TYPES.filter(t => t.value).map(t => [t.value, t.label]));
+
 function SnackCatalogPage() {
   const [snacks, setSnacks] = useState([]);
   const [ingredients, setIngredients] = useState([]);
@@ -30,7 +39,7 @@ function SnackCatalogPage() {
   const [editForm, setEditForm] = useState({});
   const [addOpen, setAddOpen] = useState(false);
   const [addForm, setAddForm] = useState({
-    ingredient_id: '', weight_per_serving: '', calories_per_serving: '', category: '', notes: '',
+    ingredient_id: '', weight_per_serving: '', calories_per_serving: '', category: '', drink_mix_type: '', notes: '',
   });
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [sortCol, setSortCol] = useState('ingredient_name');
@@ -78,10 +87,11 @@ function SnackCatalogPage() {
         weight_per_serving: parseFloat(addForm.weight_per_serving),
         calories_per_serving: parseFloat(addForm.calories_per_serving),
         category: addForm.category || null,
+        drink_mix_type: addForm.category === 'drink_mix' ? (addForm.drink_mix_type || null) : null,
         notes: addForm.notes || null,
       });
       setSnacks([...snacks, created]);
-      setAddForm({ ingredient_id: '', weight_per_serving: '', calories_per_serving: '', category: '', notes: '' });
+      setAddForm({ ingredient_id: '', weight_per_serving: '', calories_per_serving: '', category: '', drink_mix_type: '', notes: '' });
       setAddOpen(false);
       setError(null);
     } catch (err) { setError(err.message); }
@@ -93,6 +103,7 @@ function SnackCatalogPage() {
       weight_per_serving: snack.weight_per_serving ?? '',
       calories_per_serving: snack.calories_per_serving ?? '',
       category: snack.category ?? '',
+      drink_mix_type: snack.drink_mix_type ?? '',
       notes: snack.notes ?? '',
       rating: snack.rating ?? null,
     });
@@ -104,6 +115,7 @@ function SnackCatalogPage() {
         weight_per_serving: parseFloat(editForm.weight_per_serving),
         calories_per_serving: parseFloat(editForm.calories_per_serving),
         category: editForm.category || null,
+        drink_mix_type: editForm.category === 'drink_mix' ? (editForm.drink_mix_type || null) : null,
         notes: editForm.notes || null,
         rating: editForm.rating,
       });
@@ -154,13 +166,24 @@ function SnackCatalogPage() {
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{s.ingredient_name}</TableCell>
                   <TableCell>
-                    <select value={editForm.category}
-                      onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                      className="flex h-8 w-full rounded-md border border-input bg-background px-2 text-sm">
-                      {CATEGORIES.map((c) => (
-                        <option key={c.value} value={c.value}>{c.label}</option>
-                      ))}
-                    </select>
+                    <div className="space-y-1">
+                      <select value={editForm.category}
+                        onChange={(e) => setEditForm({ ...editForm, category: e.target.value, drink_mix_type: e.target.value === 'drink_mix' ? editForm.drink_mix_type : '' })}
+                        className="flex h-8 w-full rounded-md border border-input bg-background px-2 text-sm">
+                        {CATEGORIES.map((c) => (
+                          <option key={c.value} value={c.value}>{c.label}</option>
+                        ))}
+                      </select>
+                      {editForm.category === 'drink_mix' && (
+                        <select value={editForm.drink_mix_type}
+                          onChange={(e) => setEditForm({ ...editForm, drink_mix_type: e.target.value })}
+                          className="flex h-8 w-full rounded-md border border-input bg-background px-2 text-sm">
+                          {DRINK_MIX_TYPES.map((t) => (
+                            <option key={t.value} value={t.value}>{t.label}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <Input type="number" step="any" value={editForm.weight_per_serving}
@@ -191,7 +214,10 @@ function SnackCatalogPage() {
               ) : (
                 <TableRow key={s.id} className="even:bg-muted/50">
                   <TableCell className="font-medium">{s.ingredient_name}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm">{CATEGORY_LABELS[s.category] || ''}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {CATEGORY_LABELS[s.category] || ''}
+                    {s.drink_mix_type && <span className="text-xs ml-1">({DRINK_MIX_TYPE_LABELS[s.drink_mix_type]})</span>}
+                  </TableCell>
                   <TableCell className="text-right">{s.weight_per_serving}</TableCell>
                   <TableCell className="text-right">{s.calories_per_serving}</TableCell>
                   <TableCell className="text-right">{s.calories_per_oz}</TableCell>
@@ -254,13 +280,25 @@ function SnackCatalogPage() {
               <div className="space-y-2">
                 <Label>Category</Label>
                 <select value={addForm.category}
-                  onChange={(e) => setAddForm({ ...addForm, category: e.target.value })}
+                  onChange={(e) => setAddForm({ ...addForm, category: e.target.value, drink_mix_type: e.target.value === 'drink_mix' ? addForm.drink_mix_type : '' })}
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm">
                   {CATEGORIES.map((c) => (
                     <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
                 </select>
               </div>
+              {addForm.category === 'drink_mix' && (
+                <div className="space-y-2">
+                  <Label>Drink Mix Type</Label>
+                  <select value={addForm.drink_mix_type}
+                    onChange={(e) => setAddForm({ ...addForm, drink_mix_type: e.target.value })}
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm">
+                    {DRINK_MIX_TYPES.map((t) => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Notes</Label>
                 <Input value={addForm.notes}

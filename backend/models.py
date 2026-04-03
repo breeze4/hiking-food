@@ -19,6 +19,7 @@ class SnackCatalogItem(Base):
     weight_per_serving = Column(Float)
     calories_per_serving = Column(Float)
     category = Column(Text)  # drink_mix, lunch, salty, sweet, bars_energy
+    drink_mix_type = Column(Text)  # breakfast, dinner, all_day (only for drink_mix category)
     notes = Column(Text)
     rating = Column(Integer)
 
