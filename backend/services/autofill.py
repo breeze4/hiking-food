@@ -99,6 +99,9 @@ def distribute_snacks(days, trip_snacks, snack_weights):
     # Sort by weight_per_serving descending (heaviest first), then by id for determinism
     snacks.sort(key=lambda s: (-snack_weights.get(s["id"], 0), s["id"]))
 
+    # Track rotation offset per slot so different items don't all land on the same days
+    slot_offset = {}
+
     for snack in snacks:
         plan_slot = SNACK_SLOT_MAP.get(snack["slot"], "afternoon_snacks")
         elig = eligible_days(days, plan_slot)
@@ -107,16 +110,20 @@ def distribute_snacks(days, trip_snacks, snack_weights):
         if num_days == 0 or remaining <= 0:
             continue
 
-        # How many days we can fill (1 serving per day)
         fill_count = min(int(remaining), num_days)
+        offset = slot_offset.get(plan_slot, 0)
 
-        # Pick evenly-spaced day indices so servings spread across the trip
         if fill_count >= num_days:
             chosen = list(range(num_days))
         else:
-            chosen = [round(i * num_days / fill_count) for i in range(fill_count)]
-            # Clamp and deduplicate (shouldn't happen but safety)
-            chosen = sorted(set(min(idx, num_days - 1) for idx in chosen))
+            # Evenly-spaced indices with a rotating offset so different items
+            # land on different days (e.g., item1 -> [0,3], item2 -> [1,4], etc.)
+            stride = num_days / fill_count
+            chosen = [int((offset + i * stride) % num_days) for i in range(fill_count)]
+            chosen = sorted(set(chosen))
+
+        # Advance offset for next item in this slot
+        slot_offset[plan_slot] = offset + 1
 
         for idx in chosen:
             if remaining <= 0:
