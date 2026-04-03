@@ -5,12 +5,18 @@ from typing import Optional
 class IngredientCreate(BaseModel):
     name: str
     calories_per_oz: float
+    on_hand: bool = False
+    essentials: bool = False
+    packing_method: Optional[str] = None
     notes: Optional[str] = None
 
 
 class IngredientUpdate(BaseModel):
     name: Optional[str] = None
     calories_per_oz: Optional[float] = None
+    on_hand: Optional[bool] = None
+    essentials: Optional[bool] = None
+    packing_method: Optional[str] = None
     notes: Optional[str] = None
 
 
@@ -18,6 +24,9 @@ class IngredientRead(BaseModel):
     id: int
     name: str
     calories_per_oz: Optional[float] = None
+    on_hand: bool = False
+    essentials: bool = False
+    packing_method: Optional[str] = None
     notes: Optional[str] = None
 
     model_config = {"from_attributes": True}

@@ -371,14 +371,19 @@ def get_packing_detail(trip_id: int, db: Session = Depends(get_db)):
     for tm in db.query(TripMeal).filter(TripMeal.trip_id == trip_id).all():
         recipe = db.get(Recipe, tm.recipe_id)
         rows = (
-            db.query(RecipeIngredient, Ingredient.name)
+            db.query(RecipeIngredient, Ingredient)
             .join(Ingredient, RecipeIngredient.ingredient_id == Ingredient.id)
             .filter(RecipeIngredient.recipe_id == recipe.id)
             .all()
         )
         ingredients = [
-            {"name": name, "amount_oz": round(ri.amount_oz * tm.quantity, 2)}
-            for ri, name in rows
+            {
+                "name": ing.name,
+                "amount_oz": round(ri.amount_oz * tm.quantity, 2),
+                "essentials": bool(ing.essentials),
+                "packing_method": ing.packing_method,
+            }
+            for ri, ing in rows
         ]
         meals.append({
             "id": tm.id,
@@ -404,6 +409,7 @@ def get_packing_detail(trip_id: int, db: Session = Depends(get_db)):
             "servings": ts.servings,
             "packed": ts.packed,
             "actual_weight_oz": ts.actual_weight_oz,
+            "packing_method": ingredient.packing_method,
         })
 
     return {"trip_name": trip.name, "meals": meals, "snacks": snacks}
@@ -417,20 +423,24 @@ def get_shopping_list(trip_id: int, db: Session = Depends(get_db)):
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
 
-    totals = {}  # ingredient_id -> {name, total_oz}
+    totals = {}  # ingredient_id -> {name, total_oz, on_hand, essentials, packing_method}
 
     # Aggregate from meals
     for tm in db.query(TripMeal).filter(TripMeal.trip_id == trip_id).all():
         ris = (
-            db.query(RecipeIngredient, Ingredient.name)
+            db.query(RecipeIngredient, Ingredient)
             .join(Ingredient, RecipeIngredient.ingredient_id == Ingredient.id)
             .filter(RecipeIngredient.recipe_id == tm.recipe_id)
             .all()
         )
-        for ri, name in ris:
+        for ri, ing in ris:
             key = ri.ingredient_id
             if key not in totals:
-                totals[key] = {"ingredient_id": key, "ingredient_name": name, "total_oz": 0}
+                totals[key] = {
+                    "ingredient_id": key, "ingredient_name": ing.name, "total_oz": 0,
+                    "on_hand": bool(ing.on_hand), "essentials": bool(ing.essentials),
+                    "packing_method": ing.packing_method,
+                }
             totals[key]["total_oz"] += ri.amount_oz * tm.quantity
 
     # Aggregate from snacks
@@ -439,13 +449,25 @@ def get_shopping_list(trip_id: int, db: Session = Depends(get_db)):
         ingredient = db.get(Ingredient, cat_item.ingredient_id)
         key = cat_item.ingredient_id
         if key not in totals:
-            totals[key] = {"ingredient_id": key, "ingredient_name": ingredient.name, "total_oz": 0}
+            totals[key] = {
+                "ingredient_id": key, "ingredient_name": ingredient.name, "total_oz": 0,
+                "on_hand": bool(ingredient.on_hand), "essentials": bool(ingredient.essentials),
+                "packing_method": ingredient.packing_method,
+            }
         totals[key]["total_oz"] += ts.servings * (cat_item.weight_per_serving or 0)
 
-    result = sorted(totals.values(), key=lambda x: x["ingredient_name"])
-    for item in result:
+    for item in totals.values():
         item["total_oz"] = round(item["total_oz"], 2)
-    return result
+
+    # Split essentials from regular items
+    regular = [v for v in totals.values() if not v["essentials"]]
+    essentials = [v for v in totals.values() if v["essentials"]]
+
+    # Sort regular: need-to-buy first (not on_hand), then on-hand, alphabetical within
+    regular.sort(key=lambda x: (x["on_hand"], x["ingredient_name"]))
+    essentials.sort(key=lambda x: x["ingredient_name"])
+
+    return {"items": regular, "essentials": essentials}
 
 
 # --- Clone ---

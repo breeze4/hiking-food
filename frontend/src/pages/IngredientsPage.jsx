@@ -6,9 +6,20 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+
+const PACKING_METHODS = [
+  { value: '', label: 'None' },
+  { value: 'bag', label: 'Bag' },
+  { value: 'container', label: 'Container' },
+  { value: 'original', label: 'Original' },
+  { value: 'repack', label: 'Repack' },
+];
+
+const PACKING_METHOD_LABELS = Object.fromEntries(PACKING_METHODS.filter(p => p.value).map(p => [p.value, p.label]));
 
 function IngredientsPage() {
   const [ingredients, setIngredients] = useState([]);
@@ -62,6 +73,8 @@ function IngredientsPage() {
     setEditForm({
       name: ingredient.name,
       calories_per_oz: ingredient.calories_per_oz ?? '',
+      essentials: ingredient.essentials ?? false,
+      packing_method: ingredient.packing_method ?? '',
       notes: ingredient.notes ?? '',
     });
   }
@@ -71,6 +84,8 @@ function IngredientsPage() {
       const updated = await put(`/ingredients/${id}`, {
         name: editForm.name,
         calories_per_oz: parseFloat(editForm.calories_per_oz),
+        essentials: editForm.essentials,
+        packing_method: editForm.packing_method || null,
         notes: editForm.notes || null,
       });
       setIngredients(ingredients.map((i) => (i.id === id ? updated : i)));
@@ -106,6 +121,8 @@ function IngredientsPage() {
             <TableRow>
               <SortHead col="name" label="Name" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} />
               <SortHead col="calories_per_oz" label="Cal/oz" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} className="text-right" />
+              <SortHead col="essentials" label="Essential" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} />
+              <SortHead col="packing_method" label="Packing" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} />
               <SortHead col="notes" label="Notes" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} />
               <TableHead className="w-28"></TableHead>
             </TableRow>
@@ -125,6 +142,19 @@ function IngredientsPage() {
                       className="w-20 h-8 ml-auto" />
                   </TableCell>
                   <TableCell>
+                    <Checkbox checked={editForm.essentials}
+                      onCheckedChange={(checked) => setEditForm({ ...editForm, essentials: !!checked })} />
+                  </TableCell>
+                  <TableCell>
+                    <select value={editForm.packing_method}
+                      onChange={(e) => setEditForm({ ...editForm, packing_method: e.target.value })}
+                      className="flex h-8 w-full rounded-md border border-input bg-background px-2 text-sm">
+                      {PACKING_METHODS.map((p) => (
+                        <option key={p.value} value={p.value}>{p.label}</option>
+                      ))}
+                    </select>
+                  </TableCell>
+                  <TableCell>
                     <Input value={editForm.notes}
                       onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                       className="h-8" />
@@ -140,6 +170,8 @@ function IngredientsPage() {
                 <TableRow key={ing.id} className="even:bg-muted/50">
                   <TableCell className="font-medium">{ing.name}</TableCell>
                   <TableCell className="text-right">{ing.calories_per_oz}</TableCell>
+                  <TableCell>{ing.essentials && <span className="text-xs text-muted-foreground">Yes</span>}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{PACKING_METHOD_LABELS[ing.packing_method] || ''}</TableCell>
                   <TableCell className="text-muted-foreground">{ing.notes}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">

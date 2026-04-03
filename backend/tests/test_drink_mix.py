@@ -1,47 +1,13 @@
 """Tests for drink mix manual control behavior."""
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
-
 from database import Base
-from main import inner as app
 from models import Ingredient, SnackCatalogItem
-
-# Override get_db for ALL routers that define their own
-from routers import trips, snacks, recipes, ingredients
-
-# In-memory SQLite needs StaticPool to share the same connection across threads
-_engine = create_engine(
-    "sqlite:///:memory:",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-_TestSession = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
-
-
-def _override_get_db():
-    db = _TestSession()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-for mod in (trips, snacks, recipes, ingredients):
-    app.dependency_overrides[mod.get_db] = _override_get_db
 
 
 @pytest.fixture(autouse=True)
-def db_setup():
-    Base.metadata.create_all(bind=_engine)
-    db = _TestSession()
+def db_setup(test_engine, test_session):
+    Base.metadata.create_all(bind=test_engine)
+    db = test_session()
     ing = Ingredient(name="Lemon Lime Mix", calories_per_oz=100.0)
     db.add(ing)
     db.flush()
@@ -59,13 +25,7 @@ def db_setup():
     db.commit()
     db.close()
     yield
-    Base.metadata.drop_all(bind=_engine)
-
-
-@pytest.fixture()
-def c():
-    with TestClient(app, raise_server_exceptions=True) as tc:
-        yield tc
+    Base.metadata.drop_all(bind=test_engine)
 
 
 def _create_trip(c, **overrides):

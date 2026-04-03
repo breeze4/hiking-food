@@ -50,6 +50,9 @@ def _migrate_drink_mix_types(conn):
 def _run_migrations(conn):
     _add_column_if_missing(conn, "snack_catalog", "drink_mix_type")
     _migrate_drink_mix_types(conn)
+    _add_column_if_missing(conn, "ingredients", "on_hand", "BOOLEAN DEFAULT 0")
+    _add_column_if_missing(conn, "ingredients", "essentials", "BOOLEAN DEFAULT 0")
+    _add_column_if_missing(conn, "ingredients", "packing_method")
 
 
 @asynccontextmanager

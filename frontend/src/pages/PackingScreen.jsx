@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { get, put } from '../api';
+import { get, put, patch } from '../api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -20,7 +20,7 @@ function PackingScreen() {
   const { tripId } = useParams();
   const navigate = useNavigate();
   const [packing, setPacking] = useState(null);
-  const [shoppingList, setShoppingList] = useState([]);
+  const [shoppingList, setShoppingList] = useState({ items: [], essentials: [] });
   const [error, setError] = useState(null);
 
   useEffect(() => { loadData(); }, [tripId]);
@@ -37,6 +37,13 @@ function PackingScreen() {
     } catch (err) {
       setError(err.message);
     }
+  }
+
+  async function toggleOnHand(ingredientId) {
+    try {
+      await patch(`/ingredients/${ingredientId}/on-hand`);
+      loadData();
+    } catch (err) { setError(err.message); }
   }
 
   async function toggleMealPacked(mealId, packed) {
@@ -122,8 +129,12 @@ function PackingScreen() {
                   </TableHeader>
                   <TableBody>
                     {meal.ingredients.map((ing, i) => (
-                      <TableRow key={i}>
-                        <TableCell className="py-1 text-sm">{ing.name}</TableCell>
+                      <TableRow key={i} className={ing.essentials ? 'text-muted-foreground' : ''}>
+                        <TableCell className="py-1 text-sm">
+                          {ing.name}
+                          {ing.essentials && <span className="text-xs ml-1">(essential)</span>}
+                          {ing.packing_method && <span className="text-xs text-muted-foreground ml-1">[{ing.packing_method}]</span>}
+                        </TableCell>
                         <TableCell className="py-1 text-sm text-right">{ing.amount_oz}</TableCell>
                       </TableRow>
                     ))}
@@ -218,7 +229,7 @@ function PackingScreen() {
         <div className="flex items-center gap-3 mb-3">
           <CollapsibleTrigger className="flex items-center gap-2 cursor-pointer">
             <h3 className="text-lg font-semibold">Shopping List</h3>
-            <Badge variant="secondary">{shoppingList.length} items</Badge>
+            <Badge variant="secondary">{(shoppingList.items || []).length} items</Badge>
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent>
@@ -226,20 +237,61 @@ function PackingScreen() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10"></TableHead>
                   <TableHead>Ingredient</TableHead>
+                  <TableHead>Packing</TableHead>
                   <TableHead className="text-right">Total (oz)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {shoppingList.map((item) => (
-                  <TableRow key={item.ingredient_id}>
-                    <TableCell>{item.ingredient_name}</TableCell>
+                {(shoppingList.items || []).map((item) => (
+                  <TableRow key={item.ingredient_id} className={item.on_hand ? 'opacity-60' : ''}>
+                    <TableCell>
+                      <Checkbox
+                        checked={item.on_hand}
+                        onCheckedChange={() => toggleOnHand(item.ingredient_id)}
+                      />
+                    </TableCell>
+                    <TableCell className={item.on_hand ? 'line-through' : ''}>{item.ingredient_name}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{item.packing_method || ''}</TableCell>
                     <TableCell className="text-right">{item.total_oz}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </Card>
+
+          {/* Essentials section */}
+          {(shoppingList.essentials || []).length > 0 && (
+            <Collapsible className="mt-3">
+              <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground cursor-pointer">
+                <span>Essentials (always on hand)</span>
+                <Badge variant="outline" className="text-xs">{shoppingList.essentials.length}</Badge>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <Card className="overflow-x-auto mt-2">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Ingredient</TableHead>
+                        <TableHead>Packing</TableHead>
+                        <TableHead className="text-right">Total (oz)</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {shoppingList.essentials.map((item) => (
+                        <TableRow key={item.ingredient_id}>
+                          <TableCell>{item.ingredient_name}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{item.packing_method || ''}</TableCell>
+                          <TableCell className="text-right">{item.total_oz}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Card>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </CollapsibleContent>
       </Collapsible>
     </div>

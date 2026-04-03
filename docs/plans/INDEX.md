@@ -25,6 +25,7 @@
 | 19 | [Zebra Striping + Mobile Audit](19-zebra-striping-mobile-audit.md) | Table striping + mobile layout fixes across all screens |
 | 20 | [Per-Section Meters](20-per-section-meters.md) | Per-section meters + summary relayout |
 | 21 | [Collapsible Category Grid](21-collapsible-category-grid.md) | Collapse 5-category grid by default in trip summary |
+| 22 | [Shopping List Enhancements](22-shopping-list-enhancements.md) | On-hand toggle, essentials, packing method for ingredients |
 | 23 | [Drink Mix Subcategories](23-drink-mix-subcategories.md) | Add drink_mix_type field (breakfast/dinner/all_day) to snack catalog |
 
 ## In Progress
@@ -36,7 +37,6 @@
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
-| 22 | [Shopping List Enhancements](22-shopping-list-enhancements.md) | On-hand toggle, essentials, packing method for ingredients | — |
 | 24 | [Daily Plan — Auto-Fill](24-daily-plan-autofill.md) | Day assignments table, auto-fill algorithm, read-only UI | 23 |
 | 25 | [Daily Plan — Manual Editing](25-daily-plan-manual-editing.md) | CRUD endpoints for assignments, unallocated pool, reset | 24 |
 | 26 | [Daily Plan — Bar Chart & Layout](26-daily-plan-bar-chart.md) | Stacked bar chart, target lines, responsive day grid | 25 |
