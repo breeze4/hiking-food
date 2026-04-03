@@ -14,6 +14,7 @@ from routers.ingredients import router as ingredients_router
 from routers.snacks import router as snacks_router
 from routers.recipes import router as recipes_router
 from routers.trips import router as trips_router
+from routers.daily_plan import router as daily_plan_router
 
 FRONTEND_DIR = Path(__file__).parent / ".." / "frontend" / "dist"
 
@@ -78,6 +79,7 @@ inner.include_router(ingredients_router)
 inner.include_router(snacks_router)
 inner.include_router(recipes_router)
 inner.include_router(trips_router)
+inner.include_router(daily_plan_router)
 
 
 @inner.get("/api/health")

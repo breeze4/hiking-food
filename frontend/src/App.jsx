@@ -8,6 +8,7 @@ import RecipesPage from './pages/RecipesPage';
 import RecipeEditPage from './pages/RecipeEditPage';
 import TripPlannerPage from './pages/TripPlannerPage';
 import PackingScreen from './pages/PackingScreen';
+import DailyPlanPage from './pages/DailyPlanPage';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
@@ -22,8 +23,22 @@ function NavLinks({ onClick }) {
       <NavLink to="/recipes" className={linkClass} onClick={onClick}>Recipes</NavLink>
       <NavLink to="/snacks" className={linkClass} onClick={onClick}>Snack Catalog</NavLink>
       <NavLink to="/ingredients" className={linkClass} onClick={onClick}>Ingredients</NavLink>
+      <DailyPlanLink onClick={onClick} />
       <PackingLink onClick={onClick} />
     </>
+  );
+}
+
+function DailyPlanLink({ onClick }) {
+  const { activeTripId } = useTrip();
+  const linkClass = ({ isActive }) =>
+    `text-sm font-medium transition-colors hover:text-primary ${isActive ? 'text-foreground' : 'text-muted-foreground'}`;
+
+  if (!activeTripId) return null;
+  return (
+    <NavLink to={`/trips/${activeTripId}/daily-plan`} className={linkClass} onClick={onClick}>
+      Daily Plan
+    </NavLink>
   );
 }
 
@@ -97,6 +112,7 @@ function App() {
               <Route path="/snacks" element={<SnackCatalogPage />} />
               <Route path="/recipes" element={<RecipesPage />} />
               <Route path="/recipes/:id" element={<RecipeEditPage />} />
+              <Route path="/trips/:tripId/daily-plan" element={<DailyPlanPage />} />
               <Route path="/trips/:tripId/packing" element={<PackingScreen />} />
               <Route path="/packing" element={<PackingRedirect />} />
             </Routes>

@@ -70,6 +70,18 @@ class TripMeal(Base):
     actual_weight_oz = Column(Float)
 
 
+class TripDayAssignment(Base):
+    __tablename__ = "trip_day_assignments"
+
+    id = Column(Integer, primary_key=True)
+    trip_id = Column(Integer, ForeignKey("trips.id"), nullable=False)
+    day_number = Column(Integer, nullable=False)  # 1-based
+    slot = Column(Text, nullable=False)
+    source_type = Column(Text, nullable=False)  # meal or snack
+    source_id = Column(Integer, nullable=False)  # trip_meal.id or trip_snack.id
+    servings = Column(Float, default=1)
+
+
 class TripSnack(Base):
     __tablename__ = "trip_snacks"
 
