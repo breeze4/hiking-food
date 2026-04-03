@@ -31,7 +31,32 @@ const DAY_TYPE_LABELS = {
   full: null,
 };
 
-// Map source categories to default slots for adding from pool
+// Category colors for the stacked bar chart
+const CATEGORY_COLORS = {
+  breakfast: '#3b82f6',      // blue
+  dinner: '#8b5cf6',         // purple
+  lunch: '#22c55e',          // green
+  snacks: '#f59e0b',         // amber
+  drink_mix: '#06b6d4',      // cyan
+};
+
+const CATEGORY_LABELS = {
+  breakfast: 'Breakfast',
+  dinner: 'Dinner',
+  lunch: 'Lunch',
+  snacks: 'Snacks',
+  drink_mix: 'Drinks',
+};
+
+// Map slot to display category
+function slotToCategory(slot) {
+  if (slot === 'breakfast') return 'breakfast';
+  if (slot === 'dinner') return 'dinner';
+  if (slot === 'lunch') return 'lunch';
+  if (slot === 'morning_snacks' || slot === 'afternoon_snacks') return 'snacks';
+  return 'drink_mix';
+}
+
 function defaultSlotForItem(item) {
   if (item.source_type === 'meal') {
     return item.category === 'breakfast' ? 'breakfast' : 'dinner';
@@ -40,6 +65,113 @@ function defaultSlotForItem(item) {
   if (item.category === 'lunch') return 'lunch';
   return 'afternoon_snacks';
 }
+
+// --- Stacked Bar Chart ---
+
+function StackedBarChart({ days }) {
+  if (!days.length) return null;
+
+  const maxCal = Math.max(
+    ...days.map(d => Math.max(
+      d.items.reduce((s, i) => s + i.calories, 0),
+      d.target_calories || 0
+    ))
+  ) * 1.1 || 1;
+
+  const barWidth = Math.min(60, Math.floor(600 / days.length));
+  const chartHeight = 180;
+  const chartWidth = days.length * (barWidth + 12) + 20;
+  const categories = ['breakfast', 'dinner', 'lunch', 'snacks', 'drink_mix'];
+
+  return (
+    <div className="space-y-2">
+      <div className="overflow-x-auto">
+        <svg width={chartWidth} height={chartHeight + 40} className="block">
+          {days.map((day, idx) => {
+            const x = idx * (barWidth + 12) + 10;
+            const target = day.target_calories || 0;
+
+            // Sum calories per category
+            const byCat = {};
+            for (const cat of categories) byCat[cat] = 0;
+            for (const item of day.items) {
+              byCat[slotToCategory(item.slot)] += item.calories;
+            }
+
+            // Stack segments bottom-up
+            let yOffset = chartHeight;
+            const segments = [];
+            for (const cat of categories) {
+              const cal = byCat[cat];
+              if (cal <= 0) continue;
+              const h = (cal / maxCal) * chartHeight;
+              yOffset -= h;
+              segments.push({ cat, y: yOffset, h });
+            }
+
+            // Target line
+            const targetY = chartHeight - (target / maxCal) * chartHeight;
+
+            const typeLabel = DAY_TYPE_LABELS[day.day_type];
+            const label = typeLabel ? `D${day.day_number}(½)` : `D${day.day_number}`;
+
+            return (
+              <g key={day.day_number}>
+                {segments.map(({ cat, y, h }) => (
+                  <rect
+                    key={cat}
+                    x={x}
+                    y={y}
+                    width={barWidth}
+                    height={h}
+                    fill={CATEGORY_COLORS[cat]}
+                    rx={2}
+                  />
+                ))}
+                {/* Target line */}
+                <line
+                  x1={x - 3}
+                  y1={targetY}
+                  x2={x + barWidth + 3}
+                  y2={targetY}
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  strokeDasharray="4,2"
+                  className="text-foreground/40"
+                />
+                {/* Day label */}
+                <text
+                  x={x + barWidth / 2}
+                  y={chartHeight + 16}
+                  textAnchor="middle"
+                  className="fill-muted-foreground text-[10px]"
+                >
+                  {label}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-3 text-xs">
+        {categories.map(cat => (
+          <div key={cat} className="flex items-center gap-1">
+            <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: CATEGORY_COLORS[cat] }} />
+            <span className="text-muted-foreground">{CATEGORY_LABELS[cat]}</span>
+          </div>
+        ))}
+        <div className="flex items-center gap-1">
+          <span className="inline-block w-4 border-t-2 border-dashed border-foreground/40" />
+          <span className="text-muted-foreground">Target</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Main Page ---
 
 function DailyPlanPage() {
   const { tripId } = useParams();
@@ -105,7 +237,7 @@ function DailyPlanPage() {
   const hasAssignments = plan.days.some(d => d.items.length > 0);
   const totalDays = plan.days.length;
 
-  // Track which items run out: find last day each item appears
+  // Track last day each item appears (for "runs out" indicator)
   const lastDayBySource = {};
   for (const day of plan.days) {
     for (const item of day.items) {
@@ -130,6 +262,7 @@ function DailyPlanPage() {
         </div>
       </div>
 
+      {/* Warnings */}
       {plan.warnings.length > 0 && (
         <div className="space-y-1">
           {plan.warnings.map((w, i) => (
@@ -142,7 +275,10 @@ function DailyPlanPage() {
         <p className="text-muted-foreground">No assignments yet. Click Auto-Fill to distribute food across days.</p>
       )}
 
-      {/* Day cards */}
+      {/* Stacked bar chart */}
+      {hasAssignments && <StackedBarChart days={plan.days} />}
+
+      {/* Day detail cards — responsive grid */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {plan.days.map((day) => {
           const typeLabel = DAY_TYPE_LABELS[day.day_type];
@@ -161,11 +297,10 @@ function DailyPlanPage() {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">{dayLabel}</CardTitle>
-                  {day.items.length > 0 && (
-                    <span className="text-xs text-muted-foreground">
-                      {Math.round(totalCal)} cal · {totalWeight.toFixed(1)} oz
-                    </span>
-                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {day.items.length > 0 && <>{Math.round(totalCal)} / {Math.round(day.target_calories)} cal</>}
+                    {day.items.length > 0 && <> · {totalWeight.toFixed(1)} oz</>}
+                  </span>
                 </div>
               </CardHeader>
               <CardContent className="text-sm space-y-2">

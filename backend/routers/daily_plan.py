@@ -9,6 +9,7 @@ from models import (
     Trip, TripMeal, TripSnack, TripDayAssignment,
     SnackCatalogItem, Ingredient, Recipe, RecipeIngredient,
 )
+from calculator import compute_trip_targets
 from services.autofill import auto_fill, build_day_list
 from services.recipe_calc import compute_recipe_totals
 
@@ -77,6 +78,11 @@ def _build_daily_plan_response(db: Session, trip: Trip):
     days_list = build_day_list(trip)
     days_map = {d["day_number"]: d for d in days_list}
 
+    # Compute per-day calorie target using Skurka method
+    total_days = sum(d["fraction"] for d in days_list)
+    # Midpoint of target range: (19+24)/2 * 125 = 2687.5 cal per full day
+    cal_per_full_day = (19 + 24) / 2 * 125 if total_days > 0 else 0
+
     # Build name/calorie lookup for meals and snacks
     meal_info = {}
     for tm in db.query(TripMeal).filter(TripMeal.trip_id == trip.id).all():
@@ -121,6 +127,7 @@ def _build_daily_plan_response(db: Session, trip: Trip):
                 "day_number": day_num,
                 "fraction": day_info["fraction"],
                 "day_type": day_info["type"],
+                "target_calories": round(cal_per_full_day * day_info["fraction"], 1),
                 "items": [],
             }
 
@@ -162,6 +169,7 @@ def _build_daily_plan_response(db: Session, trip: Trip):
                 "day_number": d["day_number"],
                 "fraction": d["fraction"],
                 "day_type": d["type"],
+                "target_calories": round(cal_per_full_day * d["fraction"], 1),
                 "items": [],
             }
 
