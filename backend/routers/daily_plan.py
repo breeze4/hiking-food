@@ -1,3 +1,6 @@
+from pydantic import BaseModel
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -229,3 +232,51 @@ def run_auto_fill(trip_id: int, db: Session = Depends(get_db)):
     response = _build_daily_plan_response(db, trip)
     response["warnings"] = warnings
     return response
+
+
+# --- Assignment CRUD ---
+
+class AssignmentCreate(BaseModel):
+    day_number: int
+    slot: str
+    source_type: str  # meal or snack
+    source_id: int
+    servings: float = 1
+
+
+class AssignmentUpdate(BaseModel):
+    servings: Optional[float] = None
+
+
+@router.post("/{trip_id}/daily-plan/assignments", status_code=201)
+def add_assignment(trip_id: int, data: AssignmentCreate, db: Session = Depends(get_db)):
+    trip = db.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    assignment = TripDayAssignment(trip_id=trip_id, **data.model_dump())
+    db.add(assignment)
+    db.commit()
+    return _build_daily_plan_response(db, trip)
+
+
+@router.delete("/{trip_id}/daily-plan/assignments/{assignment_id}")
+def delete_assignment(trip_id: int, assignment_id: int, db: Session = Depends(get_db)):
+    assignment = db.get(TripDayAssignment, assignment_id)
+    if not assignment or assignment.trip_id != trip_id:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    db.delete(assignment)
+    db.commit()
+    trip = db.get(Trip, trip_id)
+    return _build_daily_plan_response(db, trip)
+
+
+@router.patch("/{trip_id}/daily-plan/assignments/{assignment_id}")
+def update_assignment(trip_id: int, assignment_id: int, data: AssignmentUpdate, db: Session = Depends(get_db)):
+    assignment = db.get(TripDayAssignment, assignment_id)
+    if not assignment or assignment.trip_id != trip_id:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    if data.servings is not None:
+        assignment.servings = data.servings
+    db.commit()
+    trip = db.get(Trip, trip_id)
+    return _build_daily_plan_response(db, trip)

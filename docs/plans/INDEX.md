@@ -28,6 +28,7 @@
 | 22 | [Shopping List Enhancements](22-shopping-list-enhancements.md) | On-hand toggle, essentials, packing method for ingredients |
 | 23 | [Drink Mix Subcategories](23-drink-mix-subcategories.md) | Add drink_mix_type field (breakfast/dinner/all_day) to snack catalog |
 | 24 | [Daily Plan — Auto-Fill](24-daily-plan-autofill.md) | Day assignments table, auto-fill algorithm, read-only UI |
+| 25 | [Daily Plan — Manual Editing](25-daily-plan-manual-editing.md) | CRUD endpoints for assignments, unallocated pool, reset |
 
 ## In Progress
 
@@ -38,7 +39,6 @@
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
-| 25 | [Daily Plan — Manual Editing](25-daily-plan-manual-editing.md) | CRUD endpoints for assignments, unallocated pool, reset | 24 |
 | 26 | [Daily Plan — Bar Chart & Layout](26-daily-plan-bar-chart.md) | Stacked bar chart, target lines, responsive day grid | 25 |
 
 ## PRDs
