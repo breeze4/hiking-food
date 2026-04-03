@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTrip } from '../context/TripContext';
 import ProgressMeter from './ProgressMeter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,6 +38,7 @@ function CategoryRow({ label, actualCal, calLow, calHigh, actualWeight, weightLo
 
 function TripSummary() {
   const { summary, tripDetail } = useTrip();
+  const [categoryOpen, setCategoryOpen] = useState(false);
 
   if (!summary) return null;
 
@@ -115,45 +117,63 @@ function TripSummary() {
 
         <Separator />
 
-        {/* Category grid */}
-        <div className="space-y-2">
-          {/* Grid header - desktop only */}
-          <div className="hidden sm:grid sm:grid-cols-[8rem_1fr_1fr] gap-3 text-[10px] text-muted-foreground uppercase tracking-wide">
-            <span></span>
-            <span>Calories</span>
-            <span>Weight</span>
-          </div>
+        {/* Collapsible category grid */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setCategoryOpen(o => !o)}
+            className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <svg
+              width="12" height="12" viewBox="0 0 12 12"
+              className={`transition-transform ${categoryOpen ? 'rotate-90' : ''}`}
+            >
+              <path d="M4 2 L9 6 L4 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Category Breakdown
+          </button>
 
-          {bkf && (
-            <CategoryRow
-              label="Breakfast"
-              actualCal={summary.breakfast_calories} calLow={bkf.calLow} calHigh={bkf.calHigh}
-              actualWeight={summary.breakfast_weight} weightLow={bkf.weightLow} weightHigh={bkf.weightHigh}
-            />
-          )}
-          {din && (
-            <CategoryRow
-              label="Dinner"
-              actualCal={summary.dinner_calories} calLow={din.calLow} calHigh={din.calHigh}
-              actualWeight={summary.dinner_weight} weightLow={din.weightLow} weightHigh={din.weightHigh}
-            />
-          )}
-          <CategoryRow
-            label="Lunch"
-            actualCal={slotData.lunch.actualCal} calLow={slotData.lunch.calLow} calHigh={slotData.lunch.calHigh}
-            actualWeight={slotData.lunch.actualWeight} weightLow={slotData.lunch.weightLow} weightHigh={slotData.lunch.weightHigh}
-          />
-          <CategoryRow
-            label="Snacks"
-            actualCal={slotData.snacks.actualCal} calLow={slotData.snacks.calLow} calHigh={slotData.snacks.calHigh}
-            actualWeight={slotData.snacks.actualWeight} weightLow={slotData.snacks.weightLow} weightHigh={slotData.snacks.weightHigh}
-          />
-          {(summary.drink_mix_weight > 0 || drinkMixes.length > 0) && (
-            <CategoryRow
-              label="Drink Mixes"
-              actualCal={summary.drink_mix_calories} calLow={dmCalLow} calHigh={dmCalHigh}
-              actualWeight={summary.drink_mix_weight} weightLow={dmWeightLow} weightHigh={dmWeightHigh}
-            />
+          {categoryOpen && (
+            <div className="space-y-2 mt-2">
+              {/* Grid header - desktop only */}
+              <div className="hidden sm:grid sm:grid-cols-[8rem_1fr_1fr] gap-3 text-[10px] text-muted-foreground uppercase tracking-wide">
+                <span></span>
+                <span>Calories</span>
+                <span>Weight</span>
+              </div>
+
+              {bkf && (
+                <CategoryRow
+                  label="Breakfast"
+                  actualCal={summary.breakfast_calories} calLow={bkf.calLow} calHigh={bkf.calHigh}
+                  actualWeight={summary.breakfast_weight} weightLow={bkf.weightLow} weightHigh={bkf.weightHigh}
+                />
+              )}
+              {din && (
+                <CategoryRow
+                  label="Dinner"
+                  actualCal={summary.dinner_calories} calLow={din.calLow} calHigh={din.calHigh}
+                  actualWeight={summary.dinner_weight} weightLow={din.weightLow} weightHigh={din.weightHigh}
+                />
+              )}
+              <CategoryRow
+                label="Lunch"
+                actualCal={slotData.lunch.actualCal} calLow={slotData.lunch.calLow} calHigh={slotData.lunch.calHigh}
+                actualWeight={slotData.lunch.actualWeight} weightLow={slotData.lunch.weightLow} weightHigh={slotData.lunch.weightHigh}
+              />
+              <CategoryRow
+                label="Snacks"
+                actualCal={slotData.snacks.actualCal} calLow={slotData.snacks.calLow} calHigh={slotData.snacks.calHigh}
+                actualWeight={slotData.snacks.actualWeight} weightLow={slotData.snacks.weightLow} weightHigh={slotData.snacks.weightHigh}
+              />
+              {(summary.drink_mix_weight > 0 || drinkMixes.length > 0) && (
+                <CategoryRow
+                  label="Drink Mixes"
+                  actualCal={summary.drink_mix_calories} calLow={dmCalLow} calHigh={dmCalHigh}
+                  actualWeight={summary.drink_mix_weight} weightLow={dmWeightLow} weightHigh={dmWeightHigh}
+                />
+              )}
+            </div>
           )}
         </div>
       </CardContent>
