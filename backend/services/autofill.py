@@ -103,13 +103,27 @@ def distribute_snacks(days, trip_snacks, snack_weights):
         plan_slot = SNACK_SLOT_MAP.get(snack["slot"], "afternoon_snacks")
         elig = eligible_days(days, plan_slot)
         remaining = snack["servings"]
+        num_days = len(elig)
+        if num_days == 0 or remaining <= 0:
+            continue
 
-        for day in elig:
+        # How many days we can fill (1 serving per day)
+        fill_count = min(int(remaining), num_days)
+
+        # Pick evenly-spaced day indices so servings spread across the trip
+        if fill_count >= num_days:
+            chosen = list(range(num_days))
+        else:
+            chosen = [round(i * num_days / fill_count) for i in range(fill_count)]
+            # Clamp and deduplicate (shouldn't happen but safety)
+            chosen = sorted(set(min(idx, num_days - 1) for idx in chosen))
+
+        for idx in chosen:
             if remaining <= 0:
                 break
             assign_qty = min(1, remaining)
             assignments.append({
-                "day_number": day["day_number"],
+                "day_number": elig[idx]["day_number"],
                 "slot": plan_slot,
                 "source_type": "snack",
                 "source_id": snack["id"],

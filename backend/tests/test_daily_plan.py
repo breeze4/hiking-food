@@ -462,3 +462,74 @@ def test_unallocated_pool(c):
     assert len(unalloc) == 1
     # 3 eligible days for afternoon_snacks (1, 2, 3), 10-3=7 remaining
     assert unalloc[0]["remaining_servings"] == 7
+
+
+def test_snacks_distributed_evenly_not_front_loaded(c):
+    """Snacks with fewer servings than days should spread evenly, not pile on day 1."""
+    # Utah-like trip: 0.5 + 5 + 0.5 = 7 days, many snack items with 2 servings each
+    trip = _create_trip(c, first_day_fraction=0.5, full_days=5, last_day_fraction=0.5)
+
+    # Add many snack items with 2 servings each (like the real Utah trip)
+    _add_snack(c, trip["id"], "Mixed Nuts", 2)
+    _add_snack(c, trip["id"], "Salami", 2)
+    _add_snack(c, trip["id"], "Crackers", 2)  # lunch slot
+
+    plan = _autofill(c, trip["id"])
+
+    # Count afternoon_snacks per day
+    snack_counts = {}
+    for d in plan["days"]:
+        count = len([i for i in d["items"] if i["slot"] == "afternoon_snacks"])
+        snack_counts[d["day_number"]] = count
+
+    # With 2 items × 2 servings across 6 eligible afternoon_snack days (1-6, not day 7),
+    # no single day should have more than 2 snack items
+    max_snacks_per_day = max(snack_counts.values()) if snack_counts else 0
+    assert max_snacks_per_day <= 2, (
+        f"Snacks should be spread evenly but day had {max_snacks_per_day} snacks: {snack_counts}"
+    )
+
+    # The two items should NOT both be on day 1
+    assert snack_counts.get(1, 0) <= 1, (
+        f"Day 1 got {snack_counts.get(1, 0)} snacks — should spread across days"
+    )
+
+
+def test_utah_trip_realistic(c):
+    """Realistic Utah trip: snacks spread across days, not front-loaded.
+
+    Reproduces the bug where all snack items with 2 servings piled onto days 1-2.
+    """
+    trip = _create_trip(c, first_day_fraction=0.5, full_days=5, last_day_fraction=0.5)
+
+    # 6 breakfasts
+    _add_meal(c, trip["id"], "Oatmeal", quantity=6)
+    # 2 each of 3 different dinners = 6 dinners
+    _add_meal(c, trip["id"], "Rice & Beans", quantity=2)
+    _add_meal(c, trip["id"], "Cheese Quesadilla", quantity=2)
+
+    # Lots of 2-serving snack items (the problematic pattern)
+    _add_snack(c, trip["id"], "Mixed Nuts", 4)
+    _add_snack(c, trip["id"], "Salami", 2)
+
+    plan = _autofill(c, trip["id"])
+
+    # Count total snack items per day across all snack slots
+    snack_counts = {}
+    for d in plan["days"]:
+        count = len([i for i in d["items"]
+                     if i["slot"] in ("afternoon_snacks", "morning_snacks")])
+        snack_counts[d["day_number"]] = count
+
+    # Key assertion: the spread should be roughly even.
+    # With 6 total snack servings across 6 eligible days, each day should get ~1.
+    # Definitely no day should get more than 3.
+    if snack_counts:
+        max_count = max(snack_counts.values())
+        min_count = min(snack_counts.get(d, 0) for d in range(1, 7))
+        assert max_count <= 3, (
+            f"Worst day got {max_count} snacks — distribution is front-loaded: {snack_counts}"
+        )
+        assert max_count - min_count <= 2, (
+            f"Snack spread too uneven: max={max_count}, min={min_count}: {snack_counts}"
+        )
