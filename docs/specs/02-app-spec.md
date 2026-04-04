@@ -296,6 +296,18 @@ A Claude Code agent that builds complete trip food plans via the API.
 - Agent carries snack category and slot knowledge in its prompt/memory
 - When app features (categories, slots, meters) are built, agent adopts the API
 
+## Macronutrient Tracking
+
+Protein, fat, and carb tracking at the ingredient level, rolling up through recipes, snacks, trips, and daily plans. See `docs/specs/10-macronutrient-tracking.md` for full spec.
+
+- Ingredients have optional `protein_per_oz`, `fat_per_oz`, `carb_per_oz` (grams)
+- When all three macros are set, `calories_per_oz` is derived (p*4 + f*9 + c*4). When macros are null, direct `calories_per_oz` is used.
+- Macros roll up everywhere calories do: recipes, snack servings, trip summary, daily plan
+- At item level: show grams. At aggregate level: show percentage breakdown vs. global target
+- Global macro target (e.g., 20% protein / 30% fat / 50% carb) stored in app settings, not per-trip
+- Partial data handled gracefully: macro percentages computed from the subset of calories with macro data, with coverage indicator
+- Data populated via manual UI entry or external agent using USDA FoodData Central API
+
 ## Future Feature Requests
 
 - ~~Snack categories in data model (category column on snack_catalog)~~ (done)
