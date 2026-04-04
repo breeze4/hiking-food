@@ -52,15 +52,23 @@ function RecipeEditPage() {
   }, [allIngredients]);
 
   const totals = useMemo(() => {
-    let weight = 0, cals = 0;
+    let weight = 0, cals = 0, protein = 0, fat = 0, carb = 0;
     recipeIngredients.forEach((ri) => {
-      weight += ri.amount_oz || 0;
-      cals += (ri.amount_oz || 0) * (ingLookup[ri.ingredient_id]?.calories_per_oz ?? 0);
+      const amt = ri.amount_oz || 0;
+      const ing = ingLookup[ri.ingredient_id];
+      weight += amt;
+      cals += amt * (ing?.calories_per_oz ?? 0);
+      protein += amt * (ing?.protein_per_oz ?? 0);
+      fat += amt * (ing?.fat_per_oz ?? 0);
+      carb += amt * (ing?.carb_per_oz ?? 0);
     });
     return {
       total_weight: Math.round(weight * 100) / 100,
       total_calories: Math.round(cals * 10) / 10,
       cal_per_oz: weight > 0 ? Math.round((cals / weight) * 10) / 10 : null,
+      protein_g: Math.round(protein * 10) / 10,
+      fat_g: Math.round(fat * 10) / 10,
+      carb_g: Math.round(carb * 10) / 10,
     };
   }, [recipeIngredients, ingLookup]);
 
@@ -230,6 +238,11 @@ function RecipeEditPage() {
 
         <div className="mt-3 text-sm font-semibold">
           Total: {totals.total_weight} oz &middot; {totals.total_calories} cal &middot; {totals.cal_per_oz ?? '\u2014'} cal/oz
+          {(totals.protein_g > 0 || totals.fat_g > 0 || totals.carb_g > 0) && (
+            <span className="ml-2 font-normal text-muted-foreground">
+              &middot; {totals.protein_g}g P / {totals.fat_g}g F / {totals.carb_g}g C
+            </span>
+          )}
         </div>
       </div>
 

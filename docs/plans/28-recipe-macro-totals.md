@@ -23,12 +23,12 @@ AFK
 
 ## Acceptance criteria
 
-- [ ] `compute_recipe_totals()` returns `protein_g`, `fat_g`, `carb_g` (sum of each ingredient's macro_per_oz * amount_oz)
-- [ ] Ingredients with null macros contribute 0 to macro totals (but still contribute calories)
-- [ ] Recipe detail API response includes `protein_g`, `fat_g`, `carb_g`
-- [ ] Recipe edit page shows macro totals alongside weight/calorie totals
-- [ ] Recipe list/browse shows macro totals per recipe
-- [ ] Tests verify macro rollup with full data, partial data (some ingredients missing macros), and no macro data
+- [x] `compute_recipe_totals()` returns `protein_g`, `fat_g`, `carb_g` (sum of each ingredient's macro_per_oz * amount_oz)
+- [x] Ingredients with null macros contribute 0 to macro totals (but still contribute calories)
+- [x] Recipe detail API response includes `protein_g`, `fat_g`, `carb_g`
+- [x] Recipe edit page shows macro totals alongside weight/calorie totals
+- [x] Recipe list/browse shows macro totals per recipe
+- [x] Tests verify macro rollup with full data, partial data (some ingredients missing macros), and no macro data
 
 ## Pattern exemplar
 
@@ -37,8 +37,9 @@ AFK
 
 ## Tasks
 
-- [ ] Extend `compute_recipe_totals()` to sum protein, fat, carb grams from ingredients
-- [ ] Update recipe-related Pydantic schemas to include macro fields
-- [ ] Update recipe API responses to include macro totals
-- [ ] Update RecipeEditPage to display macro totals
-- [ ] Write tests for recipe macro rollup (full, partial, and no macro data)
+- [x] Extend `compute_recipe_totals()` to sum protein, fat, carb grams from ingredients
+- [x] Update recipe-related Pydantic schemas to include macro fields
+- [x] Update recipe API responses to include macro totals
+- [x] Update RecipeEditPage to display macro totals
+- [x] Update RecipesPage to display macro totals in list view
+- [x] Write tests for recipe macro rollup (full, partial, and no macro data)

@@ -118,6 +118,9 @@ class RecipeListRead(BaseModel):
     total_weight: float
     total_calories: float
     cal_per_oz: Optional[float] = None
+    protein_g: float = 0
+    fat_g: float = 0
+    carb_g: float = 0
 
 
 class RecipeDetailRead(BaseModel):
@@ -132,6 +135,9 @@ class RecipeDetailRead(BaseModel):
     total_weight: float
     total_calories: float
     cal_per_oz: Optional[float] = None
+    protein_g: float = 0
+    fat_g: float = 0
+    carb_g: float = 0
 
 
 # --- Trips ---

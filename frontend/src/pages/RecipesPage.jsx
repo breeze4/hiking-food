@@ -50,6 +50,7 @@ function RecipesPage() {
               <TableHead className="text-right">Weight (oz)</TableHead>
               <TableHead className="text-right">Calories</TableHead>
               <TableHead className="text-right">Cal/oz</TableHead>
+              <TableHead className="text-right">P/F/C (g)</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -74,11 +75,16 @@ function RecipesPage() {
                 <TableCell className="text-right">{r.total_weight}</TableCell>
                 <TableCell className="text-right">{r.total_calories}</TableCell>
                 <TableCell className="text-right">{r.cal_per_oz}</TableCell>
+                <TableCell className="text-right text-muted-foreground">
+                  {(r.protein_g > 0 || r.fat_g > 0 || r.carb_g > 0)
+                    ? `${r.protein_g}/${r.fat_g}/${r.carb_g}`
+                    : '\u2014'}
+                </TableCell>
               </TableRow>
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                   No recipes found.
                 </TableCell>
               </TableRow>

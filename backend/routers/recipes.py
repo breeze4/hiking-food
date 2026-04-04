@@ -22,9 +22,16 @@ def get_db():
 
 
 def _get_recipe_ingredients(db: Session, recipe_id: int):
-    """Get recipe ingredients with their ingredient names and cal/oz."""
+    """Get recipe ingredients with their ingredient names, cal/oz, and macros."""
     rows = (
-        db.query(RecipeIngredient, Ingredient.name, Ingredient.calories_per_oz)
+        db.query(
+            RecipeIngredient,
+            Ingredient.name,
+            Ingredient.calories_per_oz,
+            Ingredient.protein_per_oz,
+            Ingredient.fat_per_oz,
+            Ingredient.carb_per_oz,
+        )
         .join(Ingredient, RecipeIngredient.ingredient_id == Ingredient.id)
         .filter(RecipeIngredient.recipe_id == recipe_id)
         .all()
@@ -36,15 +43,24 @@ def _get_recipe_ingredients(db: Session, recipe_id: int):
             "ingredient_name": name,
             "amount_oz": ri.amount_oz,
             "calories_per_oz": cal_per_oz,
+            "protein_per_oz": protein_per_oz,
+            "fat_per_oz": fat_per_oz,
+            "carb_per_oz": carb_per_oz,
             "calories": round(ri.amount_oz * (cal_per_oz or 0), 1),
         }
-        for ri, name, cal_per_oz in rows
+        for ri, name, cal_per_oz, protein_per_oz, fat_per_oz, carb_per_oz in rows
     ]
 
 
 def _build_detail(recipe: Recipe, ingredients_data: list) -> dict:
     totals = compute_recipe_totals([
-        {"amount_oz": i["amount_oz"], "calories_per_oz": i["calories_per_oz"]}
+        {
+            "amount_oz": i["amount_oz"],
+            "calories_per_oz": i["calories_per_oz"],
+            "protein_per_oz": i.get("protein_per_oz"),
+            "fat_per_oz": i.get("fat_per_oz"),
+            "carb_per_oz": i.get("carb_per_oz"),
+        }
         for i in ingredients_data
     ])
     return {
@@ -93,7 +109,13 @@ def list_recipes(category: Optional[str] = Query(None), db: Session = Depends(ge
     for recipe in recipes:
         ingredients_data = _get_recipe_ingredients(db, recipe.id)
         totals = compute_recipe_totals([
-            {"amount_oz": i["amount_oz"], "calories_per_oz": i["calories_per_oz"]}
+            {
+                "amount_oz": i["amount_oz"],
+                "calories_per_oz": i["calories_per_oz"],
+                "protein_per_oz": i.get("protein_per_oz"),
+                "fat_per_oz": i.get("fat_per_oz"),
+                "carb_per_oz": i.get("carb_per_oz"),
+            }
             for i in ingredients_data
         ])
         result.append({
