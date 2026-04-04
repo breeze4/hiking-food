@@ -9,6 +9,7 @@ import RecipeEditPage from './pages/RecipeEditPage';
 import TripPlannerPage from './pages/TripPlannerPage';
 import PackingScreen from './pages/PackingScreen';
 import DailyPlanPage from './pages/DailyPlanPage';
+import SettingsModal from './components/SettingsModal';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
@@ -90,9 +91,15 @@ function AppHeader() {
           <NavLinks />
         </nav>
 
-        {/* Trip selector - desktop */}
+        {/* Trip selector + settings - desktop */}
         <div className="hidden md:flex ml-auto items-center gap-2">
           <TripSelector />
+          <SettingsModal />
+        </div>
+
+        {/* Settings icon - mobile (visible when sheet is closed) */}
+        <div className="md:hidden ml-auto">
+          <SettingsModal />
         </div>
       </div>
     </header>

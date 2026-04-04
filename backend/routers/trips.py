@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import (
     Trip, TripSnack, TripMeal, SnackCatalogItem, Ingredient,
-    Recipe, RecipeIngredient,
+    Recipe, RecipeIngredient, AppSettings,
 )
 from schemas import (
     TripCreate, TripUpdate, TripListRead, TripDetailRead,
@@ -408,6 +408,17 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
         if total_all_calories > 0 else None
     )
 
+    # Fetch macro targets from settings
+    settings = db.query(AppSettings).first()
+    if settings:
+        macro_target = {
+            "protein_pct": settings.macro_target_protein_pct,
+            "fat_pct": settings.macro_target_fat_pct,
+            "carb_pct": settings.macro_target_carb_pct,
+        }
+    else:
+        macro_target = {"protein_pct": 20, "fat_pct": 30, "carb_pct": 50}
+
     return {
         **targets,
         "snack_weight": round(snack_weight, 2),
@@ -429,6 +440,7 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
         "weight_per_day": round(combined_weight / total_days, 1) if total_days > 0 else None,
         "cal_per_day": round(combined_calories / total_days, 1) if total_days > 0 else None,
         "macro_actual": macro_actual,
+        "macro_target": macro_target,
         "macro_coverage_pct": macro_coverage_pct,
     }
 

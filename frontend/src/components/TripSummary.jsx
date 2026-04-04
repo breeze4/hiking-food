@@ -115,16 +115,25 @@ function TripSummary() {
           </div>
         </div>
 
-        {/* Macro breakdown */}
+        {/* Macro breakdown: actual vs target */}
         {summary.macro_actual && (
           <>
             <Separator />
             <div className="space-y-1">
               <div className="text-xs font-medium text-muted-foreground">Macronutrients</div>
-              <div className="flex gap-3 text-sm">
+              <div className="grid grid-cols-[auto_1fr_1fr_1fr] gap-x-3 gap-y-0.5 text-sm items-center">
+                <span className="text-xs text-muted-foreground">Actual</span>
                 <span>P {summary.macro_actual.protein_pct}%</span>
                 <span>F {summary.macro_actual.fat_pct}%</span>
                 <span>C {summary.macro_actual.carb_pct}%</span>
+                {summary.macro_target && (
+                  <>
+                    <span className="text-xs text-muted-foreground">Target</span>
+                    <span className="text-muted-foreground">P {summary.macro_target.protein_pct}%</span>
+                    <span className="text-muted-foreground">F {summary.macro_target.fat_pct}%</span>
+                    <span className="text-muted-foreground">C {summary.macro_target.carb_pct}%</span>
+                  </>
+                )}
               </div>
               <div className="flex gap-3 text-xs text-muted-foreground">
                 <span>{summary.macro_actual.protein_g}g protein</span>

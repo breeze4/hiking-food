@@ -2,6 +2,24 @@ from pydantic import BaseModel
 from typing import Optional
 
 
+# --- App Settings ---
+
+class AppSettingsRead(BaseModel):
+    macro_target_protein_pct: float
+    macro_target_fat_pct: float
+    macro_target_carb_pct: float
+
+    model_config = {"from_attributes": True}
+
+
+class AppSettingsUpdate(BaseModel):
+    macro_target_protein_pct: float
+    macro_target_fat_pct: float
+    macro_target_carb_pct: float
+
+
+# --- Ingredients ---
+
 class IngredientCreate(BaseModel):
     name: str
     calories_per_oz: Optional[float] = None
@@ -254,6 +272,12 @@ class MacroActual(BaseModel):
     carb_pct: float
 
 
+class MacroTarget(BaseModel):
+    protein_pct: float
+    fat_pct: float
+    carb_pct: float
+
+
 class TripSummaryRead(BaseModel):
     total_days: float
     total_weight_low: float
@@ -285,4 +309,5 @@ class TripSummaryRead(BaseModel):
     weight_per_day: Optional[float] = None
     cal_per_day: Optional[float] = None
     macro_actual: Optional[MacroActual] = None
+    macro_target: Optional[MacroTarget] = None
     macro_coverage_pct: Optional[float] = None

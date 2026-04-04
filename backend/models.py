@@ -85,6 +85,15 @@ class TripDayAssignment(Base):
     servings = Column(Float, default=1)
 
 
+class AppSettings(Base):
+    __tablename__ = "app_settings"
+
+    id = Column(Integer, primary_key=True)
+    macro_target_protein_pct = Column(Float, default=20)
+    macro_target_fat_pct = Column(Float, default=30)
+    macro_target_carb_pct = Column(Float, default=50)
+
+
 class TripSnack(Base):
     __tablename__ = "trip_snacks"
 

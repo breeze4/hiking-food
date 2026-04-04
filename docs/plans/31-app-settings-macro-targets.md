@@ -23,13 +23,13 @@ AFK
 
 ## Acceptance criteria
 
-- [ ] `app_settings` table with `macro_target_protein_pct`, `macro_target_fat_pct`, `macro_target_carb_pct` (defaults: 20, 30, 50)
-- [ ] Settings row auto-created on first access if not present
-- [ ] `GET /api/settings` returns current settings
-- [ ] `PUT /api/settings` updates settings; validates percentages sum to 100
-- [ ] Settings UI accessible from app header (modal or simple page)
-- [ ] Trip summary shows actual vs target comparison (e.g., side-by-side percentages)
-- [ ] Tests for settings CRUD, validation (must sum to 100), and auto-creation
+- [x] `app_settings` table with `macro_target_protein_pct`, `macro_target_fat_pct`, `macro_target_carb_pct` (defaults: 20, 30, 50)
+- [x] Settings row auto-created on first access if not present
+- [x] `GET /api/settings` returns current settings
+- [x] `PUT /api/settings` updates settings; validates percentages sum to 100
+- [x] Settings UI accessible from app header (modal or simple page)
+- [x] Trip summary shows actual vs target comparison (e.g., side-by-side percentages)
+- [x] Tests for settings CRUD, validation (must sum to 100), and auto-creation
 
 ## Pattern exemplar
 
@@ -38,11 +38,11 @@ AFK
 
 ## Tasks
 
-- [ ] Add `AppSettings` model and migration
-- [ ] Create settings router with GET and PUT endpoints
-- [ ] Add validation that percentages sum to 100
-- [ ] Register settings router in main.py
-- [ ] Update trip summary endpoint to include macro targets from settings
-- [ ] Update trip summary UI to show actual vs target comparison
-- [ ] Add settings UI (modal from header or simple page)
-- [ ] Write tests for settings CRUD and validation
+- [x] Add `AppSettings` model and migration
+- [x] Create settings router with GET and PUT endpoints
+- [x] Add validation that percentages sum to 100
+- [x] Register settings router in main.py
+- [x] Update trip summary endpoint to include macro targets from settings
+- [x] Update trip summary UI to show actual vs target comparison
+- [x] Add settings UI (modal from header or simple page)
+- [x] Write tests for settings CRUD and validation
