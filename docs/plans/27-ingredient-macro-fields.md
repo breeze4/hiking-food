@@ -27,15 +27,15 @@ None - can start immediately
 
 ## Acceptance criteria
 
-- [ ] Ingredient table has `protein_per_oz`, `fat_per_oz`, `carb_per_oz` columns (nullable REAL)
-- [ ] PUT/POST ingredient with all three macros set → `calories_per_oz` is computed as `p*4 + f*9 + c*4`
-- [ ] PUT/POST ingredient with `calories_per_oz` set and no macros → macros are null, calories stored directly
-- [ ] PUT/POST ingredient with all three macros AND calories_per_oz → macros win, calories derived
-- [ ] GET ingredient returns all three macro fields (null when not set)
-- [ ] Ingredients page shows protein, fat, carb columns with inline editing
-- [ ] Ingredients missing macro data are visually distinguishable (e.g., empty cells, muted text)
-- [ ] Migration adds columns without losing existing data
-- [ ] Tests cover derivation rules: macros→calories, direct calories, and the transition between them
+- [x] Ingredient table has `protein_per_oz`, `fat_per_oz`, `carb_per_oz` columns (nullable REAL)
+- [x] PUT/POST ingredient with all three macros set → `calories_per_oz` is computed as `p*4 + f*9 + c*4`
+- [x] PUT/POST ingredient with `calories_per_oz` set and no macros → macros are null, calories stored directly
+- [x] PUT/POST ingredient with all three macros AND calories_per_oz → macros win, calories derived
+- [x] GET ingredient returns all three macro fields (null when not set)
+- [x] Ingredients page shows protein, fat, carb columns with inline editing
+- [x] Ingredients missing macro data are visually distinguishable (e.g., empty cells, muted text)
+- [x] Migration adds columns without losing existing data
+- [x] Tests cover derivation rules: macros→calories, direct calories, and the transition between them
 
 ## Pattern exemplar
 
@@ -45,10 +45,10 @@ None - can start immediately
 
 ## Tasks
 
-- [ ] Add migration script to add `protein_per_oz`, `fat_per_oz`, `carb_per_oz` to ingredients table
-- [ ] Update `models.py` with new columns, update `schemas.py` with new fields
-- [ ] Add calorie derivation logic to ingredient create/update endpoints
-- [ ] Update ingredients router to accept and return macro fields
-- [ ] Add protein, fat, carb columns to IngredientsPage with inline editing
-- [ ] Add visual indicator for ingredients missing macro data
-- [ ] Write tests for calorie derivation rules (macros→calories, direct calories, transitions)
+- [x] Add migration script to add `protein_per_oz`, `fat_per_oz`, `carb_per_oz` to ingredients table
+- [x] Update `models.py` with new columns, update `schemas.py` with new fields
+- [x] Add calorie derivation logic to ingredient create/update endpoints
+- [x] Update ingredients router to accept and return macro fields
+- [x] Add protein, fat, carb columns to IngredientsPage with inline editing
+- [x] Add visual indicator for ingredients missing macro data
+- [x] Write tests for calorie derivation rules (macros→calories, direct calories, transitions)

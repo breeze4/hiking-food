@@ -4,7 +4,10 @@ from typing import Optional
 
 class IngredientCreate(BaseModel):
     name: str
-    calories_per_oz: float
+    calories_per_oz: Optional[float] = None
+    protein_per_oz: Optional[float] = None
+    fat_per_oz: Optional[float] = None
+    carb_per_oz: Optional[float] = None
     on_hand: bool = False
     essentials: bool = False
     packing_method: Optional[str] = None
@@ -14,6 +17,9 @@ class IngredientCreate(BaseModel):
 class IngredientUpdate(BaseModel):
     name: Optional[str] = None
     calories_per_oz: Optional[float] = None
+    protein_per_oz: Optional[float] = None
+    fat_per_oz: Optional[float] = None
+    carb_per_oz: Optional[float] = None
     on_hand: Optional[bool] = None
     essentials: Optional[bool] = None
     packing_method: Optional[str] = None
@@ -24,6 +30,9 @@ class IngredientRead(BaseModel):
     id: int
     name: str
     calories_per_oz: Optional[float] = None
+    protein_per_oz: Optional[float] = None
+    fat_per_oz: Optional[float] = None
+    carb_per_oz: Optional[float] = None
     on_hand: bool = False
     essentials: bool = False
     packing_method: Optional[str] = None

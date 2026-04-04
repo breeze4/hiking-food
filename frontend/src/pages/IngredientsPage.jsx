@@ -27,7 +27,7 @@ function IngredientsPage() {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [addOpen, setAddOpen] = useState(false);
-  const [addForm, setAddForm] = useState({ name: '', calories_per_oz: '', notes: '' });
+  const [addForm, setAddForm] = useState({ name: '', calories_per_oz: '', protein_per_oz: '', fat_per_oz: '', carb_per_oz: '', notes: '' });
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [sortCol, setSortCol] = useState('name');
   const [sortAsc, setSortAsc] = useState(true);
@@ -56,13 +56,20 @@ function IngredientsPage() {
   async function handleAdd(e) {
     e.preventDefault();
     try {
-      const created = await post('/ingredients', {
+      const payload = {
         name: addForm.name,
-        calories_per_oz: parseFloat(addForm.calories_per_oz),
         notes: addForm.notes || null,
-      });
+      };
+      if (addForm.protein_per_oz !== '' && addForm.fat_per_oz !== '' && addForm.carb_per_oz !== '') {
+        payload.protein_per_oz = parseFloat(addForm.protein_per_oz);
+        payload.fat_per_oz = parseFloat(addForm.fat_per_oz);
+        payload.carb_per_oz = parseFloat(addForm.carb_per_oz);
+      } else if (addForm.calories_per_oz !== '') {
+        payload.calories_per_oz = parseFloat(addForm.calories_per_oz);
+      }
+      const created = await post('/ingredients', payload);
       setIngredients([...ingredients, created]);
-      setAddForm({ name: '', calories_per_oz: '', notes: '' });
+      setAddForm({ name: '', calories_per_oz: '', protein_per_oz: '', fat_per_oz: '', carb_per_oz: '', notes: '' });
       setAddOpen(false);
       setError(null);
     } catch (err) { setError(err.message); }
@@ -73,6 +80,9 @@ function IngredientsPage() {
     setEditForm({
       name: ingredient.name,
       calories_per_oz: ingredient.calories_per_oz ?? '',
+      protein_per_oz: ingredient.protein_per_oz ?? '',
+      fat_per_oz: ingredient.fat_per_oz ?? '',
+      carb_per_oz: ingredient.carb_per_oz ?? '',
       essentials: ingredient.essentials ?? false,
       packing_method: ingredient.packing_method ?? '',
       notes: ingredient.notes ?? '',
@@ -81,13 +91,26 @@ function IngredientsPage() {
 
   async function saveEdit(id) {
     try {
-      const updated = await put(`/ingredients/${id}`, {
+      const payload = {
         name: editForm.name,
-        calories_per_oz: parseFloat(editForm.calories_per_oz),
         essentials: editForm.essentials,
         packing_method: editForm.packing_method || null,
         notes: editForm.notes || null,
-      });
+      };
+      const p = editForm.protein_per_oz;
+      const f = editForm.fat_per_oz;
+      const cb = editForm.carb_per_oz;
+      if (p !== '' && f !== '' && cb !== '') {
+        payload.protein_per_oz = parseFloat(p);
+        payload.fat_per_oz = parseFloat(f);
+        payload.carb_per_oz = parseFloat(cb);
+      } else {
+        payload.calories_per_oz = editForm.calories_per_oz !== '' ? parseFloat(editForm.calories_per_oz) : null;
+        payload.protein_per_oz = null;
+        payload.fat_per_oz = null;
+        payload.carb_per_oz = null;
+      }
+      const updated = await put(`/ingredients/${id}`, payload);
       setIngredients(ingredients.map((i) => (i.id === id ? updated : i)));
       setEditingId(null);
       setError(null);
@@ -121,6 +144,9 @@ function IngredientsPage() {
             <TableRow>
               <SortHead col="name" label="Name" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} />
               <SortHead col="calories_per_oz" label="Cal/oz" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} className="text-right" />
+              <SortHead col="protein_per_oz" label="P g/oz" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} className="text-right" />
+              <SortHead col="fat_per_oz" label="F g/oz" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} className="text-right" />
+              <SortHead col="carb_per_oz" label="C g/oz" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} className="text-right" />
               <SortHead col="essentials" label="Essential" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} />
               <SortHead col="packing_method" label="Packing" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} />
               <SortHead col="notes" label="Notes" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} />
@@ -140,6 +166,21 @@ function IngredientsPage() {
                     <Input type="number" step="any" value={editForm.calories_per_oz}
                       onChange={(e) => setEditForm({ ...editForm, calories_per_oz: e.target.value })}
                       className="w-20 h-8 ml-auto" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Input type="number" step="any" value={editForm.protein_per_oz}
+                      onChange={(e) => setEditForm({ ...editForm, protein_per_oz: e.target.value })}
+                      className="w-20 h-8 ml-auto" placeholder="P" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Input type="number" step="any" value={editForm.fat_per_oz}
+                      onChange={(e) => setEditForm({ ...editForm, fat_per_oz: e.target.value })}
+                      className="w-20 h-8 ml-auto" placeholder="F" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Input type="number" step="any" value={editForm.carb_per_oz}
+                      onChange={(e) => setEditForm({ ...editForm, carb_per_oz: e.target.value })}
+                      className="w-20 h-8 ml-auto" placeholder="C" />
                   </TableCell>
                   <TableCell>
                     <Checkbox checked={editForm.essentials}
@@ -170,6 +211,9 @@ function IngredientsPage() {
                 <TableRow key={ing.id} className="even:bg-muted/50">
                   <TableCell className="font-medium">{ing.name}</TableCell>
                   <TableCell className="text-right">{ing.calories_per_oz}</TableCell>
+                  <TableCell className={`text-right ${ing.protein_per_oz == null ? 'text-muted-foreground/40' : ''}`}>{ing.protein_per_oz != null ? ing.protein_per_oz : '\u2014'}</TableCell>
+                  <TableCell className={`text-right ${ing.fat_per_oz == null ? 'text-muted-foreground/40' : ''}`}>{ing.fat_per_oz != null ? ing.fat_per_oz : '\u2014'}</TableCell>
+                  <TableCell className={`text-right ${ing.carb_per_oz == null ? 'text-muted-foreground/40' : ''}`}>{ing.carb_per_oz != null ? ing.carb_per_oz : '\u2014'}</TableCell>
                   <TableCell>{ing.essentials && <span className="text-xs text-muted-foreground">Yes</span>}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{PACKING_METHOD_LABELS[ing.packing_method] || ''}</TableCell>
                   <TableCell className="text-muted-foreground">{ing.notes}</TableCell>
@@ -203,9 +247,27 @@ function IngredientsPage() {
               </div>
               <div className="space-y-2">
                 <Label>Calories per oz</Label>
-                <Input type="number" step="any" required value={addForm.calories_per_oz}
+                <Input type="number" step="any" value={addForm.calories_per_oz}
                   onChange={(e) => setAddForm({ ...addForm, calories_per_oz: e.target.value })} />
               </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-2">
+                  <Label>Protein g/oz</Label>
+                  <Input type="number" step="any" value={addForm.protein_per_oz}
+                    onChange={(e) => setAddForm({ ...addForm, protein_per_oz: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Fat g/oz</Label>
+                  <Input type="number" step="any" value={addForm.fat_per_oz}
+                    onChange={(e) => setAddForm({ ...addForm, fat_per_oz: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Carb g/oz</Label>
+                  <Input type="number" step="any" value={addForm.carb_per_oz}
+                    onChange={(e) => setAddForm({ ...addForm, carb_per_oz: e.target.value })} />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">If all three macros are set, calories are derived automatically.</p>
               <div className="space-y-2">
                 <Label>Notes</Label>
                 <Input value={addForm.notes}

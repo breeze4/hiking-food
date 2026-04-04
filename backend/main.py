@@ -54,6 +54,9 @@ def _run_migrations(conn):
     _add_column_if_missing(conn, "ingredients", "on_hand", "BOOLEAN DEFAULT 0")
     _add_column_if_missing(conn, "ingredients", "essentials", "BOOLEAN DEFAULT 0")
     _add_column_if_missing(conn, "ingredients", "packing_method")
+    _add_column_if_missing(conn, "ingredients", "protein_per_oz", "REAL")
+    _add_column_if_missing(conn, "ingredients", "fat_per_oz", "REAL")
+    _add_column_if_missing(conn, "ingredients", "carb_per_oz", "REAL")
 
 
 @asynccontextmanager

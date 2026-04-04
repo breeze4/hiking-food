@@ -8,6 +8,9 @@ class Ingredient(Base):
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False)
     calories_per_oz = Column(Float)
+    protein_per_oz = Column(Float)
+    fat_per_oz = Column(Float)
+    carb_per_oz = Column(Float)
     on_hand = Column(Boolean, default=False)
     essentials = Column(Boolean, default=False)
     packing_method = Column(Text)  # bag, container, original, repack
