@@ -245,6 +245,15 @@ class SlotSubtotal(BaseModel):
     days_covered: Optional[float] = None
 
 
+class MacroActual(BaseModel):
+    protein_g: float
+    fat_g: float
+    carb_g: float
+    protein_pct: float
+    fat_pct: float
+    carb_pct: float
+
+
 class TripSummaryRead(BaseModel):
     total_days: float
     total_weight_low: float
@@ -275,3 +284,5 @@ class TripSummaryRead(BaseModel):
     combined_calories: float
     weight_per_day: Optional[float] = None
     cal_per_day: Optional[float] = None
+    macro_actual: Optional[MacroActual] = None
+    macro_coverage_pct: Optional[float] = None

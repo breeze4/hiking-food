@@ -68,14 +68,20 @@ def _build_trip_snack(ts: TripSnack, db: Session) -> dict:
 
 def _get_recipe_totals(db: Session, recipe_id: int):
     rows = (
-        db.query(RecipeIngredient, Ingredient.calories_per_oz)
+        db.query(RecipeIngredient, Ingredient)
         .join(Ingredient, RecipeIngredient.ingredient_id == Ingredient.id)
         .filter(RecipeIngredient.recipe_id == recipe_id)
         .all()
     )
     ingredients = [
-        {"amount_oz": ri.amount_oz, "calories_per_oz": cal_per_oz}
-        for ri, cal_per_oz in rows
+        {
+            "amount_oz": ri.amount_oz,
+            "calories_per_oz": ing.calories_per_oz,
+            "protein_per_oz": ing.protein_per_oz,
+            "fat_per_oz": ing.fat_per_oz,
+            "carb_per_oz": ing.carb_per_oz,
+        }
+        for ri, ing in rows
     ]
     return compute_recipe_totals(ingredients)
 
@@ -268,6 +274,13 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
     dinner_weight = 0
     dinner_cal = 0
     dinner_count = 0
+    # Macro accumulators
+    total_protein_g = 0.0
+    total_fat_g = 0.0
+    total_carb_g = 0.0
+    # Track calories from ingredients that have macro data vs total
+    macro_covered_calories = 0.0
+    total_all_calories = 0.0
     for tm in trip_meals:
         recipe = db.get(Recipe, tm.recipe_id)
         totals = _get_recipe_totals(db, tm.recipe_id)
@@ -285,6 +298,25 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
             meal_weights.append(totals["total_weight"])
         meal_weight_actual += w
         meal_calories_actual += c
+        # Accumulate macros from meals
+        total_protein_g += totals["protein_g"] * tm.quantity
+        total_fat_g += totals["fat_g"] * tm.quantity
+        total_carb_g += totals["carb_g"] * tm.quantity
+        # Compute macro coverage for this meal's ingredients
+        rows = (
+            db.query(RecipeIngredient, Ingredient)
+            .join(Ingredient, RecipeIngredient.ingredient_id == Ingredient.id)
+            .filter(RecipeIngredient.recipe_id == tm.recipe_id)
+            .all()
+        )
+        for ri, ing in rows:
+            ing_cal = ri.amount_oz * (ing.calories_per_oz or 0) * tm.quantity
+            total_all_calories += ing_cal
+            has_macros = (ing.protein_per_oz is not None
+                          or ing.fat_per_oz is not None
+                          or ing.carb_per_oz is not None)
+            if has_macros:
+                macro_covered_calories += ing_cal
 
     targets = compute_trip_targets(
         trip.first_day_fraction or 0,
@@ -302,6 +334,7 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
     slot_subtotals = {}
     for ts in trip_snacks:
         cat_item = db.get(SnackCatalogItem, ts.catalog_item_id)
+        ingredient = db.get(Ingredient, cat_item.ingredient_id)
         w = ts.servings * (cat_item.weight_per_serving or 0)
         c = ts.servings * (cat_item.calories_per_serving or 0)
         snack_weight += w
@@ -315,6 +348,20 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
                 slot_subtotals[slot] = {"weight": 0, "calories": 0}
             slot_subtotals[slot]["weight"] += w
             slot_subtotals[slot]["calories"] += c
+        # Accumulate snack macros
+        wps = cat_item.weight_per_serving or 0
+        has_macros = (ingredient.protein_per_oz is not None
+                      or ingredient.fat_per_oz is not None
+                      or ingredient.carb_per_oz is not None)
+        if ingredient.protein_per_oz is not None:
+            total_protein_g += (ingredient.protein_per_oz * wps) * ts.servings
+        if ingredient.fat_per_oz is not None:
+            total_fat_g += (ingredient.fat_per_oz * wps) * ts.servings
+        if ingredient.carb_per_oz is not None:
+            total_carb_g += (ingredient.carb_per_oz * wps) * ts.servings
+        total_all_calories += c
+        if has_macros:
+            macro_covered_calories += c
 
     # Compute per-slot targets and days_covered
     # Slot percentages: lunch 40%, snacks 60%
@@ -342,6 +389,25 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
     combined_weight = snack_weight + meal_weight_actual
     combined_calories = snack_calories + meal_calories_actual
 
+    # Compute macro percentages
+    total_macro_calories = total_protein_g * 4 + total_fat_g * 9 + total_carb_g * 4
+    if total_macro_calories > 0:
+        macro_actual = {
+            "protein_g": round(total_protein_g, 1),
+            "fat_g": round(total_fat_g, 1),
+            "carb_g": round(total_carb_g, 1),
+            "protein_pct": round(total_protein_g * 4 / total_macro_calories * 100, 1),
+            "fat_pct": round(total_fat_g * 9 / total_macro_calories * 100, 1),
+            "carb_pct": round(total_carb_g * 4 / total_macro_calories * 100, 1),
+        }
+    else:
+        macro_actual = None
+
+    macro_coverage_pct = (
+        round(macro_covered_calories / total_all_calories * 100, 1)
+        if total_all_calories > 0 else None
+    )
+
     return {
         **targets,
         "snack_weight": round(snack_weight, 2),
@@ -362,6 +428,8 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
         "combined_calories": round(combined_calories, 1),
         "weight_per_day": round(combined_weight / total_days, 1) if total_days > 0 else None,
         "cal_per_day": round(combined_calories / total_days, 1) if total_days > 0 else None,
+        "macro_actual": macro_actual,
+        "macro_coverage_pct": macro_coverage_pct,
     }
 
 

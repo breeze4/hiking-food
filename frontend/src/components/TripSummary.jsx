@@ -115,6 +115,31 @@ function TripSummary() {
           </div>
         </div>
 
+        {/* Macro breakdown */}
+        {summary.macro_actual && (
+          <>
+            <Separator />
+            <div className="space-y-1">
+              <div className="text-xs font-medium text-muted-foreground">Macronutrients</div>
+              <div className="flex gap-3 text-sm">
+                <span>P {summary.macro_actual.protein_pct}%</span>
+                <span>F {summary.macro_actual.fat_pct}%</span>
+                <span>C {summary.macro_actual.carb_pct}%</span>
+              </div>
+              <div className="flex gap-3 text-xs text-muted-foreground">
+                <span>{summary.macro_actual.protein_g}g protein</span>
+                <span>{summary.macro_actual.fat_g}g fat</span>
+                <span>{summary.macro_actual.carb_g}g carb</span>
+              </div>
+              {summary.macro_coverage_pct != null && summary.macro_coverage_pct < 100 && (
+                <div className="text-xs text-muted-foreground italic">
+                  Based on {summary.macro_coverage_pct}% of calories
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
         <Separator />
 
         {/* Collapsible category grid */}

@@ -25,13 +25,13 @@ AFK
 
 ## Acceptance criteria
 
-- [ ] Summary endpoint returns `macro_actual: {protein_g, fat_g, carb_g, protein_pct, fat_pct, carb_pct}`
-- [ ] Percentages computed from macro calorie equivalents (p*4 / total_macro_cal, etc.)
-- [ ] Summary endpoint returns `macro_coverage_pct` — what % of total trip calories come from ingredients with macro data
-- [ ] When no ingredients have macro data, macro fields are null (not zero)
-- [ ] Trip summary UI shows macro percentage breakdown
-- [ ] Trip summary UI shows coverage indicator when coverage < 100% (e.g., "Based on 85% of calories")
-- [ ] Tests verify aggregation across meals + snacks, partial data coverage, and all-null case
+- [x] Summary endpoint returns `macro_actual: {protein_g, fat_g, carb_g, protein_pct, fat_pct, carb_pct}`
+- [x] Percentages computed from macro calorie equivalents (p*4 / total_macro_cal, etc.)
+- [x] Summary endpoint returns `macro_coverage_pct` — what % of total trip calories come from ingredients with macro data
+- [x] When no ingredients have macro data, macro fields are null (not zero)
+- [x] Trip summary UI shows macro percentage breakdown
+- [x] Trip summary UI shows coverage indicator when coverage < 100% (e.g., "Based on 85% of calories")
+- [x] Tests verify aggregation across meals + snacks, partial data coverage, and all-null case
 
 ## Pattern exemplar
 
@@ -40,8 +40,8 @@ AFK
 
 ## Tasks
 
-- [ ] Extend `get_trip_summary()` to aggregate macro grams from trip meals and snacks
-- [ ] Compute macro percentages and coverage percentage
-- [ ] Update TripSummaryRead schema with macro fields
-- [ ] Update TripSummary component to display macro breakdown and coverage
-- [ ] Write tests for macro aggregation (full data, partial data, no data)
+- [x] Extend `get_trip_summary()` to aggregate macro grams from trip meals and snacks
+- [x] Compute macro percentages and coverage percentage
+- [x] Update TripSummaryRead schema with macro fields
+- [x] Update TripSummary component to display macro breakdown and coverage
+- [x] Write tests for macro aggregation (full data, partial data, no data)
