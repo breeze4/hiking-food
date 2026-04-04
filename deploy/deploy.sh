@@ -24,10 +24,6 @@ echo "==> Installing Python deps"
 ssh "$HOST" "cd ~/$APP_DIR/backend && venv/bin/pip install -q -r requirements.txt"
 
 echo "==> Running migrations"
-ssh "$HOST" "cd ~/$APP_DIR/backend && venv/bin/python migrate_add_ratings.py"
-ssh "$HOST" "cd ~/$APP_DIR/backend && venv/bin/python migrate_add_slots.py"
-ssh "$HOST" "cd ~/$APP_DIR/backend && venv/bin/python migrate_add_drink_mixes.py"
-ssh "$HOST" "cd ~/$APP_DIR/backend && venv/bin/python migrate_simplify_slots.py"
 ssh "$HOST" "cd ~/$APP_DIR/backend && venv/bin/python run_migrations.py"
 
 echo "==> Seeding database"
@@ -41,6 +37,9 @@ ssh "$HOST" "mkdir -p ~/.config/systemd/user && cp ~/$APP_DIR/deploy/hiking-food
 
 echo "==> Restarting service"
 ssh "$HOST" "systemctl --user restart hiking-food"
+
+echo "==> Verifying schema matches prod"
+cd "$PROJECT_DIR/backend" && venv/bin/pytest tests/test_schema_match.py -v
 
 echo "==> Done. Status:"
 ssh "$HOST" "systemctl --user status hiking-food --no-pager -l" || true
