@@ -1,6 +1,6 @@
 Dev: `cd backend && uvicorn main:app --reload` + `cd frontend && npm run dev` (Vite proxies /api to :8000)
 Test: `cd backend && venv/bin/pytest`
-Deploy: `./deploy/deploy.sh` (rsyncs to beebaby, builds, restarts service) — ask before deploying
+Deploy: `./deploy/deploy.sh` (rsyncs to beebaby, builds, restarts service). OK to deploy after a clean build and finishing a piece of work.
 Access: `http://beebaby:8000/hiking-food/`
 
 ## Plans
