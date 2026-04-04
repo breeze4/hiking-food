@@ -310,6 +310,7 @@ Protein, fat, and carb tracking at the ingredient level, rolling up through reci
 - Global macro target (e.g., 20% protein / 30% fat / 50% carb) stored in app settings, not per-trip
 - Partial data handled gracefully: macro percentages computed from the subset of calories with macro data, with coverage indicator
 - Data populated via manual UI entry or external agent using USDA FoodData Central API
+- Macro research agent (`.claude/agents/research-macros.md`) — standalone agent that bulk-populates macros by looking up USDA FoodData Central, with LLM estimation fallback. See `docs/specs/11-macro-research-agent.md`.
 
 ## Future Feature Requests
 
