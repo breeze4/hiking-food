@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 
 function TripCalculator() {
   const { tripDetail, refreshTrip } = useTrip();
-  const [form, setForm] = useState({ first_day_fraction: 1, full_days: 0, last_day_fraction: 0, drink_mixes_per_day: 2, oz_per_day_low: 19, oz_per_day_high: 24, cal_per_oz: 125 });
+  const [form, setForm] = useState({ first_day_fraction: 1, full_days: 0, last_day_fraction: 0, drink_mixes_per_day: 2, oz_per_day: 22, cal_per_oz: 125 });
   const [open, setOpen] = useState(true);
   const saveTimer = useRef(null);
 
@@ -20,8 +20,7 @@ function TripCalculator() {
         full_days: tripDetail.full_days ?? 0,
         last_day_fraction: tripDetail.last_day_fraction ?? 0,
         drink_mixes_per_day: tripDetail.drink_mixes_per_day ?? 2,
-        oz_per_day_low: tripDetail.oz_per_day_low ?? 19,
-        oz_per_day_high: tripDetail.oz_per_day_high ?? 24,
+        oz_per_day: tripDetail.oz_per_day ?? 22,
         cal_per_oz: tripDetail.cal_per_oz ?? 125,
       });
     }
@@ -30,10 +29,8 @@ function TripCalculator() {
   if (!tripDetail) return null;
 
   const totalDays = form.first_day_fraction + form.full_days + form.last_day_fraction;
-  const weightLow = (totalDays * form.oz_per_day_low).toFixed(1);
-  const weightHigh = (totalDays * form.oz_per_day_high).toFixed(1);
-  const calLow = Math.round(totalDays * form.oz_per_day_low * form.cal_per_oz);
-  const calHigh = Math.round(totalDays * form.oz_per_day_high * form.cal_per_oz);
+  const totalWeight = (totalDays * form.oz_per_day).toFixed(1);
+  const totalCal = Math.round(totalDays * form.oz_per_day * form.cal_per_oz);
 
   function handleChange(field, value) {
     const updated = { ...form, [field]: value };
@@ -54,7 +51,7 @@ function TripCalculator() {
               <CardTitle className="text-base">Trip Calculator</CardTitle>
               <div className="flex items-center gap-3">
                 <span className="text-sm text-muted-foreground">
-                  {totalDays} days &middot; {weightLow}&ndash;{weightHigh} oz
+                  {totalDays} days &middot; {totalWeight} oz
                 </span>
                 <ChevronIcon open={open} />
               </div>
@@ -109,24 +106,13 @@ function TripCalculator() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="oz-per-day-low">oz/day low</Label>
+                <Label htmlFor="oz-per-day">oz/day</Label>
                 <Input
-                  id="oz-per-day-low"
+                  id="oz-per-day"
                   type="number"
                   min="0" step="0.5"
-                  value={form.oz_per_day_low}
-                  onChange={(e) => handleChange('oz_per_day_low', parseFloat(e.target.value) || 0)}
-                  className="w-20"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="oz-per-day-high">oz/day high</Label>
-                <Input
-                  id="oz-per-day-high"
-                  type="number"
-                  min="0" step="0.5"
-                  value={form.oz_per_day_high}
-                  onChange={(e) => handleChange('oz_per_day_high', parseFloat(e.target.value) || 0)}
+                  value={form.oz_per_day}
+                  onChange={(e) => handleChange('oz_per_day', parseFloat(e.target.value) || 0)}
                   className="w-20"
                 />
               </div>
@@ -144,8 +130,8 @@ function TripCalculator() {
             </div>
             <p className="text-sm text-muted-foreground mt-3">
               <span className="font-medium text-foreground">Total days: {totalDays}</span>
-              {' '}&middot; Recommended: {weightLow}&ndash;{weightHigh} oz
-              {' '}&middot; {calLow.toLocaleString()}&ndash;{calHigh.toLocaleString()} cal
+              {' '}&middot; Target: {totalWeight} oz
+              {' '}&middot; {totalCal.toLocaleString()} cal
             </p>
           </CardContent>
         </CollapsibleContent>

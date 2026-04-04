@@ -60,8 +60,7 @@ class Trip(Base):
     full_days = Column(Integer)
     last_day_fraction = Column(Float)
     drink_mixes_per_day = Column(Integer, default=2)
-    oz_per_day_low = Column(Float, default=19)
-    oz_per_day_high = Column(Float, default=24)
+    oz_per_day = Column(Float, default=22)
     cal_per_oz = Column(Float, default=125)
 
 

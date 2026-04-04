@@ -58,8 +58,17 @@ def _run_migrations(conn):
     _add_column_if_missing(conn, "ingredients", "protein_per_oz", "REAL")
     _add_column_if_missing(conn, "ingredients", "fat_per_oz", "REAL")
     _add_column_if_missing(conn, "ingredients", "carb_per_oz", "REAL")
-    _add_column_if_missing(conn, "trips", "oz_per_day_low", "REAL DEFAULT 19")
-    _add_column_if_missing(conn, "trips", "oz_per_day_high", "REAL DEFAULT 24")
+    # Migrate oz_per_day_low/high to single oz_per_day
+    cols = [c["name"] for c in inspect(conn).get_columns("trips")]
+    if "oz_per_day" not in cols:
+        conn.execute(text("ALTER TABLE trips ADD COLUMN oz_per_day REAL DEFAULT 22"))
+        conn.execute(text(
+            "UPDATE trips SET oz_per_day = ROUND((COALESCE(oz_per_day_low, 19) + COALESCE(oz_per_day_high, 24)) / 2.0, 1)"
+        ))
+    if "oz_per_day_low" in cols:
+        conn.execute(text("ALTER TABLE trips DROP COLUMN oz_per_day_low"))
+    if "oz_per_day_high" in cols:
+        conn.execute(text("ALTER TABLE trips DROP COLUMN oz_per_day_high"))
     _add_column_if_missing(conn, "trips", "cal_per_oz", "REAL DEFAULT 125")
 
 

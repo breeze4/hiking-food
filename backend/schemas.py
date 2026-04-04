@@ -169,8 +169,7 @@ class TripCreate(BaseModel):
     full_days: int = 0
     last_day_fraction: float = 0.0
     drink_mixes_per_day: int = 2
-    oz_per_day_low: float = 19.0
-    oz_per_day_high: float = 24.0
+    oz_per_day: float = 22.0
     cal_per_oz: float = 125.0
 
 
@@ -180,8 +179,7 @@ class TripUpdate(BaseModel):
     full_days: Optional[int] = None
     last_day_fraction: Optional[float] = None
     drink_mixes_per_day: Optional[int] = None
-    oz_per_day_low: Optional[float] = None
-    oz_per_day_high: Optional[float] = None
+    oz_per_day: Optional[float] = None
     cal_per_oz: Optional[float] = None
 
 
@@ -257,8 +255,7 @@ class TripDetailRead(BaseModel):
     full_days: Optional[int] = None
     last_day_fraction: Optional[float] = None
     drink_mixes_per_day: int = 2
-    oz_per_day_low: Optional[float] = 19.0
-    oz_per_day_high: Optional[float] = 24.0
+    oz_per_day: Optional[float] = 22.0
     cal_per_oz: Optional[float] = 125.0
     snacks: list[TripSnackRead] = []
     meals: list[TripMealRead] = []
@@ -267,8 +264,7 @@ class TripDetailRead(BaseModel):
 class SlotSubtotal(BaseModel):
     weight: float
     calories: float
-    target_cal_low: float = 0
-    target_cal_high: float = 0
+    target_cal: float = 0
     days_covered: Optional[float] = None
 
 
@@ -289,16 +285,12 @@ class MacroTarget(BaseModel):
 
 class TripSummaryRead(BaseModel):
     total_days: float
-    total_weight_low: float
-    total_weight_high: float
-    total_cal_low: float
-    total_cal_high: float
+    total_weight: float
+    total_cal: float
     meal_weight: float
     meal_cal: float
-    daytime_weight_low: float
-    daytime_weight_high: float
-    daytime_cal_low: float
-    daytime_cal_high: float
+    daytime_weight: float
+    daytime_cal: float
     snack_weight: float
     snack_calories: float
     snack_cal_per_oz: Optional[float] = None

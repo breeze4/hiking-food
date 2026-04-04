@@ -113,8 +113,7 @@ def _build_trip_detail(trip: Trip, db: Session) -> dict:
         "full_days": trip.full_days,
         "last_day_fraction": trip.last_day_fraction,
         "drink_mixes_per_day": trip.drink_mixes_per_day if trip.drink_mixes_per_day is not None else 2,
-        "oz_per_day_low": trip.oz_per_day_low if trip.oz_per_day_low is not None else 19,
-        "oz_per_day_high": trip.oz_per_day_high if trip.oz_per_day_high is not None else 24,
+        "oz_per_day": trip.oz_per_day if trip.oz_per_day is not None else 22,
         "cal_per_oz": trip.cal_per_oz if trip.cal_per_oz is not None else 125,
         "snacks": [_build_trip_snack(ts, db) for ts in snacks],
         "meals": [_build_trip_meal(tm, db) for tm in meals],
@@ -326,8 +325,7 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
         trip.full_days or 0,
         trip.last_day_fraction or 0,
         meal_weights,
-        oz_per_day_low=trip.oz_per_day_low or 19,
-        oz_per_day_high=trip.oz_per_day_high or 24,
+        oz_per_day=trip.oz_per_day or 22,
         cal_per_oz=trip.cal_per_oz or 125,
     )
 
@@ -373,8 +371,7 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
     # Slot percentages: lunch 40%, snacks 60%
     slot_pcts = {"lunch": 0.40, "snacks": 0.60}
     # Remaining calories = daytime minus drink mixes
-    remaining_cal_low = targets["daytime_cal_low"] - drink_mix_calories
-    remaining_cal_high = targets["daytime_cal_high"] - drink_mix_calories
+    remaining_cal = targets["daytime_cal"] - drink_mix_calories
     total_days = targets["total_days"]
 
     for slot_name in ("lunch", "snacks"):
@@ -382,11 +379,9 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
             slot_subtotals[slot_name] = {"weight": 0, "calories": 0}
         st = slot_subtotals[slot_name]
         pct = slot_pcts[slot_name]
-        st["target_cal_low"] = round(remaining_cal_low * pct, 1)
-        st["target_cal_high"] = round(remaining_cal_high * pct, 1)
-        # days_covered: actual calories / daily slot target (using midpoint)
-        daily_target_mid = ((remaining_cal_low + remaining_cal_high) / 2 * pct / total_days) if total_days > 0 else 0
-        st["days_covered"] = round(st["calories"] / daily_target_mid, 1) if daily_target_mid > 0 else None
+        st["target_cal"] = round(remaining_cal * pct, 1)
+        daily_target = (remaining_cal * pct / total_days) if total_days > 0 else 0
+        st["days_covered"] = round(st["calories"] / daily_target, 1) if daily_target > 0 else None
         st["weight"] = round(st["weight"], 2)
         st["calories"] = round(st["calories"], 1)
 
@@ -576,8 +571,7 @@ def clone_trip(trip_id: int, db: Session = Depends(get_db)):
         full_days=trip.full_days,
         last_day_fraction=trip.last_day_fraction,
         drink_mixes_per_day=trip.drink_mixes_per_day,
-        oz_per_day_low=trip.oz_per_day_low,
-        oz_per_day_high=trip.oz_per_day_high,
+        oz_per_day=trip.oz_per_day,
         cal_per_oz=trip.cal_per_oz,
     )
     db.add(new_trip)

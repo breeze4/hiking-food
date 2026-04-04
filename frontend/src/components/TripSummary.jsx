@@ -48,20 +48,20 @@ function TripSummary() {
 
   // Slot targets (lunch/snacks) — cal from backend, weight computed with same percentage split
   const slotPcts = { lunch: 0.40, snacks: 0.60 };
-  const remainingWeightLow = summary.daytime_weight_low - summary.drink_mix_weight;
-  const remainingWeightHigh = summary.daytime_weight_high - summary.drink_mix_weight;
+  const remainingWeight = summary.daytime_weight - summary.drink_mix_weight;
 
   const slotData = {};
   for (const slotName of ['lunch', 'snacks']) {
-    const st = summary.slot_subtotals?.[slotName] || { weight: 0, calories: 0, target_cal_low: 0, target_cal_high: 0 };
+    const st = summary.slot_subtotals?.[slotName] || { weight: 0, calories: 0, target_cal: 0 };
     const pct = slotPcts[slotName];
+    const targetWeight = remainingWeight * pct;
     slotData[slotName] = {
       actualCal: st.calories,
-      calLow: st.target_cal_low,
-      calHigh: st.target_cal_high,
+      calLow: st.target_cal * 0.9,
+      calHigh: st.target_cal * 1.1,
       actualWeight: st.weight,
-      weightLow: remainingWeightLow * pct * 0.9,
-      weightHigh: remainingWeightHigh * pct * 1.1,
+      weightLow: targetWeight * 0.9,
+      weightHigh: targetWeight * 1.1,
     };
   }
 
@@ -95,15 +95,15 @@ function TripSummary() {
           <ProgressMeter
             label="Total calories"
             actual={summary.combined_calories}
-            targetLow={summary.total_cal_low}
-            targetHigh={summary.total_cal_high}
+            targetLow={summary.total_cal * 0.9}
+            targetHigh={summary.total_cal * 1.1}
             unit="cal"
           />
           <ProgressMeter
             label="Total weight"
             actual={summary.combined_weight}
-            targetLow={summary.total_weight_low}
-            targetHigh={summary.total_weight_high}
+            targetLow={summary.total_weight * 0.9}
+            targetHigh={summary.total_weight * 1.1}
             unit="oz"
           />
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
