@@ -92,6 +92,11 @@ A dedicated view for packing day (at home with Chromebook + scale):
 **Combined Shopping List**:
 - All ingredients aggregated across all selected recipes + snacks
 - Total amount needed for each ingredient across the whole trip
+- Sorted: need-to-buy first, then on-hand; alphabetical within groups
+- Essentials hidden by default (collapsed section at bottom for verification)
+- On-hand toggle directly on the list for prep sessions
+- Packing method shown per ingredient
+- See `docs/specs/07-shopping-list-enhancements.md` for full spec
 
 ### Notes
 - Ingredient-level notes (catalog default)
@@ -118,6 +123,9 @@ A dedicated view for packing day (at home with Chromebook + scale):
 | name | TEXT NOT NULL |
 | calories_per_oz | REAL |
 | notes | TEXT |
+| on_hand | BOOLEAN DEFAULT FALSE |
+| essentials | BOOLEAN DEFAULT FALSE |
+| packing_method | TEXT (by_weight\|by_count\|single_serving\|baggies\|full_item) |
 
 ### snack_catalog
 | Column | Type |
@@ -127,6 +135,7 @@ A dedicated view for packing day (at home with Chromebook + scale):
 | weight_per_serving | REAL |
 | calories_per_serving | REAL |
 | category | TEXT (drink_mix\|lunch\|salty\|sweet\|bars_energy) |
+| drink_mix_type | TEXT (breakfast\|dinner\|all_day) |
 | notes | TEXT |
 
 ### recipes
@@ -177,12 +186,24 @@ A dedicated view for packing day (at home with Chromebook + scale):
 | actual_weight_oz | REAL |
 | trip_notes | TEXT |
 
+### trip_day_assignments
+| Column | Type |
+|--------|------|
+| id | INTEGER PRIMARY KEY |
+| trip_id | INTEGER FK |
+| day_number | INTEGER |
+| slot | TEXT (breakfast\|breakfast_drinks\|morning_snacks\|lunch\|afternoon_snacks\|dinner\|evening_drinks\|all_day_drinks) |
+| source_type | TEXT (meal\|snack) |
+| source_id | INTEGER |
+| servings | REAL |
+
 ## Screens / Views
 1. **Trip Planner** (main): Trip calculator config, snack table with servings, meal recipe selection, summary dashboard
-2. **Packing Screen**: Recipe assembly checklists, snack packing checklist, actual weights, combined shopping list
-3. **Recipe Library**: Browse/create/edit recipes
-4. **Ingredient Database**: Add/edit/remove ingredients
-5. **Trip Management**: Create/switch/delete/clone trips
+2. **Daily Meal Plan**: Day-by-day food distribution with stacked bar chart, per-day item lists, unallocated pool, auto-fill algorithm. See `docs/specs/09-daily-meal-plan.md`.
+3. **Packing Screen**: Recipe assembly checklists, snack packing checklist, actual weights, combined shopping list
+4. **Recipe Library**: Browse/create/edit recipes
+5. **Ingredient Database**: Add/edit/remove ingredients (plus essentials flag, packing method)
+6. **Trip Management**: Create/switch/delete/clone trips
 
 ## Pre-loaded Data
 - All Skurka recipes (6 breakfasts, 6 dinners) with ingredients
@@ -216,6 +237,7 @@ Snack items on a trip are assigned to a slot (`lunch` or `snacks`). The slot cal
 - Servings are manually set per item, always whole numbers (packets)
 - New drink mixes added to a trip start at 1 serving
 - UI shows a budget meter: current total vs mixes_per_day * total_days
+- Each drink mix has a `drink_mix_type`: `breakfast` (coffee, carnation, greens), `dinner` (tea), or `all_day` (electrolytes). Used by the daily meal plan for time-of-day distribution. See `docs/specs/08-drink-mix-subcategories.md`.
 
 ### Summary Meters
 The UI shows per-category progress bars for calories and weight (snacks, breakfast, dinner). Each bar:
@@ -223,6 +245,19 @@ The UI shows per-category progress bars for calories and weight (snacks, breakfa
 - Color-coded by deviation: green (within 5%), yellow (10%), orange (20%), red (>20%)
 - Shows delta text: "+10 oz", "-80 cal"
 - Overall cal/oz number displayed across all categories
+
+### Per-Section Meters & Summary Layout
+Summary lives at the top of the trip planner as a full-width section (not sidebar), containing:
+- Combined total meters (cal + weight) — always visible
+- Compact category grid: 5 rows (breakfast, dinner, lunch, snacks, drink mixes) × 2 columns (cal bar, weight bar) — **collapsed by default**, expandable
+- Text stats (cal/day, oz/day, total days)
+
+Each food section also has inline meters in its header:
+- Breakfast/dinner: cal + weight bars, targets from ±10% of per-recipe average × days
+- Lunch/snacks: cal + weight bars, targets from backend slot_subtotals
+- Drink mixes: cal + weight bars (dynamic targets from selected mixes' averages × budget) + servings bar
+
+On mobile, meters stack vertically. See `docs/specs/05-per-section-meters.md` and `docs/specs/06-collapsible-category-grid.md` for full specs.
 
 ## Food Planning Agent
 
