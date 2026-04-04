@@ -58,6 +58,9 @@ def _run_migrations(conn):
     _add_column_if_missing(conn, "ingredients", "protein_per_oz", "REAL")
     _add_column_if_missing(conn, "ingredients", "fat_per_oz", "REAL")
     _add_column_if_missing(conn, "ingredients", "carb_per_oz", "REAL")
+    _add_column_if_missing(conn, "trips", "oz_per_day_low", "REAL DEFAULT 19")
+    _add_column_if_missing(conn, "trips", "oz_per_day_high", "REAL DEFAULT 24")
+    _add_column_if_missing(conn, "trips", "cal_per_oz", "REAL DEFAULT 125")
 
 
 @asynccontextmanager

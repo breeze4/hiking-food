@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 
 function TripCalculator() {
   const { tripDetail, refreshTrip } = useTrip();
-  const [form, setForm] = useState({ first_day_fraction: 1, full_days: 0, last_day_fraction: 0, drink_mixes_per_day: 2 });
+  const [form, setForm] = useState({ first_day_fraction: 1, full_days: 0, last_day_fraction: 0, drink_mixes_per_day: 2, oz_per_day_low: 19, oz_per_day_high: 24, cal_per_oz: 125 });
   const [open, setOpen] = useState(true);
   const saveTimer = useRef(null);
 
@@ -20,6 +20,9 @@ function TripCalculator() {
         full_days: tripDetail.full_days ?? 0,
         last_day_fraction: tripDetail.last_day_fraction ?? 0,
         drink_mixes_per_day: tripDetail.drink_mixes_per_day ?? 2,
+        oz_per_day_low: tripDetail.oz_per_day_low ?? 19,
+        oz_per_day_high: tripDetail.oz_per_day_high ?? 24,
+        cal_per_oz: tripDetail.cal_per_oz ?? 125,
       });
     }
   }, [tripDetail?.id]);
@@ -27,10 +30,10 @@ function TripCalculator() {
   if (!tripDetail) return null;
 
   const totalDays = form.first_day_fraction + form.full_days + form.last_day_fraction;
-  const weightLow = (totalDays * 19).toFixed(1);
-  const weightHigh = (totalDays * 24).toFixed(1);
-  const calLow = Math.round(totalDays * 19 * 125);
-  const calHigh = Math.round(totalDays * 24 * 125);
+  const weightLow = (totalDays * form.oz_per_day_low).toFixed(1);
+  const weightHigh = (totalDays * form.oz_per_day_high).toFixed(1);
+  const calLow = Math.round(totalDays * form.oz_per_day_low * form.cal_per_oz);
+  const calHigh = Math.round(totalDays * form.oz_per_day_high * form.cal_per_oz);
 
   function handleChange(field, value) {
     const updated = { ...form, [field]: value };
@@ -102,6 +105,39 @@ function TripCalculator() {
                   min="0" step="1"
                   value={form.drink_mixes_per_day}
                   onChange={(e) => handleChange('drink_mixes_per_day', parseInt(e.target.value) || 0)}
+                  className="w-20"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="oz-per-day-low">oz/day low</Label>
+                <Input
+                  id="oz-per-day-low"
+                  type="number"
+                  min="0" step="0.5"
+                  value={form.oz_per_day_low}
+                  onChange={(e) => handleChange('oz_per_day_low', parseFloat(e.target.value) || 0)}
+                  className="w-20"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="oz-per-day-high">oz/day high</Label>
+                <Input
+                  id="oz-per-day-high"
+                  type="number"
+                  min="0" step="0.5"
+                  value={form.oz_per_day_high}
+                  onChange={(e) => handleChange('oz_per_day_high', parseFloat(e.target.value) || 0)}
+                  className="w-20"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="cal-per-oz">cal/oz</Label>
+                <Input
+                  id="cal-per-oz"
+                  type="number"
+                  min="0" step="1"
+                  value={form.cal_per_oz}
+                  onChange={(e) => handleChange('cal_per_oz', parseFloat(e.target.value) || 0)}
                   className="w-20"
                 />
               </div>

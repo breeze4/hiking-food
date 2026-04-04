@@ -82,7 +82,7 @@ def _build_daily_plan_response(db: Session, trip: Trip):
     # Compute per-day calorie target using Skurka method
     total_days = sum(d["fraction"] for d in days_list)
     # Midpoint of target range: (19+24)/2 * 125 = 2687.5 cal per full day
-    cal_per_full_day = (19 + 24) / 2 * 125 if total_days > 0 else 0
+    cal_per_full_day = ((trip.oz_per_day_low or 19) + (trip.oz_per_day_high or 24)) / 2 * (trip.cal_per_oz or 125) if total_days > 0 else 0
 
     # Fetch macro targets from app settings
     settings = db.query(AppSettings).first()

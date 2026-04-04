@@ -113,6 +113,9 @@ def _build_trip_detail(trip: Trip, db: Session) -> dict:
         "full_days": trip.full_days,
         "last_day_fraction": trip.last_day_fraction,
         "drink_mixes_per_day": trip.drink_mixes_per_day if trip.drink_mixes_per_day is not None else 2,
+        "oz_per_day_low": trip.oz_per_day_low if trip.oz_per_day_low is not None else 19,
+        "oz_per_day_high": trip.oz_per_day_high if trip.oz_per_day_high is not None else 24,
+        "cal_per_oz": trip.cal_per_oz if trip.cal_per_oz is not None else 125,
         "snacks": [_build_trip_snack(ts, db) for ts in snacks],
         "meals": [_build_trip_meal(tm, db) for tm in meals],
     }
@@ -323,6 +326,9 @@ def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
         trip.full_days or 0,
         trip.last_day_fraction or 0,
         meal_weights,
+        oz_per_day_low=trip.oz_per_day_low or 19,
+        oz_per_day_high=trip.oz_per_day_high or 24,
+        cal_per_oz=trip.cal_per_oz or 125,
     )
 
     # Compute snack totals
@@ -570,6 +576,9 @@ def clone_trip(trip_id: int, db: Session = Depends(get_db)):
         full_days=trip.full_days,
         last_day_fraction=trip.last_day_fraction,
         drink_mixes_per_day=trip.drink_mixes_per_day,
+        oz_per_day_low=trip.oz_per_day_low,
+        oz_per_day_high=trip.oz_per_day_high,
+        cal_per_oz=trip.cal_per_oz,
     )
     db.add(new_trip)
     db.flush()

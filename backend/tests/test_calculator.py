@@ -36,3 +36,12 @@ def test_zero_fractions():
     assert result["total_days"] == 3
     assert result["total_weight_low"] == 57
     assert result["total_weight_high"] == 72
+
+
+def test_custom_targets():
+    result = compute_trip_targets(1, 0, 0, oz_per_day_low=16, oz_per_day_high=20, cal_per_oz=130)
+    assert result["total_days"] == 1
+    assert result["total_weight_low"] == 16
+    assert result["total_weight_high"] == 20
+    assert result["total_cal_low"] == 16 * 130
+    assert result["total_cal_high"] == 20 * 130

@@ -43,8 +43,8 @@ For a specific trip, the user configures:
 
 **Trip Calculator** (built-in, based on Skurka calculator):
 - First day fraction, full days, last day fraction -> total days
-- Computes recommended food weight/day (low: 19oz, high: 24oz)
-- Computes recommended calories (assuming 125 cal/oz)
+- Configurable oz/day range (default: low 19, high 24) and cal/oz (default: 125) — per-trip
+- Computes recommended food weight/day and calories from these settings
 - Subtracts provided meals -> daytime food targets
 - Shows low/high range for all recommendations
 
@@ -164,6 +164,9 @@ A dedicated view for packing day (at home with Chromebook + scale):
 | first_day_fraction | REAL |
 | full_days | INTEGER |
 | last_day_fraction | REAL |
+| oz_per_day_low | REAL DEFAULT 19 |
+| oz_per_day_high | REAL DEFAULT 24 |
+| cal_per_oz | REAL DEFAULT 125 |
 
 ### trip_meals
 | Column | Type |

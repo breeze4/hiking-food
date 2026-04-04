@@ -169,6 +169,9 @@ class TripCreate(BaseModel):
     full_days: int = 0
     last_day_fraction: float = 0.0
     drink_mixes_per_day: int = 2
+    oz_per_day_low: float = 19.0
+    oz_per_day_high: float = 24.0
+    cal_per_oz: float = 125.0
 
 
 class TripUpdate(BaseModel):
@@ -177,6 +180,9 @@ class TripUpdate(BaseModel):
     full_days: Optional[int] = None
     last_day_fraction: Optional[float] = None
     drink_mixes_per_day: Optional[int] = None
+    oz_per_day_low: Optional[float] = None
+    oz_per_day_high: Optional[float] = None
+    cal_per_oz: Optional[float] = None
 
 
 class TripListRead(BaseModel):
@@ -251,6 +257,9 @@ class TripDetailRead(BaseModel):
     full_days: Optional[int] = None
     last_day_fraction: Optional[float] = None
     drink_mixes_per_day: int = 2
+    oz_per_day_low: Optional[float] = 19.0
+    oz_per_day_high: Optional[float] = 24.0
+    cal_per_oz: Optional[float] = 125.0
     snacks: list[TripSnackRead] = []
     meals: list[TripMealRead] = []
 
