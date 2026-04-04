@@ -388,13 +388,13 @@ function DailyPlanPage() {
                           <Button
                             key={day.day_number}
                             size="sm"
-                            variant={count > 0 ? "default" : "outline"}
-                            className="h-9 w-10 sm:h-6 sm:w-8 text-xs px-0 relative"
+                            variant="outline"
+                            className={`h-9 w-10 sm:h-6 sm:w-8 text-xs px-0 relative ${count > 0 ? 'bg-blue-50 border-blue-300 dark:bg-blue-950 dark:border-blue-700' : ''}`}
                             onClick={() => addToDay(item, day.day_number)}
                           >
                             {day.day_number}
                             {count > 0 && (
-                              <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground rounded-full w-4 h-4 text-[9px] flex items-center justify-center leading-none">
+                              <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center leading-none">
                                 {count}
                               </span>
                             )}
