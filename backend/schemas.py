@@ -268,6 +268,8 @@ class SlotSubtotal(BaseModel):
     weight: float
     calories: float
     target_cal: float = 0
+    target_cal_low: float = 0
+    target_cal_high: float = 0
     days_covered: Optional[float] = None
 
 

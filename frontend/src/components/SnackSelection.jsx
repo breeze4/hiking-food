@@ -196,10 +196,10 @@ function SlotMeters({ slot, summary }) {
   if (!st) return null;
 
   const slotPct = slot === 'lunch' ? 0.40 : 0.60;
-  const remainingWeightLow = summary.daytime_weight_low - summary.drink_mix_weight;
-  const remainingWeightHigh = summary.daytime_weight_high - summary.drink_mix_weight;
-  const weightLow = remainingWeightLow * slotPct * 0.9;
-  const weightHigh = remainingWeightHigh * slotPct * 1.1;
+  const remainingWeight = (summary.daytime_weight || 0) - (summary.drink_mix_weight || 0);
+  const weightTarget = remainingWeight * slotPct;
+  const weightLow = weightTarget * 0.9;
+  const weightHigh = weightTarget * 1.1;
 
   return (
     <div className="mb-2 p-2 rounded-md bg-muted/60 grid grid-cols-1 sm:grid-cols-2 gap-2">
