@@ -69,6 +69,9 @@ class SnackRead(BaseModel):
     weight_per_serving: Optional[float] = None
     calories_per_serving: Optional[float] = None
     calories_per_oz: Optional[float] = None
+    protein_per_serving: Optional[float] = None
+    fat_per_serving: Optional[float] = None
+    carb_per_serving: Optional[float] = None
     category: Optional[str] = None
     drink_mix_type: Optional[str] = None
     notes: Optional[str] = None
@@ -172,6 +175,9 @@ class TripSnackRead(BaseModel):
     weight_per_serving: Optional[float] = None
     calories_per_serving: Optional[float] = None
     calories_per_oz: Optional[float] = None
+    protein_per_serving: Optional[float] = None
+    fat_per_serving: Optional[float] = None
+    carb_per_serving: Optional[float] = None
     category: Optional[str] = None
     slot: Optional[str] = None
     servings: float

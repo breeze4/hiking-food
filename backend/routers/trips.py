@@ -42,6 +42,9 @@ def _build_trip_snack(ts: TripSnack, db: Session) -> dict:
     wps = cat_item.weight_per_serving or 0
     cps = cat_item.calories_per_serving or 0
     cal_per_oz = round(cps / wps, 1) if wps > 0 else None
+    protein = round(ingredient.protein_per_oz * wps, 2) if ingredient.protein_per_oz is not None and wps else None
+    fat = round(ingredient.fat_per_oz * wps, 2) if ingredient.fat_per_oz is not None and wps else None
+    carb = round(ingredient.carb_per_oz * wps, 2) if ingredient.carb_per_oz is not None and wps else None
     return {
         "id": ts.id,
         "catalog_item_id": ts.catalog_item_id,
@@ -49,6 +52,9 @@ def _build_trip_snack(ts: TripSnack, db: Session) -> dict:
         "weight_per_serving": cat_item.weight_per_serving,
         "calories_per_serving": cat_item.calories_per_serving,
         "calories_per_oz": cal_per_oz,
+        "protein_per_serving": protein,
+        "fat_per_serving": fat,
+        "carb_per_serving": carb,
         "category": cat_item.category,
         "slot": ts.slot,
         "servings": ts.servings,

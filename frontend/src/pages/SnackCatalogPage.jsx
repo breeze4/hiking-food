@@ -155,6 +155,9 @@ function SnackCatalogPage() {
               <SortHead col="weight_per_serving" label="Wt/Serving (oz)" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} className="text-right" />
               <SortHead col="calories_per_serving" label="Cal/Serving" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} className="text-right" />
               <SortHead col="calories_per_oz" label="Cal/oz" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} className="text-right" />
+              <SortHead col="protein_per_serving" label="Protein (g)" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} className="text-right" />
+              <SortHead col="fat_per_serving" label="Fat (g)" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} className="text-right" />
+              <SortHead col="carb_per_serving" label="Carb (g)" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} className="text-right" />
               <SortHead col="rating" label="Rating" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} />
               <SortHead col="notes" label="Notes" sortCol={sortCol} sortAsc={sortAsc} onClick={handleSort} />
               <TableHead className="w-28"></TableHead>
@@ -196,6 +199,9 @@ function SnackCatalogPage() {
                       className="w-20 h-8 ml-auto" />
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground">&mdash;</TableCell>
+                  <TableCell className="text-right text-muted-foreground">{s.protein_per_serving != null ? s.protein_per_serving : '\u2014'}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">{s.fat_per_serving != null ? s.fat_per_serving : '\u2014'}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">{s.carb_per_serving != null ? s.carb_per_serving : '\u2014'}</TableCell>
                   <TableCell>
                     <StarRating value={editForm.rating} onChange={(r) => setEditForm({ ...editForm, rating: r })} />
                   </TableCell>
@@ -221,6 +227,9 @@ function SnackCatalogPage() {
                   <TableCell className="text-right">{s.weight_per_serving}</TableCell>
                   <TableCell className="text-right">{s.calories_per_serving}</TableCell>
                   <TableCell className="text-right">{s.calories_per_oz}</TableCell>
+                  <TableCell className="text-right">{s.protein_per_serving != null ? s.protein_per_serving : '\u2014'}</TableCell>
+                  <TableCell className="text-right">{s.fat_per_serving != null ? s.fat_per_serving : '\u2014'}</TableCell>
+                  <TableCell className="text-right">{s.carb_per_serving != null ? s.carb_per_serving : '\u2014'}</TableCell>
                   <TableCell>
                     <StarRating value={s.rating} onChange={async (r) => {
                       try {

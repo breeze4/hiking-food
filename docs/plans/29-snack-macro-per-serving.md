@@ -23,11 +23,11 @@ AFK
 
 ## Acceptance criteria
 
-- [ ] Snack catalog API response includes `protein_per_serving`, `fat_per_serving`, `carb_per_serving`
-- [ ] Values derived as `ingredient.macro_per_oz * weight_per_serving` (null if ingredient macros are null)
-- [ ] Snack catalog page shows protein, fat, carb columns
-- [ ] Trip snack responses (in trip detail) include macro per-serving values
-- [ ] Tests verify derivation with full macro data, null macros, and zero weight_per_serving
+- [x] Snack catalog API response includes `protein_per_serving`, `fat_per_serving`, `carb_per_serving`
+- [x] Values derived as `ingredient.macro_per_oz * weight_per_serving` (null if ingredient macros are null)
+- [x] Snack catalog page shows protein, fat, carb columns
+- [x] Trip snack responses (in trip detail) include macro per-serving values
+- [x] Tests verify derivation with full macro data, null macros, and zero weight_per_serving
 
 ## Pattern exemplar
 
@@ -36,8 +36,8 @@ AFK
 
 ## Tasks
 
-- [ ] Update snack API response building to compute and include macro per-serving
-- [ ] Update trip snack response (`_build_trip_snack`) to include macro per-serving
-- [ ] Update Pydantic schemas for snack responses
-- [ ] Add macro columns to SnackCatalogPage
-- [ ] Write tests for snack macro derivation
+- [x] Update snack API response building to compute and include macro per-serving
+- [x] Update trip snack response (`_build_trip_snack`) to include macro per-serving
+- [x] Update Pydantic schemas for snack responses
+- [x] Add macro columns to SnackCatalogPage
+- [x] Write tests for snack macro derivation
