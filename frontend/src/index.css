@@ -136,3 +136,9 @@
     @apply font-sans;
     }
 }
+
+/* Touch device: show action buttons without hover */
+@media (hover: none) {
+  .touch-visible { opacity: 0.6 !important; }
+  .touch-visible:active { opacity: 1 !important; }
+}

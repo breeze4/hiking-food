@@ -393,13 +393,13 @@ function DailyPlanPage() {
                               {item.source_type === 'snack' && (
                                 <button
                                   onClick={() => incrementServings(item.id, item.servings)}
-                                  className="text-xs px-1 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-muted opacity-0 group-hover:opacity-100 touch-visible transition-opacity"
                                   title="Add serving"
                                 >+</button>
                               )}
                               <button
                                 onClick={() => removeAssignment(item.id)}
-                                className="text-xs px-1 rounded hover:bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 touch-visible transition-opacity"
                                 title="Remove"
                               >×</button>
                             </div>
@@ -437,7 +437,7 @@ function DailyPlanPage() {
                         key={day.day_number}
                         size="sm"
                         variant="outline"
-                        className="h-6 w-8 text-xs px-0"
+                        className="h-9 w-10 sm:h-6 sm:w-8 text-xs px-0"
                         onClick={() => addToDay(item, day.day_number)}
                       >
                         {day.day_number}
