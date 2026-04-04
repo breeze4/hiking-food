@@ -38,6 +38,7 @@ def _to_response(item: SnackCatalogItem, ingredient: Ingredient) -> dict:
         "carb_per_serving": carb,
         "category": item.category,
         "drink_mix_type": item.drink_mix_type,
+        "splittable": bool(item.splittable) if item.splittable is not None else False,
         "notes": item.notes,
         "rating": item.rating,
     }

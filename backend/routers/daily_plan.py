@@ -61,7 +61,10 @@ def _gather_autofill_inputs(db: Session, trip: Trip):
     for ts in trip_snacks_raw:
         cat_item = db.get(SnackCatalogItem, ts.catalog_item_id)
         snack_weights[ts.id] = cat_item.weight_per_serving or 0
-        snack_info[ts.id] = {"drink_mix_type": cat_item.drink_mix_type}
+        snack_info[ts.id] = {
+            "drink_mix_type": cat_item.drink_mix_type,
+            "splittable": bool(cat_item.splittable),
+        }
         trip_snacks.append({
             "id": ts.id, "slot": ts.slot, "servings": ts.servings,
             "category": cat_item.category,

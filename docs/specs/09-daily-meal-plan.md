@@ -67,15 +67,15 @@ Day numbering: for a trip with 0.5 + 2 + 0.5 days, there are 4 days. Day 1 is th
 
 **Snacks (lunch, morning, afternoon):**
 1. Sort snack items by weight per serving descending (heaviest first).
-2. For each snack item, distribute 1 serving per eligible day, earliest day first, until servings run out.
+2. For each snack item, distribute servings evenly across eligible days. If servings <= eligible days, assign 1 per day to evenly-spaced days. If servings > eligible days, assign multiple per day (e.g., 11 servings across 5 days = 2 per day + 1 extra on one day).
 3. Assign to slot based on existing trip_snack.slot: `lunch` -> lunch slot, `snacks` -> morning_snacks or afternoon_snacks (alternate, or fill morning first then afternoon).
 4. After all items distributed, check if any day is still significantly under its calorie target — no auto-correction, just visible in the bar chart.
 
 **Drink mixes:**
 1. Group by drink_mix_type (breakfast, dinner, all_day).
 2. For each group, identify eligible days per the slot rules table.
-3. Distribute evenly across eligible days: 1 serving per eligible day, cycling through items if multiple drink mixes of the same type exist.
-4. If total servings < eligible days, flag a warning ("not enough X to cover all days").
+3. Distribute each item independently across eligible days. Each drink mix gets 1 serving per eligible day (or more if servings exceed eligible days). Multiple items of the same type (e.g., coffee AND greens) each get their own distribution — a hiker wants all their breakfast drinks every morning.
+4. If an item has fewer servings than eligible days, flag a warning ("not enough X to cover all days").
 
 ### Screen Layout
 

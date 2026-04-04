@@ -105,38 +105,49 @@ def distribute_snacks(days, trip_snacks, snack_weights):
     for snack in snacks:
         plan_slot = SNACK_SLOT_MAP.get(snack["slot"], "afternoon_snacks")
         elig = eligible_days(days, plan_slot)
-        remaining = snack["servings"]
+        total = int(snack["servings"])
         num_days = len(elig)
-        if num_days == 0 or remaining <= 0:
+        if num_days == 0 or total <= 0:
             continue
 
-        fill_count = min(int(remaining), num_days)
+        base = total // num_days
+        leftover = total % num_days
         offset = slot_offset.get(plan_slot, 0)
 
-        if fill_count >= num_days:
-            chosen = list(range(num_days))
+        if leftover > 0:
+            # Evenly-spaced indices with a rotating offset so different items'
+            # extras land on different days
+            stride = num_days / leftover
+            extra_indices = set(
+                int((offset + i * stride) % num_days) for i in range(leftover)
+            )
         else:
-            # Evenly-spaced indices with a rotating offset so different items
-            # land on different days (e.g., item1 -> [0,3], item2 -> [1,4], etc.)
-            stride = num_days / fill_count
-            chosen = [int((offset + i * stride) % num_days) for i in range(fill_count)]
-            chosen = sorted(set(chosen))
+            extra_indices = set()
 
         # Advance offset for next item in this slot
         slot_offset[plan_slot] = offset + 1
 
-        for idx in chosen:
-            if remaining <= 0:
-                break
-            assign_qty = min(1, remaining)
-            assignments.append({
-                "day_number": elig[idx]["day_number"],
-                "slot": plan_slot,
-                "source_type": "snack",
-                "source_id": snack["id"],
-                "servings": assign_qty,
-            })
-            remaining -= assign_qty
+        if base == 0:
+            # Fewer servings than days: only assign to extra days (1 each)
+            for idx in sorted(extra_indices):
+                assignments.append({
+                    "day_number": elig[idx]["day_number"],
+                    "slot": plan_slot,
+                    "source_type": "snack",
+                    "source_id": snack["id"],
+                    "servings": 1,
+                })
+        else:
+            # Enough for every day; extras get base+1
+            for idx in range(num_days):
+                qty = base + (1 if idx in extra_indices else 0)
+                assignments.append({
+                    "day_number": elig[idx]["day_number"],
+                    "slot": plan_slot,
+                    "source_type": "snack",
+                    "source_id": snack["id"],
+                    "servings": qty,
+                })
 
     return assignments
 
@@ -168,37 +179,55 @@ def distribute_drink_mixes(days, trip_snacks, snack_info):
 
         # Sort items by id for determinism
         items.sort(key=lambda s: s["id"])
+        num_days = len(elig)
 
-        # Total servings available
-        total_servings = sum(s["servings"] for s in items)
-        needed = len(elig)
+        # Distribute each item independently across eligible days.
+        for item in items:
+            total = item["servings"]
+            if total <= 0:
+                continue
 
-        if total_servings < needed:
-            type_label = {"breakfast": "breakfast", "dinner": "evening", "all_day": "all-day"}.get(dmt, dmt)
-            warnings.append(f"Not enough {type_label} drink mixes to cover all {needed} eligible days ({int(total_servings)} available)")
+            splittable = snack_info.get(item["id"], {}).get("splittable", False)
 
-        # Distribute evenly: cycle through items, 1 serving per day
-        item_idx = 0
-        remaining_per_item = {s["id"]: s["servings"] for s in items}
+            if total < num_days:
+                type_label = {"breakfast": "breakfast", "dinner": "evening", "all_day": "all-day"}.get(dmt, dmt)
+                warnings.append(
+                    f"Not enough {type_label} drink mixes to cover all {num_days} eligible days ({total} available)"
+                )
 
-        for day in elig:
-            # Find next item with remaining servings
-            attempts = 0
-            while attempts < len(items):
-                item = items[item_idx % len(items)]
-                if remaining_per_item[item["id"]] >= 1:
-                    assignments.append({
-                        "day_number": day["day_number"],
-                        "slot": slot,
-                        "source_type": "snack",
-                        "source_id": item["id"],
-                        "servings": 1,
-                    })
-                    remaining_per_item[item["id"]] -= 1
-                    item_idx += 1
-                    break
-                item_idx += 1
-                attempts += 1
+            if splittable:
+                # Fractional: divide evenly (e.g. 3 packets / 6 days = 0.5/day)
+                qty_per_day = round(total / num_days, 2)
+                assigned = 0
+                for i, day in enumerate(elig):
+                    if i == num_days - 1:
+                        qty = round(total - assigned, 2)
+                    else:
+                        qty = qty_per_day
+                        assigned += qty
+                    if qty > 0:
+                        assignments.append({
+                            "day_number": day["day_number"],
+                            "slot": slot,
+                            "source_type": "snack",
+                            "source_id": item["id"],
+                            "servings": qty,
+                        })
+            else:
+                # Integer: whole servings only, extras on earlier days
+                int_total = int(total)
+                base = int_total // num_days
+                leftover = int_total % num_days
+                for i, day in enumerate(elig):
+                    qty = base + (1 if i < leftover else 0)
+                    if qty > 0:
+                        assignments.append({
+                            "day_number": day["day_number"],
+                            "slot": slot,
+                            "source_type": "snack",
+                            "source_id": item["id"],
+                            "servings": qty,
+                        })
 
     return assignments, warnings
 

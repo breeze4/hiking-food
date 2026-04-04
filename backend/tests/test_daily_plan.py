@@ -452,16 +452,20 @@ def test_get_empty_plan(c):
 
 
 def test_unallocated_pool(c):
-    """Unallocated pool shows remaining servings after partial distribution."""
+    """When servings exceed eligible days, all servings are distributed (multi-pass)."""
     trip = _create_trip(c)
-    # 10 servings of nuts, only ~3 eligible afternoon_snack days
+    # 10 servings of nuts, 3 eligible afternoon_snack days -> ~3-4 per day
     _add_snack(c, trip["id"], "Mixed Nuts", 10)
 
     plan = _autofill(c, trip["id"])
     unalloc = [u for u in plan["unallocated"] if u["name"] == "Mixed Nuts"]
-    assert len(unalloc) == 1
-    # 3 eligible days for afternoon_snacks (1, 2, 3), 10-3=7 remaining
-    assert unalloc[0]["remaining_servings"] == 7
+    # All 10 distributed across 3 days (3+3+4), none remaining
+    assert len(unalloc) == 0
+
+    # Verify total assigned
+    total = sum(i["servings"] for d in plan["days"] for i in d["items"]
+                if i["name"] == "Mixed Nuts")
+    assert total == 10
 
 
 def test_snacks_distributed_evenly_not_front_loaded(c):
@@ -570,3 +574,70 @@ def test_unallocated_summary(c):
     assert summary2["count"] == 0
     assert summary2["total_calories"] == 0
     assert summary2["total_weight"] == 0
+
+
+# --- Multi-Pass Distribution Tests ---
+
+def test_snack_multi_pass(c):
+    """Snack with more servings than eligible days distributes all via multi-pass."""
+    trip = _create_trip(c)
+    # 10 servings, 3 eligible afternoon_snack days (1,2,3)
+    _add_snack(c, trip["id"], "Mixed Nuts", 10)
+
+    plan = _autofill(c, trip["id"])
+    nut_servings = [(d["day_number"], i["servings"])
+                    for d in plan["days"] for i in d["items"]
+                    if i["name"] == "Mixed Nuts"]
+    assert len(nut_servings) == 3  # present on all 3 eligible days
+    assert sum(s for _, s in nut_servings) == 10
+    # Each day gets at least 3 (base=10//3=3)
+    assert all(s >= 3 for _, s in nut_servings)
+
+
+def test_drink_mix_independent(c):
+    """Multiple drink mixes of same type each get distributed to all eligible days."""
+    trip = _create_trip(c)
+    # Coffee (breakfast type) and Electrolytes (all_day type)
+    # Coffee: 3 servings, 3 eligible breakfast_drinks days (2,3,4)
+    _add_snack(c, trip["id"], "Coffee Mix", 3)
+    # Electrolytes: 4 servings, 4 eligible all_day_drinks days (1,2,3,4)
+    _add_snack(c, trip["id"], "Electrolytes", 4)
+
+    plan = _autofill(c, trip["id"])
+
+    # Coffee should appear on all 3 eligible days
+    coffee_days = [d["day_number"] for d in plan["days"]
+                   for i in d["items"] if i["name"] == "Coffee Mix"]
+    assert sorted(coffee_days) == [2, 3, 4]
+
+    # Electrolytes should appear on all 4 days
+    elec_days = [d["day_number"] for d in plan["days"]
+                 for i in d["items"] if i["name"] == "Electrolytes"]
+    assert sorted(elec_days) == [1, 2, 3, 4]
+
+    # Nothing unallocated
+    unalloc = [u for u in plan["unallocated"]
+               if u["name"] in ("Coffee Mix", "Electrolytes")]
+    assert len(unalloc) == 0
+
+
+def test_drink_mix_excess_servings(c):
+    """Drink mix with more servings than eligible days distributes all."""
+    trip = _create_trip(c)
+    # 10 electrolyte servings, 4 eligible all_day_drinks days
+    _add_snack(c, trip["id"], "Electrolytes", 10)
+
+    plan = _autofill(c, trip["id"])
+    elec_total = sum(i["servings"] for d in plan["days"]
+                     for i in d["items"] if i["name"] == "Electrolytes")
+    assert elec_total == 10
+
+    # Each day gets at least 2 (base=10//4=2)
+    for day_num in [1, 2, 3, 4]:
+        items = _day_items(plan, day_num, "all_day_drinks")
+        elec = [i for i in items if i["name"] == "Electrolytes"]
+        assert len(elec) == 1
+        assert elec[0]["servings"] >= 2
+
+    unalloc = [u for u in plan["unallocated"] if u["name"] == "Electrolytes"]
+    assert len(unalloc) == 0

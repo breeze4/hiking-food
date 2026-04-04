@@ -70,6 +70,17 @@ def _run_migrations(conn):
     if "oz_per_day_high" in cols:
         conn.execute(text("ALTER TABLE trips DROP COLUMN oz_per_day_high"))
     _add_column_if_missing(conn, "trips", "cal_per_oz", "REAL DEFAULT 125")
+    _add_column_if_missing(conn, "snack_catalog", "splittable", "BOOLEAN DEFAULT 0")
+    # Mark Carnation breakfast essential as splittable
+    try:
+        conn.execute(text(
+            "UPDATE snack_catalog SET splittable = 1"
+            " WHERE id IN (SELECT sc.id FROM snack_catalog sc"
+            "   JOIN ingredients i ON sc.ingredient_id = i.id"
+            "   WHERE LOWER(i.name) LIKE '%carnation%')"
+        ))
+    except Exception:
+        pass
 
 
 @asynccontextmanager

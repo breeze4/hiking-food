@@ -26,6 +26,7 @@ class SnackCatalogItem(Base):
     calories_per_serving = Column(Float)
     category = Column(Text)  # drink_mix, lunch, salty, sweet, bars_energy
     drink_mix_type = Column(Text)  # breakfast, dinner, all_day (only for drink_mix category)
+    splittable = Column(Boolean, default=False)  # allow fractional servings in autofill
     notes = Column(Text)
     rating = Column(Integer)
 

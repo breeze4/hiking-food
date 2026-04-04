@@ -40,6 +40,8 @@
 | 34 | [Fractional Day Allocation](34-fractional-day-allocation.md) | Half-serving allocation from unallocated pool |
 | 35 | [Unallocated Bar Chart Visibility](35-unallocated-bar-chart-visibility.md) | Show unallocated totals near bar chart |
 | 36 | [Day Plan Mobile UX](36-day-plan-mobile-ux.md) | Touch-friendly action buttons + tap targets |
+| 37 | [Macro Research Agent](37-macro-research-agent.md) | Agent to populate ingredient macros via USDA API |
+| 38 | [Auto-Fill Distribute All Servings](autofill-distribute-all-servings.md) | Multi-pass snack/drink distribution to eliminate unallocated items |
 
 ## In Progress
 
@@ -54,6 +56,7 @@
 ## Specs
 
 - [Macronutrient Tracking](../specs/10-macronutrient-tracking.md) — covers plans 27-32
+- [Macro Research Agent](../specs/11-macro-research-agent.md) — covers plan 37
 
 ## PRDs
 
