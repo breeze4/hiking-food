@@ -329,6 +329,16 @@ function DailyPlanPage() {
       {/* Stacked bar chart */}
       {hasAssignments && <StackedBarChart days={plan.days} />}
 
+      {/* Unallocated summary banner */}
+      {hasAssignments && plan.unallocated_summary?.count > 0 && (
+        <p className="text-sm text-amber-600 dark:text-amber-400">
+          {plan.unallocated_summary.count} item{plan.unallocated_summary.count !== 1 ? 's' : ''} unallocated ({plan.unallocated_summary.total_calories} cal · {plan.unallocated_summary.total_weight} oz)
+        </p>
+      )}
+      {hasAssignments && plan.unallocated_summary?.count === 0 && (
+        <p className="text-sm text-green-600/70 dark:text-green-400/70">All food allocated</p>
+      )}
+
       {/* Day detail cards — responsive grid */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {plan.days.map((day) => {

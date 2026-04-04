@@ -295,6 +295,11 @@ def _build_daily_plan_response(db: Session, trip: Trip):
     return {
         "days": sorted(days_out.values(), key=lambda d: d["day_number"]),
         "unallocated": unallocated,
+        "unallocated_summary": {
+            "count": len(unallocated),
+            "total_calories": round(sum(u["remaining_servings"] * u["calories_per_serving"] for u in unallocated), 1),
+            "total_weight": round(sum(u["remaining_servings"] * u["weight_per_serving"] for u in unallocated), 1),
+        },
         "warnings": [],
         "macro_target": macro_target,
     }

@@ -533,3 +533,40 @@ def test_utah_trip_realistic(c):
         assert max_count - min_count <= 2, (
             f"Snack spread too uneven: max={max_count}, min={min_count}: {snack_counts}"
         )
+
+
+# --- Unallocated Summary Tests ---
+
+def test_unallocated_summary(c):
+    """unallocated_summary has correct count, calories, and weight."""
+    # Create a short trip with more food than fits
+    trip = _create_trip(c, full_days=1, first_day_fraction=0.5, last_day_fraction=0.5)
+    _add_meal(c, trip["id"], "Oatmeal", quantity=3)
+    _add_meal(c, trip["id"], "Rice & Beans", quantity=3)
+    _add_snack(c, trip["id"], "Crackers", servings=10)
+    plan = _autofill(c, trip["id"])
+
+    summary = plan["unallocated_summary"]
+    assert "count" in summary
+    assert "total_calories" in summary
+    assert "total_weight" in summary
+
+    # With 3 oatmeal + 3 dinners + 10 snack servings on a 3-day trip,
+    # there should be unallocated items
+    assert summary["count"] > 0
+    assert summary["total_calories"] > 0
+    assert summary["total_weight"] > 0
+
+    # Now test all-allocated: create a trip with exactly enough food.
+    # first_partial gets dinner but not breakfast; full gets both;
+    # last_partial gets breakfast but not dinner. So 2 breakfasts, 2 dinners.
+    trip2 = _create_trip(c, name="Exact Trip", full_days=1,
+                         first_day_fraction=1.0, last_day_fraction=1.0)
+    _add_meal(c, trip2["id"], "Oatmeal", quantity=2)
+    _add_meal(c, trip2["id"], "Rice & Beans", quantity=2)
+    plan2 = _autofill(c, trip2["id"])
+
+    summary2 = plan2["unallocated_summary"]
+    assert summary2["count"] == 0
+    assert summary2["total_calories"] == 0
+    assert summary2["total_weight"] == 0
