@@ -261,7 +261,7 @@ def test_snacks_heaviest_first(c):
 
 
 def test_lunch_snacks_go_to_lunch_slot(c):
-    """Snacks with slot=lunch go to lunch slot (eligible on full days only)."""
+    """Snacks with slot=lunch go to lunch slot (eligible on first_partial + full days)."""
     trip = _create_trip(c)
     _add_snack(c, trip["id"], "Crackers", 3)
 
@@ -272,9 +272,9 @@ def test_lunch_snacks_go_to_lunch_slot(c):
             if item["name"] == "Crackers":
                 lunch_items.append((d["day_number"], item["slot"]))
 
-    # Lunch only eligible on days 2, 3 (full days)
+    # Lunch eligible on days 1 (first_partial), 2, 3 (full days) — not day 4 (last_partial)
     assert all(slot == "lunch" for _, slot in lunch_items)
-    assert all(day in [2, 3] for day, _ in lunch_items)
+    assert all(day in [1, 2, 3] for day, _ in lunch_items)
 
 
 # --- Drink Mix Distribution Tests ---

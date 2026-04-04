@@ -52,7 +52,7 @@ Day numbering: for a trip with 0.5 + 2 + 0.5 days, there are 4 days. Day 1 is th
 | breakfast | No | Yes | Yes |
 | breakfast_drinks | No | Yes | Yes |
 | morning_snacks | No | Yes | Yes |
-| lunch | No | Yes | No |
+| lunch | Yes | Yes | No |
 | afternoon_snacks | Yes | Yes | No |
 | dinner | Yes | Yes | No |
 | evening_drinks | Yes | Yes | No |

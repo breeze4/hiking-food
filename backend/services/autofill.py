@@ -6,7 +6,7 @@ SLOT_RULES = {
     "breakfast":          {"first_partial": False, "full": True,  "last_partial": True},
     "breakfast_drinks":   {"first_partial": False, "full": True,  "last_partial": True},
     "morning_snacks":     {"first_partial": False, "full": True,  "last_partial": True},
-    "lunch":              {"first_partial": False, "full": True,  "last_partial": False},
+    "lunch":              {"first_partial": True,  "full": True,  "last_partial": False},
     "afternoon_snacks":   {"first_partial": True,  "full": True,  "last_partial": False},
     "dinner":             {"first_partial": True,  "full": True,  "last_partial": False},
     "evening_drinks":     {"first_partial": True,  "full": True,  "last_partial": False},
