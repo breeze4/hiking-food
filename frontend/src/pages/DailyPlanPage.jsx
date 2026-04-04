@@ -379,17 +379,28 @@ function DailyPlanPage() {
                           {isHalf ? '½' : '1'}
                         </button>
                       )}
-                      {plan.days.map((day) => (
-                        <Button
-                          key={day.day_number}
-                          size="sm"
-                          variant="outline"
-                          className="h-9 w-10 sm:h-6 sm:w-8 text-xs px-0"
-                          onClick={() => addToDay(item, day.day_number)}
-                        >
-                          {day.day_number}
-                        </Button>
-                      ))}
+                      {plan.days.map((day) => {
+                        const existing = day.items.find(
+                          d => d.source_type === item.source_type && d.source_id === item.source_id
+                        );
+                        const count = existing ? existing.servings : 0;
+                        return (
+                          <Button
+                            key={day.day_number}
+                            size="sm"
+                            variant={count > 0 ? "default" : "outline"}
+                            className="h-9 w-10 sm:h-6 sm:w-8 text-xs px-0 relative"
+                            onClick={() => addToDay(item, day.day_number)}
+                          >
+                            {day.day_number}
+                            {count > 0 && (
+                              <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground rounded-full w-4 h-4 text-[9px] flex items-center justify-center leading-none">
+                                {count}
+                              </span>
+                            )}
+                          </Button>
+                        );
+                      })}
                     </div>
                   </div>
                 );
