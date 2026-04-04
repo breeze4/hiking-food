@@ -35,6 +35,7 @@
 | 29 | [Snack Macro Per-Serving](29-snack-macro-per-serving.md) | Macro grams per serving on snack catalog |
 | 30 | [Trip Summary Macros](30-trip-summary-macros.md) | Macro percentage breakdown in trip summary |
 | 31 | [App Settings + Macro Targets](31-app-settings-macro-targets.md) | Global macro target percentages + actual vs target |
+| 32 | [Daily Plan Macros](32-daily-plan-macros.md) | Per-day macro breakdown on daily plan |
 
 ## In Progress
 
@@ -45,7 +46,6 @@
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
-| 32 | [Daily Plan Macros](32-daily-plan-macros.md) | Per-day macro breakdown on daily plan | 28, 29, 31 |
 
 ## Specs
 

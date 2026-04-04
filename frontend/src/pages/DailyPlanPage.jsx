@@ -171,6 +171,57 @@ function StackedBarChart({ days }) {
   );
 }
 
+// --- Macro Bar ---
+
+const MACRO_COLORS = {
+  protein: '#ef4444',  // red
+  fat: '#eab308',      // yellow
+  carb: '#3b82f6',     // blue
+};
+
+function MacroBar({ macros, target }) {
+  if (!macros) return null;
+
+  const { protein_pct, fat_pct, carb_pct, protein_g, fat_g, carb_g, coverage_pct } = macros;
+
+  return (
+    <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
+      {/* Stacked percentage bar */}
+      <div className="flex h-2 rounded-full overflow-hidden bg-muted">
+        {protein_pct > 0 && (
+          <div style={{ width: `${protein_pct}%`, backgroundColor: MACRO_COLORS.protein }} />
+        )}
+        {fat_pct > 0 && (
+          <div style={{ width: `${fat_pct}%`, backgroundColor: MACRO_COLORS.fat }} />
+        )}
+        {carb_pct > 0 && (
+          <div style={{ width: `${carb_pct}%`, backgroundColor: MACRO_COLORS.carb }} />
+        )}
+      </div>
+
+      {/* Gram totals and percentages */}
+      <div className="flex gap-3 text-[10px] text-muted-foreground">
+        <span style={{ color: MACRO_COLORS.protein }}>
+          P {protein_g}g ({protein_pct}%{target ? ` / ${target.protein_pct}%` : ''})
+        </span>
+        <span style={{ color: MACRO_COLORS.fat }}>
+          F {fat_g}g ({fat_pct}%{target ? ` / ${target.fat_pct}%` : ''})
+        </span>
+        <span style={{ color: MACRO_COLORS.carb }}>
+          C {carb_g}g ({carb_pct}%{target ? ` / ${target.carb_pct}%` : ''})
+        </span>
+      </div>
+
+      {/* Coverage indicator */}
+      {coverage_pct !== null && coverage_pct < 100 && (
+        <p className="text-[10px] text-muted-foreground/70">
+          Macro data covers {coverage_pct}% of calories
+        </p>
+      )}
+    </div>
+  );
+}
+
 // --- Main Page ---
 
 function DailyPlanPage() {
@@ -307,44 +358,47 @@ function DailyPlanPage() {
                 {day.items.length === 0 ? (
                   <p className="text-muted-foreground text-xs">No items assigned</p>
                 ) : (
-                  SLOT_ORDER.filter(s => bySlot[s]).map(slot => (
-                    <div key={slot}>
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">
-                        {SLOT_LABELS[slot]}
-                      </p>
-                      {bySlot[slot].map((item) => {
-                        const key = `${item.source_type}:${item.source_id}`;
-                        const runsOut = lastDayBySource[key];
-                        const showRunsOut = item.source_type === 'snack' && runsOut && runsOut < totalDays && runsOut === day.day_number;
+                  <>
+                    {SLOT_ORDER.filter(s => bySlot[s]).map(slot => (
+                      <div key={slot}>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">
+                          {SLOT_LABELS[slot]}
+                        </p>
+                        {bySlot[slot].map((item) => {
+                          const key = `${item.source_type}:${item.source_id}`;
+                          const runsOut = lastDayBySource[key];
+                          const showRunsOut = item.source_type === 'snack' && runsOut && runsOut < totalDays && runsOut === day.day_number;
 
-                        return (
-                          <div key={item.id} className="flex items-center gap-1 py-0.5 group">
-                            <span className="flex-1">
-                              {item.name}{item.servings > 1 ? ` ×${item.servings}` : ''}
-                              {showRunsOut && (
-                                <span className="text-xs text-orange-500 ml-1">(last day)</span>
+                          return (
+                            <div key={item.id} className="flex items-center gap-1 py-0.5 group">
+                              <span className="flex-1">
+                                {item.name}{item.servings > 1 ? ` ×${item.servings}` : ''}
+                                {showRunsOut && (
+                                  <span className="text-xs text-orange-500 ml-1">(last day)</span>
+                                )}
+                              </span>
+                              <span className="text-xs text-muted-foreground mr-1">
+                                {Math.round(item.calories)} cal
+                              </span>
+                              {item.source_type === 'snack' && (
+                                <button
+                                  onClick={() => incrementServings(item.id, item.servings)}
+                                  className="text-xs px-1 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+                                  title="Add serving"
+                                >+</button>
                               )}
-                            </span>
-                            <span className="text-xs text-muted-foreground mr-1">
-                              {Math.round(item.calories)} cal
-                            </span>
-                            {item.source_type === 'snack' && (
                               <button
-                                onClick={() => incrementServings(item.id, item.servings)}
-                                className="text-xs px-1 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
-                                title="Add serving"
-                              >+</button>
-                            )}
-                            <button
-                              onClick={() => removeAssignment(item.id)}
-                              className="text-xs px-1 rounded hover:bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                              title="Remove"
-                            >×</button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))
+                                onClick={() => removeAssignment(item.id)}
+                                className="text-xs px-1 rounded hover:bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Remove"
+                              >×</button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                    <MacroBar macros={day.macros} target={plan.macro_target} />
+                  </>
                 )}
               </CardContent>
             </Card>

@@ -25,14 +25,14 @@ AFK
 
 ## Acceptance criteria
 
-- [ ] Daily plan day objects include `macros: {protein_g, fat_g, carb_g, protein_pct, fat_pct, carb_pct}`
-- [ ] Daily plan response includes `macro_target` from app settings
-- [ ] Macro percentages computed per-day from assigned items' macro contributions
-- [ ] Days with no macro data show null macros (not zero)
-- [ ] Daily plan UI shows macro breakdown per day card (grams and/or percentages)
-- [ ] Daily plan UI shows actual vs target comparison
-- [ ] Coverage indicator when some assigned items lack macro data
-- [ ] Tests verify per-day macro computation with mixed data
+- [x] Daily plan day objects include `macros: {protein_g, fat_g, carb_g, protein_pct, fat_pct, carb_pct}`
+- [x] Daily plan response includes `macro_target` from app settings
+- [x] Macro percentages computed per-day from assigned items' macro contributions
+- [x] Days with no macro data show null macros (not zero)
+- [x] Daily plan UI shows macro breakdown per day card (grams and/or percentages)
+- [x] Daily plan UI shows actual vs target comparison
+- [x] Coverage indicator when some assigned items lack macro data
+- [x] Tests verify per-day macro computation with mixed data
 
 ## Pattern exemplar
 
@@ -41,8 +41,8 @@ AFK
 
 ## Tasks
 
-- [ ] Extend `_build_daily_plan_response()` to compute per-day macro grams and percentages
-- [ ] Include macro targets from app settings in response
-- [ ] Update daily plan day card UI to show macro breakdown
-- [ ] Add actual vs target indicator per day
-- [ ] Write tests for per-day macro computation (full, partial, empty data)
+- [x] Extend `_build_daily_plan_response()` to compute per-day macro grams and percentages
+- [x] Include macro targets from app settings in response
+- [x] Update daily plan day card UI to show macro breakdown
+- [x] Add actual vs target indicator per day
+- [x] Write tests for per-day macro computation (full, partial, empty data)
