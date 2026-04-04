@@ -344,6 +344,61 @@ function DailyPlanPage() {
         <p className="text-sm text-green-600/70 dark:text-green-400/70">All food allocated</p>
       )}
 
+      {/* Unallocated Pool */}
+      {plan.unallocated.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-3">Unallocated</h3>
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              {plan.unallocated.map((item, i) => {
+                const itemKey = `${item.source_type}:${item.source_id}`;
+                const effectiveAmount = item.remaining_servings < 1
+                  ? item.remaining_servings
+                  : (allocAmounts[itemKey] ?? 1);
+                const isHalf = effectiveAmount === 0.5;
+
+                return (
+                  <div key={i}>
+                    <div className="flex items-center gap-2 text-sm mb-1">
+                      <span className="font-medium">{item.name}</span>
+                      <Badge variant="outline" className="text-xs">{item.category}</Badge>
+                      <span className="text-muted-foreground text-xs">
+                        {item.remaining_servings} serving{item.remaining_servings !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 items-center">
+                      {item.remaining_servings >= 1 && (
+                        <button
+                          onClick={() => setAllocAmounts(prev => ({
+                            ...prev,
+                            [itemKey]: isHalf ? 1 : 0.5,
+                          }))}
+                          className="text-xs h-9 w-10 sm:h-6 sm:w-8 rounded border font-medium bg-muted/50 hover:bg-muted"
+                          title={`Allocate ${isHalf ? '1' : '½'} serving`}
+                        >
+                          {isHalf ? '½' : '1'}
+                        </button>
+                      )}
+                      {plan.days.map((day) => (
+                        <Button
+                          key={day.day_number}
+                          size="sm"
+                          variant="outline"
+                          className="h-9 w-10 sm:h-6 sm:w-8 text-xs px-0"
+                          onClick={() => addToDay(item, day.day_number)}
+                        >
+                          {day.day_number}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Day detail cards — responsive grid */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {plan.days.map((day) => {
@@ -427,61 +482,6 @@ function DailyPlanPage() {
           );
         })}
       </div>
-
-      {/* Unallocated Pool */}
-      {plan.unallocated.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold mb-3">Unallocated</h3>
-          <Card>
-            <CardContent className="p-4 space-y-3">
-              {plan.unallocated.map((item, i) => {
-                const itemKey = `${item.source_type}:${item.source_id}`;
-                const effectiveAmount = item.remaining_servings < 1
-                  ? item.remaining_servings
-                  : (allocAmounts[itemKey] ?? 1);
-                const isHalf = effectiveAmount === 0.5;
-
-                return (
-                  <div key={i}>
-                    <div className="flex items-center gap-2 text-sm mb-1">
-                      <span className="font-medium">{item.name}</span>
-                      <Badge variant="outline" className="text-xs">{item.category}</Badge>
-                      <span className="text-muted-foreground text-xs">
-                        {item.remaining_servings} serving{item.remaining_servings !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-1 items-center">
-                      {item.remaining_servings >= 1 && (
-                        <button
-                          onClick={() => setAllocAmounts(prev => ({
-                            ...prev,
-                            [itemKey]: isHalf ? 1 : 0.5,
-                          }))}
-                          className="text-xs h-9 w-10 sm:h-6 sm:w-8 rounded border font-medium bg-muted/50 hover:bg-muted"
-                          title={`Allocate ${isHalf ? '1' : '½'} serving`}
-                        >
-                          {isHalf ? '½' : '1'}
-                        </button>
-                      )}
-                      {plan.days.map((day) => (
-                        <Button
-                          key={day.day_number}
-                          size="sm"
-                          variant="outline"
-                          className="h-9 w-10 sm:h-6 sm:w-8 text-xs px-0"
-                          onClick={() => addToDay(item, day.day_number)}
-                        >
-                          {day.day_number}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {/* Reset confirmation dialog */}
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
