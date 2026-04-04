@@ -231,6 +231,7 @@ function DailyPlanPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [resetOpen, setResetOpen] = useState(false);
+  const [allocAmounts, setAllocAmounts] = useState({});
 
   useEffect(() => { loadPlan(); }, [tripId]);
 
@@ -261,22 +262,26 @@ function DailyPlanPage() {
     } catch (err) { setError(err.message); }
   }
 
-  async function incrementServings(assignmentId, currentServings) {
+  async function incrementServings(assignmentId, currentServings, amount = 1) {
     try {
       setPlan(await patch(`/trips/${tripId}/daily-plan/assignments/${assignmentId}`, {
-        servings: currentServings + 1,
+        servings: currentServings + amount,
       }));
     } catch (err) { setError(err.message); }
   }
 
   async function addToDay(item, dayNumber) {
+    const key = `${item.source_type}:${item.source_id}`;
+    const servings = item.remaining_servings < 1
+      ? item.remaining_servings
+      : (allocAmounts[key] ?? 1);
     try {
       setPlan(await post(`/trips/${tripId}/daily-plan/assignments`, {
         day_number: dayNumber,
         slot: defaultSlotForItem(item),
         source_type: item.source_type,
         source_id: item.source_id,
-        servings: 1,
+        servings,
       }));
     } catch (err) { setError(err.message); }
   }
@@ -382,7 +387,7 @@ function DailyPlanPage() {
                           return (
                             <div key={item.id} className="flex items-center gap-1 py-0.5 group">
                               <span className="flex-1">
-                                {item.name}{item.servings > 1 ? ` ×${item.servings}` : ''}
+                                {item.name}{item.servings !== 1 ? ` ×${item.servings}` : ''}
                                 {showRunsOut && (
                                   <span className="text-xs text-orange-500 ml-1">(last day)</span>
                                 )}
@@ -391,11 +396,18 @@ function DailyPlanPage() {
                                 {Math.round(item.calories)} cal
                               </span>
                               {item.source_type === 'snack' && (
-                                <button
-                                  onClick={() => incrementServings(item.id, item.servings)}
-                                  className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-muted opacity-0 group-hover:opacity-100 touch-visible transition-opacity"
-                                  title="Add serving"
-                                >+</button>
+                                <>
+                                  <button
+                                    onClick={() => incrementServings(item.id, item.servings, 0.5)}
+                                    className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-muted opacity-0 group-hover:opacity-100 touch-visible transition-opacity"
+                                    title="Add half serving"
+                                  >½</button>
+                                  <button
+                                    onClick={() => incrementServings(item.id, item.servings)}
+                                    className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-muted opacity-0 group-hover:opacity-100 touch-visible transition-opacity"
+                                    title="Add serving"
+                                  >+</button>
+                                </>
                               )}
                               <button
                                 onClick={() => removeAssignment(item.id)}
@@ -422,30 +434,50 @@ function DailyPlanPage() {
           <h3 className="text-lg font-semibold mb-3">Unallocated</h3>
           <Card>
             <CardContent className="p-4 space-y-3">
-              {plan.unallocated.map((item, i) => (
-                <div key={i}>
-                  <div className="flex items-center gap-2 text-sm mb-1">
-                    <span className="font-medium">{item.name}</span>
-                    <Badge variant="outline" className="text-xs">{item.category}</Badge>
-                    <span className="text-muted-foreground text-xs">
-                      {item.remaining_servings} serving{item.remaining_servings !== 1 ? 's' : ''}
-                    </span>
+              {plan.unallocated.map((item, i) => {
+                const itemKey = `${item.source_type}:${item.source_id}`;
+                const effectiveAmount = item.remaining_servings < 1
+                  ? item.remaining_servings
+                  : (allocAmounts[itemKey] ?? 1);
+                const isHalf = effectiveAmount === 0.5;
+
+                return (
+                  <div key={i}>
+                    <div className="flex items-center gap-2 text-sm mb-1">
+                      <span className="font-medium">{item.name}</span>
+                      <Badge variant="outline" className="text-xs">{item.category}</Badge>
+                      <span className="text-muted-foreground text-xs">
+                        {item.remaining_servings} serving{item.remaining_servings !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 items-center">
+                      {item.remaining_servings >= 1 && (
+                        <button
+                          onClick={() => setAllocAmounts(prev => ({
+                            ...prev,
+                            [itemKey]: isHalf ? 1 : 0.5,
+                          }))}
+                          className="text-xs h-9 w-10 sm:h-6 sm:w-8 rounded border font-medium bg-muted/50 hover:bg-muted"
+                          title={`Allocate ${isHalf ? '1' : '½'} serving`}
+                        >
+                          {isHalf ? '½' : '1'}
+                        </button>
+                      )}
+                      {plan.days.map((day) => (
+                        <Button
+                          key={day.day_number}
+                          size="sm"
+                          variant="outline"
+                          className="h-9 w-10 sm:h-6 sm:w-8 text-xs px-0"
+                          onClick={() => addToDay(item, day.day_number)}
+                        >
+                          {day.day_number}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {plan.days.map((day) => (
-                      <Button
-                        key={day.day_number}
-                        size="sm"
-                        variant="outline"
-                        className="h-9 w-10 sm:h-6 sm:w-8 text-xs px-0"
-                        onClick={() => addToDay(item, day.day_number)}
-                      >
-                        {day.day_number}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </CardContent>
           </Card>
         </div>
