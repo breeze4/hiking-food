@@ -4,6 +4,7 @@ import { TripProvider, useTrip } from './context/TripContext';
 import TripSelector from './components/TripSelector';
 import IngredientsPage from './pages/IngredientsPage';
 import SnackCatalogPage from './pages/SnackCatalogPage';
+import IntakePage from './pages/IntakePage';
 import RecipesPage from './pages/RecipesPage';
 import RecipeEditPage from './pages/RecipeEditPage';
 import TripPlannerPage from './pages/TripPlannerPage';
@@ -24,6 +25,7 @@ function NavLinks({ onClick }) {
       <NavLink to="/recipes" className={linkClass} onClick={onClick}>Recipes</NavLink>
       <NavLink to="/snacks" className={linkClass} onClick={onClick}>Snack Catalog</NavLink>
       <NavLink to="/ingredients" className={linkClass} onClick={onClick}>Ingredients</NavLink>
+      <NavLink to="/intake" className={linkClass} onClick={onClick}>Intake</NavLink>
       <DailyPlanLink onClick={onClick} />
       <PackingLink onClick={onClick} />
     </>
@@ -117,6 +119,7 @@ function App() {
               <Route path="/" element={<TripPlannerPage />} />
               <Route path="/ingredients" element={<IngredientsPage />} />
               <Route path="/snacks" element={<SnackCatalogPage />} />
+              <Route path="/intake" element={<IntakePage />} />
               <Route path="/recipes" element={<RecipesPage />} />
               <Route path="/recipes/:id" element={<RecipeEditPage />} />
               <Route path="/trips/:tripId/daily-plan" element={<DailyPlanPage />} />

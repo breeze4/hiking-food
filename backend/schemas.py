@@ -288,6 +288,31 @@ class MacroTarget(BaseModel):
     carb_pct: float
 
 
+# --- Food Intake ---
+# Note: plan 39 specifies `FoodIntakeOut` (rather than the `*Read` suffix used
+# elsewhere in this file) so downstream plan 40 can import the name it expects.
+
+class FoodIntakeCreate(BaseModel):
+    name: str
+    notes: Optional[str] = None
+
+
+class FoodIntakeUpdate(BaseModel):
+    name: Optional[str] = None
+    notes: Optional[str] = None
+    status: Optional[str] = None
+
+
+class FoodIntakeOut(BaseModel):
+    id: int
+    name: str
+    notes: Optional[str] = None
+    status: str
+    created_at: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
 class TripSummaryRead(BaseModel):
     total_days: float
     total_weight: float

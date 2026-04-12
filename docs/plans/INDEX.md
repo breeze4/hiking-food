@@ -42,6 +42,7 @@
 | 36 | [Day Plan Mobile UX](36-day-plan-mobile-ux.md) | Touch-friendly action buttons + tap targets |
 | 37 | [Macro Research Agent](37-macro-research-agent.md) | Agent to populate ingredient macros via USDA API |
 | 38 | [Auto-Fill Distribute All Servings](autofill-distribute-all-servings.md) | Multi-pass snack/drink distribution to eliminate unallocated items |
+| 39 | [Food Intake Capture](39-food-intake-capture.md) | food_intake table + CRUD API + Intake page |
 
 ## In Progress
 
@@ -52,11 +53,13 @@
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
+| 40 | [Intake Research Agent](40-intake-research-agent.md) | Agent that turns pending intake rows into ingredients/snacks via USDA | 39 |
 
 ## Specs
 
 - [Macronutrient Tracking](../specs/10-macronutrient-tracking.md) — covers plans 27-32
 - [Macro Research Agent](../specs/11-macro-research-agent.md) — covers plan 37
+- [Food Intake Queue](../specs/15-food-intake-queue.md) — covers plans 39-40
 
 ## PRDs
 

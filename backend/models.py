@@ -108,3 +108,13 @@ class TripSnack(Base):
     packed = Column(Boolean, default=False)
     actual_weight_oz = Column(Float)
     trip_notes = Column(Text)
+
+
+class FoodIntake(Base):
+    __tablename__ = "food_intake"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Text, nullable=False)
+    notes = Column(Text)
+    status = Column(Text, nullable=False, default="pending")  # pending | researched | added
+    created_at = Column(Text)  # ISO 8601 string, set server-side
