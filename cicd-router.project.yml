@@ -1,0 +1,66 @@
+# cicd-router deploy config for Hiking Food.
+version: 1
+
+identity:
+  id: hiking-food
+  name: Hiking Food
+  repo_path: /Users/breeze/dev/hiking-food
+
+eligibility:
+  auto_deploy: true
+  branches:
+    - main
+  refs:
+    - refs/heads/main
+
+gates:
+  dependency_path:
+    prepend:
+      - backend/venv/bin
+  stages:
+    - name: project-gates
+      command: bash scripts/cicd-router-gates.sh
+
+deploy:
+  enabled: true
+  host: beebaby
+  directory: dev/hiking-food
+  source_subdir: .
+  service_unit: hiking-food.service
+  port: 8000
+  rsync:
+    excludes:
+      - .git/
+      - .local/
+      - node_modules/
+      - backend/venv/
+      - frontend/node_modules/
+      - __pycache__/
+      - "*.db"
+      - "*.pdf"
+  remote_steps:
+    - name: bootstrap
+      command: bash deploy/remote-bootstrap.sh
+  restart_units:
+    - hiking-food.service
+  env_files: []
+
+smoke:
+  attempts: 5
+  delay_seconds: 2.0
+  checks:
+    - name: app-health
+      kind: http
+      port: 8000
+      path: /hiking-food/api/health
+      expected_status: 200
+
+publisher:
+  host: beebaby
+  store_path: cicd-router/results.sqlite3
+  logs_path: cicd-router/logs
+  console_port: 8086
+
+self_deploy:
+  is_router: false
+  update_command:
