@@ -49,8 +49,4 @@ venv/bin/pytest
 
 ## Deploy
 
-```sh
-./deploy/deploy.sh
-```
-
-Rsyncs to the host, builds the frontend, and restarts the service.
+Deploys run automatically through cicd-router on each commit to `main` (see `cicd-router.project.yml`); there is no manual deploy script.
