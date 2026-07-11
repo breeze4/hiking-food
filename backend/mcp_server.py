@@ -12,9 +12,7 @@ from mcp.types import ToolAnnotations
 from sqlalchemy.orm import Session
 
 from database import SessionLocal
-from models import Ingredient, SnackCatalogItem
-from routers.recipes import list_recipes as build_recipe_list
-from routers.snacks import _to_response as build_snack
+from services import catalog_queries
 from services.trip_planning import TripPlanningService
 
 
@@ -127,18 +125,13 @@ def build_mcp_server() -> FastMCP:
         with _session() as db:
             result: dict = {}
             if kind in {"recipes", "all"}:
-                recipes = build_recipe_list(category=category, db=db)
+                recipes = catalog_queries.recipe_list_view(db, category)
                 result["recipes"] = [
                     item for item in recipes
                     if not needle or needle in str(item["name"]).lower()
                 ]
             if kind in {"snacks", "all"}:
-                q = db.query(SnackCatalogItem, Ingredient).join(
-                    Ingredient, SnackCatalogItem.ingredient_id == Ingredient.id
-                )
-                if category:
-                    q = q.filter(SnackCatalogItem.category == category)
-                snacks = [build_snack(item, ingredient) for item, ingredient in q.all()]
+                snacks = catalog_queries.snack_list_view(db, category)
                 result["snacks"] = [
                     item for item in snacks
                     if not needle or needle in str(item["ingredient_name"]).lower()

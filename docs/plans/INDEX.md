@@ -48,6 +48,7 @@
 | 42 | [Remote Chatbot MCP](42-remote-chatbot-mcp.md) | OAuth-protected BeeBaby MCP for trip planning from Codex, ChatGPT, and Claude |
 | 43 | [OAuth + Server Hardening](43-oauth-server-hardening.md) | Password throttling, honest metadata, CORS removal, MCP host policy, lazy absolute OAuth DB |
 | 44 | [Frontend Mutation UX](44-frontend-mutation-ux.md) | Mutation pending/error state, accessible control names, lazy-loaded routes |
+| 45 | [Catalog Projections + Audit](45-catalog-projections-audit.md) | Shared catalog projections, architecture.md refresh, completion audit |
 
 ## In Progress
 
@@ -58,7 +59,6 @@
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
-| 45 | [Catalog Projections + Audit](45-catalog-projections-audit.md) | Shared catalog projections, architecture.md refresh, completion audit | 43, 44 |
 
 ## Specs
 

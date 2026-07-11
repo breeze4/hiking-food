@@ -57,40 +57,40 @@ Facts confirmed in code (2026-07-11):
 
 ## Tasks
 
-- [ ] Add behavior tests for `list_food_options` (recipes and snacks returned,
+- [x] Add behavior tests for `list_food_options` (recipes and snacks returned,
   category and query filters work) and a REST-vs-MCP catalog parity
   cross-check, following the existing `test_mcp_tools.py` patterns. These
   pass against the current implementation before the refactor.
-- [ ] Create `services/catalog_queries.py` per the decision above; point
+- [x] Create `services/catalog_queries.py` per the decision above; point
   `routers/recipes.py`, `routers/snacks.py`, and `mcp_server.py` at it;
   delete the `routers.*` imports from `mcp_server.py` and the duplicated
   snack join. REST response shapes unchanged (existing REST tests stay
   green).
-- [ ] Update `docs/architecture.md`: service boundary (trip planning and
+- [x] Update `docs/architecture.md`: service boundary (trip planning and
   catalog projections), versioned migrations with backups, database
   configuration (env overrides, absolute paths, FK enforcement), dependency
   locks, MCP/OAuth topology including plan 43's CORS/metadata/transport
   changes, and the corrected router/test-fixture counts.
-- [ ] Run the full gates: `cd backend && venv/bin/pytest -q` and
+- [x] Run the full gates: `cd backend && venv/bin/pytest -q` and
   `cd frontend && pnpm test && pnpm lint && pnpm build`.
 - [ ] Commit, push, and inspect the exact-SHA cicd-router result for this
   commit; verify BeeBaby health at `http://beebaby:8000/hiking-food/` plus
   representative REST reads and MCP discovery/tool reads.
-- [ ] Write the spec-behavior accounting table into this step's handoff file;
+- [x] Write the spec-behavior accounting table into this step's handoff file;
   every bullet in the spec's four behavior lists is mapped to covering
   evidence or explicitly flagged as uncovered.
 
 ## Acceptance criteria
 
-- [ ] `mcp_server.py` imports nothing from any `routers.*` module.
-- [ ] REST recipe/snack list responses are byte-identical to before the
+- [x] `mcp_server.py` imports nothing from any `routers.*` module.
+- [x] REST recipe/snack list responses are byte-identical to before the
   refactor; MCP `list_food_options` behavior is covered by tests.
-- [ ] `docs/architecture.md` accurately describes the service boundary,
+- [x] `docs/architecture.md` accurately describes the service boundary,
   migrations, database configuration, dependency locks, and MCP/OAuth
   topology as they exist after plans 43 and 44.
 - [ ] All backend and frontend gates pass; the deployed commit is verified
   healthy on BeeBaby with working REST and MCP reads.
-- [ ] Every spec behavior bullet is explicitly accounted for.
+- [x] Every spec behavior bullet is explicitly accounted for.
 
 ## Done when
 

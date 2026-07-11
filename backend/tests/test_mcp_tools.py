@@ -133,3 +133,46 @@ def test_mcp_overview_matches_rest_trip_and_summary(c):
 
     assert mcp_view["trip"] == rest_trip
     assert mcp_view["summary"] == rest_summary
+
+
+def test_list_food_options_returns_recipes_and_snacks():
+    options = _tools()["list_food_options"].fn()
+    assert "Oatmeal" in [item["name"] for item in options["recipes"]]
+    assert "Nuts" in [item["ingredient_name"] for item in options["snacks"]]
+
+
+def test_list_food_options_kind_selects_one_catalog():
+    tools = _tools()
+    recipes_only = tools["list_food_options"].fn(kind="recipes")
+    assert "recipes" in recipes_only and "snacks" not in recipes_only
+    snacks_only = tools["list_food_options"].fn(kind="snacks")
+    assert "snacks" in snacks_only and "recipes" not in snacks_only
+
+
+def test_list_food_options_category_filters_each_catalog():
+    tools = _tools()
+    breakfast = tools["list_food_options"].fn(category="breakfast")
+    assert [item["name"] for item in breakfast["recipes"]] == ["Oatmeal"]
+    assert breakfast["snacks"] == []
+    salty = tools["list_food_options"].fn(category="salty")
+    assert salty["recipes"] == []
+    assert [item["ingredient_name"] for item in salty["snacks"]] == ["Nuts"]
+
+
+def test_list_food_options_query_filters_by_name():
+    tools = _tools()
+    oat = tools["list_food_options"].fn(query="oat")
+    assert [item["name"] for item in oat["recipes"]] == ["Oatmeal"]
+    assert oat["snacks"] == []
+    nut = tools["list_food_options"].fn(query="nut")
+    assert nut["recipes"] == []
+    assert [item["ingredient_name"] for item in nut["snacks"]] == ["Nuts"]
+    empty = tools["list_food_options"].fn(query="zzz")
+    assert empty["recipes"] == []
+    assert empty["snacks"] == []
+
+
+def test_list_food_options_matches_rest_catalog(c):
+    options = _tools()["list_food_options"].fn()
+    assert options["recipes"] == c.get("/api/recipes").json()
+    assert options["snacks"] == c.get("/api/snacks").json()
