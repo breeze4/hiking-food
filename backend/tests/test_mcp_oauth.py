@@ -17,6 +17,106 @@ def _challenge(verifier: str) -> str:
     return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
 
 
+class _FakeClock:
+    """Deterministic, advanceable clock for throttle-window tests."""
+
+    def __init__(self, start: float = 1_000.0) -> None:
+        self.value = start
+
+    def __call__(self) -> float:
+        return self.value
+
+    def advance(self, seconds: float) -> None:
+        self.value += seconds
+
+
+def _throttle_app(tmp_path, monkeypatch, clock):
+    issuer = "https://food.example.test/hiking-food"
+    monkeypatch.setenv("HIKING_FOOD_OAUTH_ISSUER", issuer)
+    monkeypatch.setenv("HIKING_FOOD_AUTH_PASSWORD", "correct horse")
+    monkeypatch.setenv("HIKING_FOOD_JWT_KEY", "0123456789abcdef0123456789abcdef")
+    app = FastAPI()
+    app.include_router(
+        create_router(db_path=str(tmp_path / "auth.db"), issuer=issuer, now=clock)
+    )
+    redirect_uri = "https://claude.ai/api/mcp/auth_callback"
+    registration = TestClient(app).post("/register", json={"redirect_uris": [redirect_uri]})
+    client_id = registration.json()["client_id"]
+    base = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "code_challenge": _challenge("a" * 48),
+        "scope": "hiking-food offline_access",
+        "state": "",
+    }
+    good = {**base, "password": "correct horse"}
+    bad = {**base, "password": "wrong"}
+    return app, good, bad
+
+
+def test_password_failures_are_throttled_per_address(tmp_path, monkeypatch):
+    clock = _FakeClock()
+    app, good, bad = _throttle_app(tmp_path, monkeypatch, clock)
+    attacker = TestClient(app, client=("10.0.0.9", 5555))
+
+    for _ in range(5):
+        rejected = attacker.post("/authorize", data=bad, follow_redirects=False)
+        assert rejected.status_code == 401
+
+    throttled = attacker.post("/authorize", data=bad, follow_redirects=False)
+    assert throttled.status_code == 429
+    # Even a correct password is refused while the address is locked out.
+    still_locked = attacker.post("/authorize", data=good, follow_redirects=False)
+    assert still_locked.status_code == 429
+
+    # A different client address is unaffected by the lockout.
+    other = TestClient(app, client=("10.0.0.10", 6666))
+    unaffected = other.post("/authorize", data=good, follow_redirects=False)
+    assert unaffected.status_code == 302
+
+    # The window expires after five minutes on the injected clock.
+    clock.advance(300)
+    recovered = attacker.post("/authorize", data=good, follow_redirects=False)
+    assert recovered.status_code == 302
+
+
+def test_successful_authorization_resets_failure_counter(tmp_path, monkeypatch):
+    clock = _FakeClock()
+    app, good, bad = _throttle_app(tmp_path, monkeypatch, clock)
+    client = TestClient(app, client=("10.0.0.11", 7777))
+
+    for _ in range(4):
+        assert client.post("/authorize", data=bad, follow_redirects=False).status_code == 401
+
+    # A success clears the four accumulated failures.
+    assert client.post("/authorize", data=good, follow_redirects=False).status_code == 302
+
+    # Four fresh failures are still below the threshold, so no lockout yet.
+    for _ in range(4):
+        assert client.post("/authorize", data=bad, follow_redirects=False).status_code == 401
+    assert client.post("/authorize", data=good, follow_redirects=False).status_code == 302
+
+
+def test_discovery_drops_oidc_and_jwks_and_advertises_only_supported(tmp_path, monkeypatch):
+    issuer = "https://food.example.test/hiking-food"
+    monkeypatch.setenv("HIKING_FOOD_OAUTH_ISSUER", issuer)
+    app = FastAPI()
+    app.include_router(create_router(db_path=str(tmp_path / "auth.db"), issuer=issuer))
+    client = TestClient(app)
+
+    assert client.get("/.well-known/openid-configuration").status_code == 404
+    assert client.get("/jwks").status_code == 404
+
+    metadata = client.get("/.well-known/oauth-authorization-server").json()
+    assert metadata["response_types_supported"] == ["code"]
+    assert metadata["grant_types_supported"] == ["authorization_code", "refresh_token"]
+    assert metadata["code_challenge_methods_supported"] == ["S256"]
+    assert metadata["token_endpoint_auth_methods_supported"] == ["none"]
+    assert set(metadata["scopes_supported"]) == {"hiking-food", "offline_access"}
+    assert "jwks_uri" not in metadata
+    assert "id_token_signing_alg_values_supported" not in metadata
+
+
 def test_oauth_metadata_registration_code_and_refresh_flow(tmp_path, monkeypatch):
     issuer = "https://food.example.test/hiking-food"
     monkeypatch.setenv("HIKING_FOOD_OAUTH_ISSUER", issuer)

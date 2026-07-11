@@ -2,7 +2,6 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
 from mcp.server.fastmcp.server import StreamableHTTPASGIApp
@@ -41,14 +40,6 @@ async def lifespan(inner_app: FastAPI):
 inner = FastAPI(lifespan=lifespan)
 inner.state.database_engine = engine
 inner.state.mcp_server = MCP_SERVER
-
-inner.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 inner.include_router(ingredients_router)
 inner.include_router(snacks_router)

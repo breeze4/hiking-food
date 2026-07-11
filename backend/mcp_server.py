@@ -1,8 +1,10 @@
 """Conversational tool surface for planning hiking food over remote MCP."""
 from __future__ import annotations
 
+import os
 from contextlib import contextmanager
 from typing import Literal
+from urllib.parse import urlparse
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
@@ -19,6 +21,47 @@ from services.trip_planning import TripPlanningService
 READ_ONLY = ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True)
 WRITE_NEW = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False)
 WRITE_UPDATE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True)
+
+DEFAULT_MCP_ALLOWED_HOSTS = ["localhost:8000", "127.0.0.1:8000", "beebaby:8000"]
+DEFAULT_MCP_ALLOWED_ORIGINS = [
+    "http://localhost:8000", "http://127.0.0.1:8000", "http://beebaby:8000",
+]
+
+
+def _env_list(name: str) -> list[str]:
+    return [item.strip() for item in os.environ.get(name, "").split(",") if item.strip()]
+
+
+def _issuer_host_and_origin() -> tuple[str, str]:
+    parsed = urlparse(
+        os.environ.get("HIKING_FOOD_OAUTH_ISSUER", "http://localhost:8000/hiking-food")
+    )
+    if not parsed.scheme or not parsed.netloc:
+        return "", ""
+    return parsed.netloc, f"{parsed.scheme}://{parsed.netloc}"
+
+
+def build_transport_security() -> TransportSecuritySettings:
+    """Enable DNS-rebinding protection with an env-configurable host/origin policy.
+
+    Allowed hosts/origins come from ``HIKING_FOOD_MCP_ALLOWED_HOSTS`` /
+    ``HIKING_FOOD_MCP_ALLOWED_ORIGINS`` (comma-separated). When unset, the
+    defaults cover localhost, 127.0.0.1, beebaby, and the host of
+    ``HIKING_FOOD_OAUTH_ISSUER`` so the production Funnel hostname is accepted
+    without extra configuration.
+    """
+    issuer_host, issuer_origin = _issuer_host_and_origin()
+    default_hosts = list(DEFAULT_MCP_ALLOWED_HOSTS)
+    default_origins = list(DEFAULT_MCP_ALLOWED_ORIGINS)
+    if issuer_host and issuer_host not in default_hosts:
+        default_hosts.append(issuer_host)
+    if issuer_origin and issuer_origin not in default_origins:
+        default_origins.append(issuer_origin)
+    return TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=_env_list("HIKING_FOOD_MCP_ALLOWED_HOSTS") or default_hosts,
+        allowed_origins=_env_list("HIKING_FOOD_MCP_ALLOWED_ORIGINS") or default_origins,
+    )
 
 
 @contextmanager
@@ -45,7 +88,7 @@ def build_mcp_server() -> FastMCP:
         ),
         streamable_http_path="/",
         stateless_http=True,
-        transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
+        transport_security=build_transport_security(),
     )
 
     @mcp.tool(annotations=READ_ONLY)

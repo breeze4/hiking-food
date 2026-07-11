@@ -77,39 +77,39 @@ Test-first: each behavior gets a failing test in
 `backend/tests/test_mcp_oauth.py` (or `test_runtime_config.py` where noted)
 before the change, following the existing per-test `tmp_path` isolation.
 
-- [ ] Throttle repeated password failures: 5 consecutive failures from one
+- [x] Throttle repeated password failures: 5 consecutive failures from one
   client address → 429 with the error rendered on the form; a success resets
   the counter; the window expires after 5 minutes via the injectable clock;
   a different client address is unaffected.
-- [ ] Remove `/.well-known/openid-configuration` and `/jwks`; test that they
+- [x] Remove `/.well-known/openid-configuration` and `/jwks`; test that they
   return 404 and that `/.well-known/oauth-authorization-server` still
   advertises exactly the implemented capabilities (`code`,
   `authorization_code`/`refresh_token`, `S256`, `none`, both scopes).
-- [ ] Remove the `CORSMiddleware` block from `backend/main.py`; test that API
+- [x] Remove the `CORSMiddleware` block from `backend/main.py`; test that API
   responses carry no `access-control-allow-origin` header for a cross-origin
   request.
-- [ ] Enable DNS-rebinding protection in `build_mcp_server()` with the env-var
+- [x] Enable DNS-rebinding protection in `build_mcp_server()` with the env-var
   host/origin policy above; test that a request with a disallowed Host is
   rejected and the default allowed hosts (including the issuer host) are
   honored.
-- [ ] Make the OAuth DB path absolute-by-default with env override, and defer
+- [x] Make the OAuth DB path absolute-by-default with env override, and defer
   schema creation to first use; test that importing `main` (fresh module
   state) creates no database file and that the default path is CWD-independent.
-- [ ] Run the full backend suite: `cd backend && venv/bin/pytest -q` — all
+- [x] Run the full backend suite: `cd backend && venv/bin/pytest -q` — all
   tests pass, none skipped that ran before.
 
 ## Acceptance criteria
 
-- [ ] Repeated wrong-password attempts are throttled per client address and
+- [x] Repeated wrong-password attempts are throttled per client address and
   recover after the window; successful local use is not made brittle.
-- [ ] Discovery metadata describes only flows the service implements; OIDC
+- [x] Discovery metadata describes only flows the service implements; OIDC
   discovery and the empty JWKS endpoint are gone.
-- [ ] No wildcard CORS: the API grants no cross-origin browser access.
-- [ ] MCP transport rejects requests with unexpected Host/Origin values while
+- [x] No wildcard CORS: the API grants no cross-origin browser access.
+- [x] MCP transport rejects requests with unexpected Host/Origin values while
   accepting localhost, beebaby, and the production issuer host.
-- [ ] The OAuth database path is absolute or explicitly configured, and
+- [x] The OAuth database path is absolute or explicitly configured, and
   importing the application performs no database writes.
-- [ ] The authorization-code + PKCE flow, refresh rotation, and existing
+- [x] The authorization-code + PKCE flow, refresh rotation, and existing
   registered clients keep working (existing OAuth tests remain green).
 
 ## Done when

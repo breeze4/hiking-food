@@ -55,9 +55,19 @@ class AuthCodeRecord:
 class TokenStore:
     def __init__(self, db_path: str | Path) -> None:
         self.db_path = str(db_path)
+        self._schema_ready = False
+
+    def _ensure_schema(self) -> None:
+        """Create directories and tables on first use, not at construction time.
+
+        Deferring this keeps ``import main`` free of database writes.
+        """
+        if self._schema_ready:
+            return
         if self.db_path != ":memory:":
             Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init_schema()
+        self._schema_ready = True
 
     def _conn(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.db_path, isolation_level=None, check_same_thread=False)
@@ -125,6 +135,7 @@ class TokenStore:
         self, *, client_id: str, redirect_uris: list[str], scope: str,
         client_name: str,
     ) -> None:
+        self._ensure_schema()
         now = _now()
         with self._conn() as conn:
             conn.executemany(
@@ -136,6 +147,7 @@ class TokenStore:
             )
 
     def client_allows(self, *, client_id: str, redirect_uri: str, scope: str) -> bool:
+        self._ensure_schema()
         with self._conn() as conn:
             row = conn.execute(
                 "SELECT scope FROM oauth_clients "
@@ -148,6 +160,7 @@ class TokenStore:
         self, *, client_id: str, redirect_uri: str, code_challenge: str,
         scope: str, sub: str,
     ) -> str:
+        self._ensure_schema()
         code = _random_token()
         with self._conn() as conn:
             conn.execute(
@@ -158,6 +171,7 @@ class TokenStore:
         return code
 
     def consume_auth_code(self, code: str) -> AuthCodeRecord:
+        self._ensure_schema()
         with self._conn() as conn:
             row = conn.execute(
                 "SELECT code, client_id, redirect_uri, code_challenge, scope, sub, expires_at "
@@ -172,6 +186,7 @@ class TokenStore:
         return record
 
     def put_refresh_token(self, *, sub: str, scope: str) -> str:
+        self._ensure_schema()
         token = _random_token()
         now = _now()
         with self._conn() as conn:
@@ -183,6 +198,7 @@ class TokenStore:
         return token
 
     def rotate_refresh_token(self, token: str) -> tuple[str, str, str]:
+        self._ensure_schema()
         token_hash = _token_hash(token)
         replacement = _random_token()
         now = _now()

@@ -5,6 +5,7 @@ import hashlib
 import os
 import secrets
 import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode, urlparse
@@ -23,6 +24,54 @@ OFFLINE_SCOPE = "offline_access"
 SUPPORTED_SCOPES = {RESOURCE_SCOPE, OFFLINE_SCOPE}
 DEFAULT_SCOPE = f"{RESOURCE_SCOPE} {OFFLINE_SCOPE}"
 TEMPLATE_DIR = Path(__file__).parent / "templates"
+# Absolute default anchored beside the backend package so the path is the same
+# regardless of the process working directory. In prod the WorkingDirectory is
+# ``backend/``, so this resolves to the same file the old ``./`` default did.
+DEFAULT_AUTH_DB_PATH = Path(__file__).resolve().parent.parent / "hiking_food_auth.db"
+
+MAX_PASSWORD_FAILURES = 5
+THROTTLE_WINDOW_SECONDS = 300
+
+
+class _PasswordThrottle:
+    """In-process, in-memory lockout keyed by client address.
+
+    After ``max_failures`` consecutive failures from an address, further
+    attempts are rejected until ``window`` seconds pass on the injected clock.
+    A success clears that address's counter.
+    """
+
+    def __init__(
+        self, now: Callable[[], float],
+        max_failures: int = MAX_PASSWORD_FAILURES,
+        window: int = THROTTLE_WINDOW_SECONDS,
+    ) -> None:
+        self._now = now
+        self._max = max_failures
+        self._window = window
+        self._state: dict[str, tuple[int, float]] = {}
+
+    def is_locked(self, address: str) -> bool:
+        entry = self._state.get(address)
+        if entry is None:
+            return False
+        failures, locked_at = entry
+        if failures < self._max:
+            return False
+        if self._now() - locked_at >= self._window:
+            self._state.pop(address, None)
+            return False
+        return True
+
+    def record_failure(self, address: str) -> None:
+        failures, locked_at = self._state.get(address, (0, 0.0))
+        failures += 1
+        if failures >= self._max:
+            locked_at = self._now()
+        self._state[address] = (failures, locked_at)
+
+    def reset(self, address: str) -> None:
+        self._state.pop(address, None)
 
 
 def _valid_scope(scope: str) -> bool:
@@ -39,12 +88,18 @@ def _valid_redirect_uri(uri: str) -> bool:
 
 def create_router(
     *, db_path: str | None = None, issuer: str | None = None,
+    now: Callable[[], float] = time.time,
 ) -> APIRouter:
     issuer = (issuer or os.environ.get(
         "HIKING_FOOD_OAUTH_ISSUER", "http://localhost:8000/hiking-food"
     )).rstrip("/")
-    db_path = db_path or os.environ.get("HIKING_FOOD_AUTH_DB_PATH", "./hiking_food_auth.db")
+    db_path = (
+        db_path
+        or os.environ.get("HIKING_FOOD_AUTH_DB_PATH")
+        or str(DEFAULT_AUTH_DB_PATH)
+    )
     store = TokenStore(db_path)
+    throttle = _PasswordThrottle(now)
     templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
     router = APIRouter()
 
@@ -65,15 +120,6 @@ def create_router(
     def authorization_metadata() -> JSONResponse:
         return JSONResponse(metadata())
 
-    @router.get("/.well-known/openid-configuration")
-    def openid_metadata() -> JSONResponse:
-        return JSONResponse({
-            **metadata(),
-            "jwks_uri": f"{issuer}/jwks",
-            "subject_types_supported": ["public"],
-            "id_token_signing_alg_values_supported": ["HS256"],
-        })
-
     @router.get("/.well-known/oauth-protected-resource")
     def protected_resource_metadata() -> JSONResponse:
         return JSONResponse({
@@ -82,10 +128,6 @@ def create_router(
             "scopes_supported": [RESOURCE_SCOPE, OFFLINE_SCOPE],
             "bearer_methods_supported": ["header"],
         })
-
-    @router.get("/jwks")
-    def jwks() -> JSONResponse:
-        return JSONResponse({"keys": []})
 
     @router.post("/register")
     def register_client(metadata_in: dict[str, Any] = Body(default_factory=dict)) -> JSONResponse:
@@ -153,12 +195,22 @@ def create_router(
             client_id=client_id, redirect_uri=redirect_uri, scope=scope
         ):
             raise HTTPException(400, "unknown client or unregistered redirect_uri")
+        address = request.client.host if request.client else "unknown"
+        if throttle.is_locked(address):
+            return templates.TemplateResponse(request, "authorize.html", {
+                "client_id": client_id, "redirect_uri": redirect_uri, "scope": scope,
+                "state": state, "code_challenge": code_challenge,
+                "authorize_action": f"{issuer}/authorize",
+                "error": "Too many failed attempts. Try again later.",
+            }, status_code=429)
         if not verify_password(password):
+            throttle.record_failure(address)
             return templates.TemplateResponse(request, "authorize.html", {
                 "client_id": client_id, "redirect_uri": redirect_uri, "scope": scope,
                 "state": state, "code_challenge": code_challenge,
                 "authorize_action": f"{issuer}/authorize", "error": "Incorrect password",
             }, status_code=401)
+        throttle.reset(address)
         code = store.put_auth_code(
             client_id=client_id, redirect_uri=redirect_uri,
             code_challenge=code_challenge, scope=scope, sub="owner",
