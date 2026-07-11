@@ -59,6 +59,7 @@
 
 ## Specs
 
+- [API-Driven Cohesion and Hardening](../specs/2026-07-11-01-api-driven-cohesion.md) — unifies REST and MCP trip workflows and hardens persistence, security, and frontend state
 - [Macronutrient Tracking](../specs/10-macronutrient-tracking.md) — covers plans 27-32
 - [Macro Research Agent](../specs/11-macro-research-agent.md) — covers plan 37
 - [Food Intake Queue](../specs/15-food-intake-queue.md) — covers plans 39-40
