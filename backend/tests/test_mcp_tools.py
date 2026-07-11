@@ -121,3 +121,15 @@ def test_assignment_update_cannot_exceed_trip_inventory():
             assignment["id"],
             servings=5,
         )
+
+
+def test_mcp_overview_matches_rest_trip_and_summary(c):
+    tools = _tools()
+    trip_id = tools["list_trips"].fn()["trips"][0]["id"]
+
+    mcp_view = tools["get_trip_plan"].fn(trip_id, "overview")
+    rest_trip = c.get(f"/api/trips/{trip_id}").json()
+    rest_summary = c.get(f"/api/trips/{trip_id}/summary").json()
+
+    assert mcp_view["trip"] == rest_trip
+    assert mcp_view["summary"] == rest_summary

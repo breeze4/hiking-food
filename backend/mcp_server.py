@@ -10,15 +10,9 @@ from mcp.types import ToolAnnotations
 from sqlalchemy.orm import Session
 
 from database import SessionLocal
-from models import Ingredient, SnackCatalogItem, Trip
-from routers.daily_plan import get_daily_plan as build_daily_plan
-from routers.daily_plan import run_auto_fill
+from models import Ingredient, SnackCatalogItem
 from routers.recipes import list_recipes as build_recipe_list
 from routers.snacks import _to_response as build_snack
-from routers.trips import (
-    _build_trip_detail, get_packing_detail, get_shopping_list, get_trip_summary,
-)
-from services.autofill import build_day_list
 from services.trip_planning import TripPlanningService
 
 
@@ -37,13 +31,6 @@ def _session():
         raise
     finally:
         db.close()
-
-
-def _trip(db: Session, trip_id: int) -> Trip:
-    trip = db.get(Trip, trip_id)
-    if not trip:
-        raise ValueError(f"Trip {trip_id} was not found")
-    return trip
 
 
 def build_mcp_server() -> FastMCP:
@@ -65,19 +52,7 @@ def build_mcp_server() -> FastMCP:
     def list_trips() -> dict:
         """List existing trips before choosing a source or destination. This is read-only."""
         with _session() as db:
-            trips = db.query(Trip).order_by(Trip.id.desc()).all()
-            return {
-                "trips": [
-                    {
-                        "id": trip.id, "name": trip.name,
-                        "total_days": round(sum(d["fraction"] for d in build_day_list(trip)), 2),
-                        "first_day_fraction": trip.first_day_fraction,
-                        "full_days": trip.full_days,
-                        "last_day_fraction": trip.last_day_fraction,
-                    }
-                    for trip in trips
-                ]
-            }
+            return {"trips": TripPlanningService(db).list_trips(newest_first=True)}
 
     @mcp.tool(annotations=READ_ONLY)
     def get_trip_plan(
@@ -86,16 +61,16 @@ def build_mcp_server() -> FastMCP:
     ) -> dict:
         """Read one trip. Use overview for planning; request heavier sections only when needed."""
         with _session() as db:
-            trip = _trip(db, trip_id)
-            result: dict = {"trip": _build_trip_detail(trip, db)}
+            planner = TripPlanningService(db)
+            result: dict = {"trip": planner.read_trip(trip_id)}
             if section in {"overview", "all"}:
-                result["summary"] = get_trip_summary(trip_id, db)
+                result["summary"] = planner.read_summary(trip_id)
             if section in {"daily_plan", "all"}:
-                result["daily_plan"] = build_daily_plan(trip_id, db)
+                result["daily_plan"] = planner.read_daily_plan(trip_id)
             if section in {"packing", "all"}:
-                result["packing"] = get_packing_detail(trip_id, db)
+                result["packing"] = planner.read_packing(trip_id)
             if section in {"shopping", "all"}:
-                result["shopping"] = get_shopping_list(trip_id, db)
+                result["shopping"] = planner.read_shopping(trip_id)
             return result
 
     @mcp.tool(annotations=READ_ONLY)
@@ -144,7 +119,10 @@ def build_mcp_server() -> FastMCP:
                 "oz_per_day": oz_per_day,
                 "cal_per_oz": cal_per_oz,
             })
-            return {"trip": _build_trip_detail(trip, db), "daily_plan_needs_autofill": True}
+            return {
+                "trip": TripPlanningService(db).read_trip(trip.id),
+                "daily_plan_needs_autofill": True,
+            }
 
     @mcp.tool(annotations=WRITE_NEW)
     def clone_trip(
@@ -166,7 +144,7 @@ def build_mcp_server() -> FastMCP:
             })
             return {
                 "source_trip_id": source_trip_id,
-                "trip": _build_trip_detail(destination, db),
+                "trip": TripPlanningService(db).read_trip(destination.id),
                 "daily_plan_needs_autofill": True,
             }
 
@@ -190,7 +168,10 @@ def build_mcp_server() -> FastMCP:
                 trip_id,
                 {field: value for field, value in updates.items() if value is not None},
             )
-            return {"trip": _build_trip_detail(trip, db), "daily_plan_needs_autofill": True}
+            return {
+                "trip": TripPlanningService(db).read_trip(trip.id),
+                "daily_plan_needs_autofill": True,
+            }
 
     @mcp.tool(annotations=WRITE_UPDATE)
     def set_trip_meal_quantity(trip_id: int, recipe_id: int, quantity: int) -> dict:
@@ -224,8 +205,10 @@ def build_mcp_server() -> FastMCP:
     def auto_fill_daily_plan(trip_id: int) -> dict:
         """Regenerate all day assignments after trip inventory or duration changes."""
         with _session() as db:
-            _trip(db, trip_id)
-            return {"trip_id": trip_id, "daily_plan": run_auto_fill(trip_id, db)}
+            return {
+                "trip_id": trip_id,
+                "daily_plan": TripPlanningService(db).regenerate_daily_plan(trip_id),
+            }
 
     @mcp.tool(annotations=WRITE_UPDATE)
     def update_daily_assignment(
@@ -253,6 +236,6 @@ def build_mcp_server() -> FastMCP:
                     assignment_id,
                     {field: value for field, value in fields.items() if value is not None},
                 )
-            return {"trip_id": trip_id, "daily_plan": build_daily_plan(trip_id, db)}
+            return {"trip_id": trip_id, "daily_plan": planner.read_daily_plan(trip_id)}
 
     return mcp

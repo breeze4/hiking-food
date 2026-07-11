@@ -19,6 +19,14 @@ from models import (
     TripSnack,
 )
 from services.autofill import SLOT_RULES, build_day_list
+from services.daily_plan_queries import daily_plan_view, regenerate_daily_plan
+from services.trip_queries import (
+    packing_view,
+    shopping_view,
+    trip_detail_view,
+    trip_list_view,
+    trip_summary_view,
+)
 
 
 ALLOCATION_SHAPE_FIELDS = {
@@ -68,6 +76,39 @@ class TripPlanningService:
 
     def __init__(self, db: Session) -> None:
         self.db = db
+
+    def list_trips(self, *, newest_first: bool = False) -> list[dict]:
+        return trip_list_view(self.db, newest_first=newest_first)
+
+    def read_trip(self, trip_id: int) -> dict:
+        trip = self.db.get(Trip, trip_id)
+        if not trip:
+            raise TripNotFoundError("Trip not found")
+        return trip_detail_view(self.db, trip)
+
+    def read_summary(self, trip_id: int) -> dict:
+        trip = self._trip(trip_id)
+        return trip_summary_view(self.db, trip)
+
+    def read_packing(self, trip_id: int) -> dict:
+        trip = self._trip(trip_id)
+        return packing_view(self.db, trip)
+
+    def read_shopping(self, trip_id: int) -> dict:
+        trip = self._trip(trip_id)
+        return shopping_view(self.db, trip)
+
+    def read_daily_plan(self, trip_id: int) -> dict:
+        return daily_plan_view(self.db, self._trip(trip_id))
+
+    def regenerate_daily_plan(self, trip_id: int) -> dict:
+        return regenerate_daily_plan(self.db, self._trip(trip_id))
+
+    def _trip(self, trip_id: int) -> Trip:
+        trip = self.db.get(Trip, trip_id)
+        if not trip:
+            raise TripNotFoundError("Trip not found")
+        return trip
 
     def create_trip(self, values: Mapping[str, Any]) -> Trip:
         fields = dict(values)
