@@ -5,20 +5,20 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from database import Base
+from database import Base, create_database_engine
 from main import inner as test_app
 from routers import trips, snacks, recipes, ingredients, daily_plan, settings, food_intake
 
-_engine = create_engine(
+_engine = create_database_engine(
     "sqlite:///:memory:",
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
 _TestSession = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
+test_app.state.database_engine = _engine
 
 
 def _override_get_db():

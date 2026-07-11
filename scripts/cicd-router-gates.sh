@@ -8,8 +8,8 @@ if [[ ! -x backend/venv/bin/python ]]; then
 fi
 
 backend/venv/bin/pip install --quiet --upgrade pip
-backend/venv/bin/pip install --quiet -r backend/requirements.txt
-backend/venv/bin/pip install --quiet pytest httpx
+backend/venv/bin/pip install --quiet -r backend/requirements-dev.txt
+bash scripts/check-requirements-lock.sh
 backend/venv/bin/python -m pytest backend/tests
 
 pnpm --dir frontend install --frozen-lockfile

@@ -57,7 +57,7 @@ def list_snacks(category: Optional[str] = Query(None), db: Session = Depends(get
 
 @router.post("", response_model=SnackRead, status_code=201)
 def create_snack(data: SnackCreate, db: Session = Depends(get_db)):
-    ingredient = db.query(Ingredient).get(data.ingredient_id)
+    ingredient = db.get(Ingredient, data.ingredient_id)
     if not ingredient:
         raise HTTPException(status_code=400, detail="Ingredient not found")
     item = SnackCatalogItem(**data.model_dump())
@@ -69,20 +69,20 @@ def create_snack(data: SnackCreate, db: Session = Depends(get_db)):
 
 @router.put("/{snack_id}", response_model=SnackRead)
 def update_snack(snack_id: int, data: SnackUpdate, db: Session = Depends(get_db)):
-    item = db.query(SnackCatalogItem).get(snack_id)
+    item = db.get(SnackCatalogItem, snack_id)
     if not item:
         raise HTTPException(status_code=404, detail="Snack catalog item not found")
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(item, key, value)
     db.commit()
     db.refresh(item)
-    ingredient = db.query(Ingredient).get(item.ingredient_id)
+    ingredient = db.get(Ingredient, item.ingredient_id)
     return _to_response(item, ingredient)
 
 
 @router.delete("/{snack_id}", status_code=204)
 def delete_snack(snack_id: int, db: Session = Depends(get_db)):
-    item = db.query(SnackCatalogItem).get(snack_id)
+    item = db.get(SnackCatalogItem, snack_id)
     if not item:
         raise HTTPException(status_code=404, detail="Snack catalog item not found")
     trip_ref = db.query(TripSnack).filter(TripSnack.catalog_item_id == snack_id).first()

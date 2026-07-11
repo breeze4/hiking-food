@@ -69,7 +69,7 @@ class TripMeal(Base):
     __tablename__ = "trip_meals"
 
     id = Column(Integer, primary_key=True)
-    trip_id = Column(Integer, ForeignKey("trips.id"), nullable=False)
+    trip_id = Column(Integer, ForeignKey("trips.id", ondelete="CASCADE"), nullable=False)
     recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=False)
     quantity = Column(Integer, default=1)
     packed = Column(Boolean, default=False)
@@ -80,7 +80,7 @@ class TripDayAssignment(Base):
     __tablename__ = "trip_day_assignments"
 
     id = Column(Integer, primary_key=True)
-    trip_id = Column(Integer, ForeignKey("trips.id"), nullable=False)
+    trip_id = Column(Integer, ForeignKey("trips.id", ondelete="CASCADE"), nullable=False)
     day_number = Column(Integer, nullable=False)  # 1-based
     slot = Column(Text, nullable=False)
     source_type = Column(Text, nullable=False)  # meal or snack
@@ -101,7 +101,7 @@ class TripSnack(Base):
     __tablename__ = "trip_snacks"
 
     id = Column(Integer, primary_key=True)
-    trip_id = Column(Integer, ForeignKey("trips.id"), nullable=False)
+    trip_id = Column(Integer, ForeignKey("trips.id", ondelete="CASCADE"), nullable=False)
     catalog_item_id = Column(Integer, ForeignKey("snack_catalog.id"), nullable=False)
     servings = Column(Float)
     slot = Column(Text)  # lunch, snacks

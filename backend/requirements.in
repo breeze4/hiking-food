@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+mcp>=1.0
+pyjwt>=2.0
+jinja2>=3.0
+python-multipart>=0.0.9

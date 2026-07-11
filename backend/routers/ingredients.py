@@ -56,7 +56,7 @@ def create_ingredient(data: IngredientCreate, db: Session = Depends(get_db)):
 
 @router.put("/{ingredient_id}", response_model=IngredientRead)
 def update_ingredient(ingredient_id: int, data: IngredientUpdate, db: Session = Depends(get_db)):
-    ingredient = db.query(Ingredient).get(ingredient_id)
+    ingredient = db.get(Ingredient, ingredient_id)
     if not ingredient:
         raise HTTPException(status_code=404, detail="Ingredient not found")
     updates = data.model_dump(exclude_unset=True)
@@ -99,7 +99,7 @@ def toggle_on_hand(ingredient_id: int, db: Session = Depends(get_db)):
 
 @router.delete("/{ingredient_id}", status_code=204)
 def delete_ingredient(ingredient_id: int, db: Session = Depends(get_db)):
-    ingredient = db.query(Ingredient).get(ingredient_id)
+    ingredient = db.get(Ingredient, ingredient_id)
     if not ingredient:
         raise HTTPException(status_code=404, detail="Ingredient not found")
     # Check for references

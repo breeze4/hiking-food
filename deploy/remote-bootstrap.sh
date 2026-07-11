@@ -16,6 +16,7 @@ backend/venv/bin/pip install --quiet -r backend/requirements.txt
   cd backend
   venv/bin/python run_migrations.py
   venv/bin/python seed.py
+  venv/bin/python verify_database.py
 )
 
 mkdir -p ~/.config/systemd/user

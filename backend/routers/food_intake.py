@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -43,7 +43,7 @@ def create_food_intake(data: FoodIntakeCreate, db: Session = Depends(get_db)):
         name=data.name,
         notes=data.notes,
         status="pending",
-        created_at=datetime.utcnow().isoformat(),
+        created_at=datetime.now(timezone.utc).isoformat(),
     )
     db.add(row)
     db.commit()
@@ -53,7 +53,7 @@ def create_food_intake(data: FoodIntakeCreate, db: Session = Depends(get_db)):
 
 @router.patch("/{intake_id}", response_model=FoodIntakeOut)
 def update_food_intake(intake_id: int, data: FoodIntakeUpdate, db: Session = Depends(get_db)):
-    row = db.query(FoodIntake).get(intake_id)
+    row = db.get(FoodIntake, intake_id)
     if not row:
         raise HTTPException(status_code=404, detail="Food intake row not found")
     updates = data.model_dump(exclude_unset=True)
@@ -71,7 +71,7 @@ def update_food_intake(intake_id: int, data: FoodIntakeUpdate, db: Session = Dep
 
 @router.delete("/{intake_id}", status_code=204)
 def delete_food_intake(intake_id: int, db: Session = Depends(get_db)):
-    row = db.query(FoodIntake).get(intake_id)
+    row = db.get(FoodIntake, intake_id)
     if not row:
         raise HTTPException(status_code=404, detail="Food intake row not found")
     db.delete(row)

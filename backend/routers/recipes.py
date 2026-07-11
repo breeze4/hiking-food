@@ -90,7 +90,7 @@ def _set_recipe_ingredients(db: Session, recipe_id: int, ingredients: list):
     db.query(RecipeIngredient).filter(RecipeIngredient.recipe_id == recipe_id).delete()
     for ing in ingredients:
         # Validate ingredient exists
-        if not db.query(Ingredient).get(ing.ingredient_id):
+        if not db.get(Ingredient, ing.ingredient_id):
             raise HTTPException(status_code=400, detail=f"Ingredient {ing.ingredient_id} not found")
         db.add(RecipeIngredient(
             recipe_id=recipe_id,
@@ -130,7 +130,7 @@ def list_recipes(category: Optional[str] = Query(None), db: Session = Depends(ge
 
 @router.get("/{recipe_id}", response_model=RecipeDetailRead)
 def get_recipe(recipe_id: int, db: Session = Depends(get_db)):
-    recipe = db.query(Recipe).get(recipe_id)
+    recipe = db.get(Recipe, recipe_id)
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
     ingredients_data = _get_recipe_ingredients(db, recipe.id)
@@ -158,7 +158,7 @@ def create_recipe(data: RecipeCreate, db: Session = Depends(get_db)):
 
 @router.put("/{recipe_id}", response_model=RecipeDetailRead)
 def update_recipe(recipe_id: int, data: RecipeUpdate, db: Session = Depends(get_db)):
-    recipe = db.query(Recipe).get(recipe_id)
+    recipe = db.get(Recipe, recipe_id)
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
     update_data = data.model_dump(exclude_unset=True)
@@ -175,7 +175,7 @@ def update_recipe(recipe_id: int, data: RecipeUpdate, db: Session = Depends(get_
 
 @router.delete("/{recipe_id}", status_code=204)
 def delete_recipe(recipe_id: int, db: Session = Depends(get_db)):
-    recipe = db.query(Recipe).get(recipe_id)
+    recipe = db.get(Recipe, recipe_id)
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
     trip_ref = db.query(TripMeal).filter(TripMeal.recipe_id == recipe_id).first()

@@ -180,7 +180,7 @@ def verify(db):
         ris = db.query(RecipeIngredient).filter(RecipeIngredient.recipe_id == qc.id).all()
         total_weight = sum(ri.amount_oz for ri in ris)
         total_cal = sum(
-            ri.amount_oz * (db.query(Ingredient).get(ri.ingredient_id).calories_per_oz or 0)
+            ri.amount_oz * (db.get(Ingredient, ri.ingredient_id).calories_per_oz or 0)
             for ri in ris
         )
         status = "PASS" if abs(total_weight - 4.5) < 0.1 and abs(total_cal - 617) < 10 else "FAIL"
@@ -192,7 +192,7 @@ def verify(db):
         ris = db.query(RecipeIngredient).filter(RecipeIngredient.recipe_id == cp.id).all()
         total_weight = sum(ri.amount_oz for ri in ris)
         total_cal = sum(
-            ri.amount_oz * (db.query(Ingredient).get(ri.ingredient_id).calories_per_oz or 0)
+            ri.amount_oz * (db.get(Ingredient, ri.ingredient_id).calories_per_oz or 0)
             for ri in ris
         )
         status = "PASS" if abs(total_weight - 4.5) < 0.1 and abs(total_cal - 537) < 10 else "FAIL"
@@ -205,7 +205,7 @@ def verify(db):
         total_weight = 0
         total_cal = 0
         for ts in trip_snacks:
-            cat_item = db.query(SnackCatalogItem).get(ts.catalog_item_id)
+            cat_item = db.get(SnackCatalogItem, ts.catalog_item_id)
             total_weight += ts.servings * (cat_item.weight_per_serving or 0)
             total_cal += ts.servings * (cat_item.calories_per_serving or 0)
         avg_cal_per_oz = total_cal / total_weight if total_weight > 0 else 0
