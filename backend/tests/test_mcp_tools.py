@@ -6,6 +6,7 @@ from models import (
     Trip, TripDayAssignment, TripMeal, TripSnack,
 )
 import mcp_server
+from main import app as outer_app, lifespan as production_lifespan
 
 
 @pytest.fixture(autouse=True)
@@ -51,6 +52,11 @@ def test_tool_surface_is_small_and_stable():
         "clone_trip", "update_trip", "set_trip_meal_quantity",
         "set_trip_snack_servings", "auto_fill_daily_plan", "update_daily_assignment",
     }
+
+
+def test_outer_production_app_owns_lifespan():
+    """Uvicorn serves the outer app; mounted inner lifespans are not started."""
+    assert outer_app.router.lifespan_context is production_lifespan
 
 
 def test_clone_adjust_autofill_and_read_workflow(test_session):

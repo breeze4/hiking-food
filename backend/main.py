@@ -148,7 +148,9 @@ if FRONTEND_DIR.is_dir():
 
 
 # Mount the app under /hiking-food and redirect bare path
-app = FastAPI()
+# Uvicorn runs the outer app. Mounted sub-app lifespans are not entered by
+# Starlette, so the outer app must own database setup and the MCP task group.
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/hiking-food")
