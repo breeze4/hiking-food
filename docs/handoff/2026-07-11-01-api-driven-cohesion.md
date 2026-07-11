@@ -79,15 +79,25 @@ Recommended test-first order for the remaining work:
 
 Keep backward compatibility for existing legitimate loopback and HTTPS clients where possible. If a security correction necessarily invalidates old registrations or refresh tokens, document the one-time re-login requirement.
 
-## Following slice: frontend route and data cohesion
+## Frontend deep-linking completed
 
-The confirmed browser bug is that opening `/trips/2/daily-plan` can render trip 2 while `TripContext` still selects the first fetched trip; navigation then points back to trip 1. Make the route trip ID the source of truth for trip-scoped pages.
+The route/context divergence is fixed. Canonical trip URLs are:
 
-Add a frontend test harness first using pnpm only (Vitest, Testing Library, and jsdom are the likely fit). Cover at least:
+- `/trips/:tripId` — planner
+- `/trips/:tripId/daily-plan` — daily plan
+- `/trips/:tripId/packing` — packing
 
-- direct deep-link selects the route trip and keeps trip-scoped navigation on that trip;
-- switching trips updates the canonical URL and data once;
-- stale requests cannot overwrite a newer trip selection;
+The route trip ID controls context, the selector preserves the current trip
+subroute, global pages retain selection without navigating away, legacy root and
+packing URLs redirect, invalid paths have stable boundaries, and stale responses
+cannot overwrite a newer route. The frontend harness covers these behaviors plus
+every global page and recipe new/edit deep link.
+
+## Remaining frontend slice
+
+The Vitest, Testing Library, jest-dom, and jsdom harness is installed. Continue
+test-first with the remaining behaviors:
+
 - mutations expose pending/error state and refresh the correct projections;
 - quantity, half-serving, add, and remove controls have accessible names.
 

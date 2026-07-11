@@ -314,7 +314,7 @@ function DailyPlanPage() {
           ) : (
             <Button onClick={handleAutoFill}>Auto-Fill</Button>
           )}
-          <Button variant="outline" onClick={() => navigate('/')}>Back to Planner</Button>
+          <Button variant="outline" onClick={() => navigate(`/trips/${tripId}`)}>Back to Planner</Button>
         </div>
       </div>
 

@@ -13,5 +13,6 @@ bash scripts/check-requirements-lock.sh
 backend/venv/bin/python -m pytest backend/tests
 
 pnpm --dir frontend install --frozen-lockfile
+pnpm --dir frontend test
 pnpm --dir frontend lint
 pnpm --dir frontend build

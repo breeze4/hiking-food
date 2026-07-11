@@ -80,7 +80,7 @@ function PackingScreen() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold tracking-tight">Packing: {packing.trip_name}</h2>
-        <Button variant="outline" onClick={() => navigate('/')}>Back to Planner</Button>
+        <Button variant="outline" onClick={() => navigate(`/trips/${tripId}`)}>Back to Planner</Button>
       </div>
 
       {/* Recipe Assembly */}

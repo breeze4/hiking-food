@@ -1,21 +1,37 @@
-import { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import {
+  createContext, useState, useContext, useEffect, useCallback, useRef,
+} from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { get, post, del } from '../api';
+import { pathAfterTripSelection, readTripLocation, tripPath } from '../routes/tripRoutes';
 
 const TripContext = createContext();
 
 export function TripProvider({ children }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const routeTrip = readTripLocation(location.pathname);
   const [trips, setTrips] = useState([]);
-  const [activeTripId, setActiveTripId] = useState(null);
+  const [selectedTripId, setSelectedTripId] = useState(routeTrip?.tripId ?? null);
+  const [tripsLoaded, setTripsLoaded] = useState(false);
   const [tripDetail, setTripDetail] = useState(null);
   const [summary, setSummary] = useState(null);
+  const activeTripId = routeTrip?.tripId ?? selectedTripId;
+  const activeTripIdRef = useRef(activeTripId);
+
+  useEffect(() => {
+    activeTripIdRef.current = activeTripId;
+  }, [activeTripId]);
 
   const loadTrips = useCallback(async () => {
     try {
       const data = await get('/trips');
       setTrips(data);
-      setActiveTripId((currentId) => currentId ?? data[0]?.id ?? null);
+      setSelectedTripId((currentId) => currentId ?? data[0]?.id ?? null);
     } catch (err) {
       console.error('Failed to load trips', err);
+    } finally {
+      setTripsLoaded(true);
     }
   }, []);
 
@@ -24,40 +40,57 @@ export function TripProvider({ children }) {
       setTripDetail(null);
       return;
     }
+    const requestedTripId = activeTripId;
+    setTripDetail(null);
     try {
-      setTripDetail(await get(`/trips/${activeTripId}`));
+      const detail = await get(`/trips/${requestedTripId}`);
+      if (activeTripIdRef.current === requestedTripId) setTripDetail(detail);
     } catch (err) {
       console.error('Failed to load trip detail', err);
+      if (activeTripIdRef.current === requestedTripId) setTripDetail(null);
     }
   }, [activeTripId]);
 
   const loadSummary = useCallback(async () => {
     if (!activeTripId) { setSummary(null); return; }
+    const requestedTripId = activeTripId;
+    setSummary(null);
     try {
-      setSummary(await get(`/trips/${activeTripId}/summary`));
+      const nextSummary = await get(`/trips/${requestedTripId}/summary`);
+      if (activeTripIdRef.current === requestedTripId) setSummary(nextSummary);
     } catch (err) {
       console.error('Failed to load summary', err);
+      if (activeTripIdRef.current === requestedTripId) setSummary(null);
     }
   }, [activeTripId]);
 
   useEffect(() => { loadTrips(); }, [loadTrips]);
+  useEffect(() => {
+    if (routeTrip?.tripId) setSelectedTripId(routeTrip.tripId);
+  }, [routeTrip?.tripId]);
   useEffect(() => { loadTripDetail(); }, [loadTripDetail]);
   useEffect(() => { loadSummary(); }, [loadSummary]);
 
-  const selectTrip = (id) => setActiveTripId(id);
+  const activateTrip = useCallback((id) => {
+    setSelectedTripId(id);
+    const nextPath = pathAfterTripSelection(location.pathname, id);
+    if (nextPath && nextPath !== location.pathname) navigate(nextPath);
+  }, [location.pathname, navigate]);
+
+  const selectTrip = (id) => activateTrip(id);
 
   const createTrip = async (name) => {
     const trip = await post('/trips', { name, first_day_fraction: 1, full_days: 0, last_day_fraction: 0 });
-    setTrips([...trips, { id: trip.id, name: trip.name }]);
-    setActiveTripId(trip.id);
+    setTrips((current) => [...current, { id: trip.id, name: trip.name }]);
+    activateTrip(trip.id);
     return trip;
   };
 
   const cloneTrip = async () => {
     if (!activeTripId) return;
     const clone = await post(`/trips/${activeTripId}/clone`);
-    setTrips([...trips, { id: clone.id, name: clone.name }]);
-    setActiveTripId(clone.id);
+    setTrips((current) => [...current, { id: clone.id, name: clone.name }]);
+    activateTrip(clone.id);
     return clone;
   };
 
@@ -66,7 +99,15 @@ export function TripProvider({ children }) {
     await del(`/trips/${activeTripId}`);
     const remaining = trips.filter((t) => t.id !== activeTripId);
     setTrips(remaining);
-    setActiveTripId(remaining.length > 0 ? remaining[0].id : null);
+    const nextTripId = remaining[0]?.id ?? null;
+    setSelectedTripId(nextTripId);
+    const currentRoute = readTripLocation(location.pathname);
+    if (currentRoute) {
+      navigate(
+        nextTripId ? tripPath(nextTripId, currentRoute.section) : '/',
+        { replace: true },
+      );
+    }
   };
 
   const refreshTrip = useCallback(async () => {
@@ -76,7 +117,7 @@ export function TripProvider({ children }) {
 
   return (
     <TripContext.Provider value={{
-      trips, activeTripId, tripDetail, summary,
+      trips, tripsLoaded, activeTripId, tripDetail, summary,
       selectTrip, createTrip, cloneTrip, deleteTrip,
       refreshTrip, refreshTrips: loadTrips,
     }}>

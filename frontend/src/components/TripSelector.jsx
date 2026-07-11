@@ -34,6 +34,7 @@ function TripSelector() {
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <select
+        aria-label="Active trip"
         value={activeTripId || ''}
         onChange={(e) => selectTrip(parseInt(e.target.value))}
         className="h-9 rounded-md border border-input bg-background px-3 text-sm"

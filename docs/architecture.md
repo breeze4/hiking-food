@@ -38,9 +38,9 @@ Specs, plans, and session logs live in `docs/`; `docs/plans/INDEX.md` is the aut
 
 **Stack**: React 19 + Vite 8, plain JavaScript (`.jsx`/`.js` only, no TypeScript anywhere).
 
-**Routing**: React Router v7 with `basename="/hiking-food"`. Routes are declared inline in `App.jsx`. There are 8 routes covering trip planning, daily plan, packing, ingredients, snacks, and recipes.
+**Routing**: React Router v7 with `basename="/hiking-food"`. The canonical trip routes are `/trips/:tripId`, `/trips/:tripId/daily-plan`, and `/trips/:tripId/packing`; `/` and `/packing` remain compatibility redirects. Recipe, snack, ingredient, and intake routes remain global. Unknown trips and unknown trip subroutes render stable not-found boundaries.
 
-**State management**: A single `TripContext` holds global state (`trips`, `activeTripId`, `tripDetail`, `summary`). Mutations call the API then update local state; `refreshTrip()` re-fetches detail and summary. Pages manage their own local state via `useState`/`useEffect` for page-specific data.
+**State management**: A single `TripContext` holds global state (`trips`, `activeTripId`, `tripDetail`, `summary`). On trip-scoped pages, the route trip ID is authoritative; selecting another trip preserves the current planner/daily-plan/packing subroute. Global pages retain the selection without navigating away. Late detail or summary responses are ignored after the active route changes. Mutations call the API then update local state; `refreshTrip()` re-fetches detail and summary.
 
 **API layer**: A single `src/api.js` file wraps `fetch` with five named exports (`get`, `post`, `put`, `patch`, `del`). Base URL is hardcoded to `/hiking-food/api`. No interceptors, auth, retries, or cancellation.
 
@@ -55,6 +55,8 @@ Specs, plans, and session logs live in `docs/`; `docs/plans/INDEX.md` is the aut
 ## Testing
 
 **Framework**: pytest with `fastapi.testclient.TestClient` against an in-memory SQLite database using `StaticPool`.
+
+**Frontend**: Vitest, Testing Library, jest-dom, and jsdom exercise the rendered application through `BrowserRouter` with mocked HTTP responses at the owned API boundary. Route coverage includes direct links, redirects, trip switching, deletion, global pages, not-found states, and stale-response races.
 
 **Approach**: Mix of unit tests (calculator, recipe calc) and HTTP integration tests (daily plan, shopping list, slots, drink mixes, macros, settings). Each integration test fixture creates and drops all tables around each test. Tests run against the inner app directly (not the `/hiking-food` mounted wrapper).
 
