@@ -28,7 +28,7 @@ Specs, plans, and session logs live in `docs/`; `docs/plans/INDEX.md` is the aut
 
 **Dependencies**: Four unpinned packages: `fastapi`, `uvicorn`, `sqlalchemy`, `pydantic`.
 
-**CORS/Auth**: The browser API retains wide-open CORS and relies on Tailscale network access. The separate `/mcp` transport is protected by OAuth 2.0 authorization code + PKCE, dynamically registered public clients, short-lived JWT access tokens, and persistent refresh tokens.
+**CORS/Auth**: The browser API retains wide-open CORS and relies on Tailscale network access. The separate `/mcp` transport is protected by OAuth 2.0 authorization code + PKCE, persisted dynamically registered public clients with exact redirect matching, short-lived JWT access tokens, and hashed refresh tokens that rotate on use.
 
 **MCP**: `mcp_server.py` exposes a compact domain-level FastMCP tool surface over exact-path Streamable HTTP. It operates directly against the same SQLAlchemy models and transaction boundary as the REST API. OAuth discovery, registration, authorization, and token endpoints live in `mcp_oauth/`; the outer `/hiking-food` ASGI mount becomes the public issuer prefix.
 

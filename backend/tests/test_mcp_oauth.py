@@ -1,12 +1,15 @@
 import base64
 import hashlib
+import sqlite3
 from urllib.parse import parse_qs, urlparse
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from mcp_oauth.app import create_router
 from mcp_oauth.auth import BearerAuthMiddleware
+from mcp_oauth.tokens import TokenError, TokenStore
 
 
 def _challenge(verifier: str) -> str:
@@ -69,7 +72,14 @@ def test_oauth_metadata_registration_code_and_refresh_flow(tmp_path, monkeypatch
         "grant_type": "refresh_token", "refresh_token": refresh,
     })
     assert refreshed.status_code == 200
-    assert refreshed.json()["refresh_token"] == refresh
+    rotated_refresh = refreshed.json()["refresh_token"]
+    assert rotated_refresh != refresh
+
+    replay = client.post("/token", data={
+        "grant_type": "refresh_token", "refresh_token": refresh,
+    })
+    assert replay.status_code == 400
+    assert replay.json()["error"] == "invalid_grant"
 
 
 def test_registration_rejects_insecure_non_loopback_redirect(tmp_path):
@@ -79,6 +89,101 @@ def test_registration_rejects_insecure_non_loopback_redirect(tmp_path):
         "redirect_uris": ["http://attacker.example/callback"],
     })
     assert response.status_code == 400
+
+
+def test_authorization_rejects_unknown_client(tmp_path):
+    app = FastAPI()
+    app.include_router(create_router(db_path=str(tmp_path / "auth.db")))
+
+    response = TestClient(app).get("/authorize", params={
+        "response_type": "code",
+        "client_id": "not-registered",
+        "redirect_uri": "https://example.test/callback",
+        "code_challenge": _challenge("a" * 48),
+        "code_challenge_method": "S256",
+        "scope": "hiking-food offline_access",
+    })
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "unknown client or unregistered redirect_uri"
+
+
+def test_registered_client_survives_restart_and_only_uses_exact_redirect(tmp_path):
+    db_path = str(tmp_path / "auth.db")
+    registration_app = FastAPI()
+    registration_app.include_router(create_router(db_path=db_path))
+    registration = TestClient(registration_app).post("/register", json={
+        "redirect_uris": ["https://example.test/callback"],
+    })
+    client_id = registration.json()["client_id"]
+
+    restarted_app = FastAPI()
+    restarted_app.include_router(create_router(db_path=db_path))
+    restarted = TestClient(restarted_app)
+    base_params = {
+        "response_type": "code",
+        "client_id": client_id,
+        "code_challenge": _challenge("a" * 48),
+        "code_challenge_method": "S256",
+        "scope": "hiking-food offline_access",
+    }
+
+    allowed = restarted.get("/authorize", params={
+        **base_params, "redirect_uri": "https://example.test/callback",
+    })
+    rejected = restarted.get("/authorize", params={
+        **base_params, "redirect_uri": "https://example.test/other",
+    })
+
+    assert allowed.status_code == 200
+    assert rejected.status_code == 400
+
+
+def test_refresh_token_bearer_secret_is_never_persisted(tmp_path):
+    db_path = tmp_path / "auth.db"
+    store = TokenStore(db_path)
+
+    refresh = store.put_refresh_token(
+        sub="owner", scope="hiking-food offline_access"
+    )
+
+    with sqlite3.connect(db_path) as conn:
+        columns = [row[1] for row in conn.execute(
+            "PRAGMA table_info(refresh_tokens)"
+        )]
+        persisted = conn.execute(
+            "SELECT token_hash FROM refresh_tokens"
+        ).fetchone()[0]
+    assert columns[0] == "token_hash"
+    assert persisted == hashlib.sha256(refresh.encode("ascii")).hexdigest()
+    assert persisted != refresh
+
+
+def test_existing_refresh_token_survives_plaintext_storage_upgrade(tmp_path):
+    db_path = tmp_path / "auth.db"
+    legacy_refresh = "legacy-refresh-secret"
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """CREATE TABLE refresh_tokens (
+                token TEXT PRIMARY KEY,
+                sub TEXT NOT NULL,
+                scope TEXT NOT NULL,
+                expires_at INTEGER NOT NULL,
+                created_at INTEGER NOT NULL
+            )"""
+        )
+        conn.execute(
+            "INSERT INTO refresh_tokens VALUES (?,?,?,?,?)",
+            (legacy_refresh, "owner", "hiking-food offline_access", 4_102_444_800, 1),
+        )
+
+    store = TokenStore(db_path)
+    sub, scope, replacement = store.rotate_refresh_token(legacy_refresh)
+
+    assert (sub, scope) == ("owner", "hiking-food offline_access")
+    assert replacement != legacy_refresh
+    with pytest.raises(TokenError, match="unknown refresh token"):
+        store.rotate_refresh_token(legacy_refresh)
 
 
 def test_unauthorized_mcp_response_has_discovery_challenge(monkeypatch):

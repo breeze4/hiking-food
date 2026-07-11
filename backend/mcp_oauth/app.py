@@ -1,6 +1,7 @@
 """OAuth 2.0 authorization server for chatbot MCP clients."""
 from __future__ import annotations
 
+import hashlib
 import os
 import secrets
 import time
@@ -99,15 +100,24 @@ def create_router(
         scope = str(metadata_in.get("scope") or DEFAULT_SCOPE)
         if not _valid_scope(scope):
             return _oauth_error("invalid_scope", scope, 400)
+        client_id = f"hiking-food-{secrets.token_urlsafe(16)}"
+        client_name = str(metadata_in.get("client_name") or "MCP client")
+        issued_at = int(time.time())
+        store.register_client(
+            client_id=client_id,
+            redirect_uris=redirect_uris,
+            scope=scope,
+            client_name=client_name,
+        )
         return JSONResponse({
-            "client_id": f"hiking-food-{secrets.token_urlsafe(16)}",
-            "client_id_issued_at": int(time.time()),
+            "client_id": client_id,
+            "client_id_issued_at": issued_at,
             "client_secret_expires_at": 0,
             "redirect_uris": redirect_uris,
             "token_endpoint_auth_method": "none",
             "grant_types": ["authorization_code", "refresh_token"],
             "response_types": ["code"],
-            "client_name": metadata_in.get("client_name", "MCP client"),
+            "client_name": client_name,
             "scope": scope,
         }, status_code=201)
 
@@ -121,6 +131,10 @@ def create_router(
             raise HTTPException(400, "authorization_code with PKCE S256 is required")
         if not _valid_redirect_uri(redirect_uri) or not _valid_scope(scope):
             raise HTTPException(400, "invalid redirect_uri or scope")
+        if not store.client_allows(
+            client_id=client_id, redirect_uri=redirect_uri, scope=scope
+        ):
+            raise HTTPException(400, "unknown client or unregistered redirect_uri")
         return templates.TemplateResponse(request, "authorize.html", {
             "client_id": client_id, "redirect_uri": redirect_uri, "scope": scope,
             "state": state, "code_challenge": code_challenge,
@@ -135,6 +149,10 @@ def create_router(
     ):
         if not _valid_redirect_uri(redirect_uri) or not _valid_scope(scope):
             raise HTTPException(400, "invalid redirect_uri or scope")
+        if not store.client_allows(
+            client_id=client_id, redirect_uri=redirect_uri, scope=scope
+        ):
+            raise HTTPException(400, "unknown client or unregistered redirect_uri")
         if not verify_password(password):
             return templates.TemplateResponse(request, "authorize.html", {
                 "client_id": client_id, "redirect_uri": redirect_uri, "scope": scope,
@@ -170,18 +188,24 @@ def create_router(
                 return _oauth_error("invalid_grant", "PKCE verification failed", 400)
             refresh = store.put_refresh_token(sub=record.sub, scope=record.scope)
             access = issue_access_token(
-                sub=record.sub, scope=record.scope, refresh_id=refresh[:8]
+                sub=record.sub,
+                scope=record.scope,
+                refresh_id=hashlib.sha256(refresh.encode("ascii")).hexdigest()[:8],
             )
             return _token_response(access, refresh, record.scope)
         if grant_type == "refresh_token":
             if not refresh_token:
                 return _oauth_error("invalid_request", "refresh_token required", 400)
             try:
-                sub, scope = store.lookup_refresh_token(refresh_token)
+                sub, scope, replacement = store.rotate_refresh_token(refresh_token)
             except TokenError as exc:
                 return _oauth_error("invalid_grant", str(exc), 400)
-            access = issue_access_token(sub=sub, scope=scope, refresh_id=refresh_token[:8])
-            return _token_response(access, refresh_token, scope)
+            access = issue_access_token(
+                sub=sub,
+                scope=scope,
+                refresh_id=hashlib.sha256(replacement.encode("ascii")).hexdigest()[:8],
+            )
+            return _token_response(access, replacement, scope)
         return _oauth_error("unsupported_grant_type", grant_type, 400)
 
     return router

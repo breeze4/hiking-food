@@ -31,6 +31,10 @@ def _random_token() -> str:
     return base64.urlsafe_b64encode(secrets.token_bytes(32)).rstrip(b"=").decode("ascii")
 
 
+def _token_hash(token: str) -> str:
+    return hashlib.sha256(token.encode("ascii")).hexdigest()
+
+
 def verify_pkce_s256(code_verifier: str, code_challenge: str) -> bool:
     digest = hashlib.sha256(code_verifier.encode("ascii")).digest()
     expected = base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
@@ -74,8 +78,16 @@ class TokenStore:
                   sub TEXT NOT NULL,
                   expires_at INTEGER NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS oauth_clients (
+                  client_id TEXT NOT NULL,
+                  redirect_uri TEXT NOT NULL,
+                  scope TEXT NOT NULL,
+                  client_name TEXT NOT NULL,
+                  created_at INTEGER NOT NULL,
+                  PRIMARY KEY (client_id, redirect_uri)
+                );
                 CREATE TABLE IF NOT EXISTS refresh_tokens (
-                  token TEXT PRIMARY KEY,
+                  token_hash TEXT PRIMARY KEY,
                   sub TEXT NOT NULL,
                   scope TEXT NOT NULL,
                   expires_at INTEGER NOT NULL,
@@ -83,6 +95,54 @@ class TokenStore:
                 );
                 """
             )
+            columns = {
+                row[1] for row in conn.execute("PRAGMA table_info(refresh_tokens)")
+            }
+            if "token" in columns:
+                rows = conn.execute(
+                    "SELECT token, sub, scope, expires_at, created_at FROM refresh_tokens"
+                ).fetchall()
+                conn.executescript(
+                    """
+                    ALTER TABLE refresh_tokens RENAME TO refresh_tokens_plaintext;
+                    CREATE TABLE refresh_tokens (
+                      token_hash TEXT PRIMARY KEY,
+                      sub TEXT NOT NULL,
+                      scope TEXT NOT NULL,
+                      expires_at INTEGER NOT NULL,
+                      created_at INTEGER NOT NULL
+                    );
+                    """
+                )
+                conn.executemany(
+                    "INSERT INTO refresh_tokens VALUES (?,?,?,?,?)",
+                    [(_token_hash(token), sub, scope, expires_at, created_at)
+                     for token, sub, scope, expires_at, created_at in rows],
+                )
+                conn.execute("DROP TABLE refresh_tokens_plaintext")
+
+    def register_client(
+        self, *, client_id: str, redirect_uris: list[str], scope: str,
+        client_name: str,
+    ) -> None:
+        now = _now()
+        with self._conn() as conn:
+            conn.executemany(
+                "INSERT INTO oauth_clients VALUES (?,?,?,?,?)",
+                [
+                    (client_id, redirect_uri, scope, client_name, now)
+                    for redirect_uri in redirect_uris
+                ],
+            )
+
+    def client_allows(self, *, client_id: str, redirect_uri: str, scope: str) -> bool:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT scope FROM oauth_clients "
+                "WHERE client_id = ? AND redirect_uri = ?",
+                (client_id, redirect_uri),
+            ).fetchone()
+        return bool(row) and set(scope.split()) <= set(row[0].split())
 
     def put_auth_code(
         self, *, client_id: str, redirect_uri: str, code_challenge: str,
@@ -117,21 +177,35 @@ class TokenStore:
         with self._conn() as conn:
             conn.execute(
                 "INSERT INTO refresh_tokens VALUES (?,?,?,?,?)",
-                (token, sub, scope, now + REFRESH_TOKEN_TTL_SECONDS, now),
+                (_token_hash(token), sub, scope,
+                 now + REFRESH_TOKEN_TTL_SECONDS, now),
             )
         return token
 
-    def lookup_refresh_token(self, token: str) -> tuple[str, str]:
+    def rotate_refresh_token(self, token: str) -> tuple[str, str, str]:
+        token_hash = _token_hash(token)
+        replacement = _random_token()
+        now = _now()
         with self._conn() as conn:
+            conn.execute("BEGIN IMMEDIATE")
             row = conn.execute(
-                "SELECT sub, scope, expires_at FROM refresh_tokens WHERE token = ?", (token,),
+                "SELECT sub, scope, expires_at FROM refresh_tokens "
+                "WHERE token_hash = ?", (token_hash,),
             ).fetchone()
-        if row is None:
-            raise TokenError("unknown refresh token")
-        sub, scope, expires_at = row
-        if expires_at < _now():
-            raise TokenError("refresh token expired")
-        return sub, scope
+            if row is None:
+                raise TokenError("unknown refresh token")
+            conn.execute(
+                "DELETE FROM refresh_tokens WHERE token_hash = ?", (token_hash,)
+            )
+            sub, scope, expires_at = row
+            if expires_at < now:
+                raise TokenError("refresh token expired")
+            conn.execute(
+                "INSERT INTO refresh_tokens VALUES (?,?,?,?,?)",
+                (_token_hash(replacement), sub, scope,
+                 now + REFRESH_TOKEN_TTL_SECONDS, now),
+            )
+        return sub, scope, replacement
 
 
 def _jwt_key() -> str:

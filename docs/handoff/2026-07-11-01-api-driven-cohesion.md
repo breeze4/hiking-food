@@ -37,7 +37,13 @@ The intended starting state is a clean `main` worktree whose latest commits are:
 - Trip input validation, selection validation, assignment validation, allocation invalidation, clone naming, and delete cascades are covered by public behavior tests.
 - SQLite uses an absolute configurable path, foreign keys are enabled, migrations are versioned, pre-migration backups are retained, and the production database was migrated from schema 0 to 2 without row-count loss.
 - Backend production and development dependencies are hash-locked and checked by the deployment gate.
-- At this checkpoint the focused REST/MCP/daily-plan suite passes 80 tests.
+- OAuth dynamic clients and exact redirect URIs are persisted. Unknown clients and
+  unregistered redirects are rejected after restart.
+- Refresh tokens are stored only as SHA-256 hashes, rotate atomically on use, and
+  cannot be replayed. Existing plaintext refresh-token rows migrate to hashes
+  while preserving the next legitimate refresh exchange.
+- At this checkpoint the full backend suite passes 159 tests; frontend lint and
+  production build also pass.
 
 Important implementation files:
 
@@ -51,27 +57,25 @@ Important implementation files:
 - `backend/migrations.py`
 - `backend/verify_database.py`
 
-## Next slice: OAuth and server boundaries
+## Next slice: remaining OAuth and server boundaries
 
-Begin with public protocol tests in `backend/tests/test_mcp_oauth.py`. The current weaknesses are confirmed in code:
+Client registration, exact redirect validation, refresh rotation, hashed storage,
+and legacy refresh-row migration are complete and covered in
+`backend/tests/test_mcp_oauth.py`. Do not reimplement them.
 
-- Dynamic client registration returns a client ID but does not persist the client or its exact redirect URIs.
-- Authorization accepts any client ID and any syntactically valid HTTPS/loopback redirect URI.
-- Refresh tokens are stored in plaintext and are reusable rather than rotated.
+The remaining weaknesses are confirmed in code:
+
 - Password failures are not throttled.
 - OIDC metadata advertises an ID-token response that the server does not issue.
 - `backend/main.py` allows CORS from `*` even though the browser client is same-origin through the Vite/prod proxy.
 - MCP transport has DNS-rebinding protection disabled.
 - The OAuth SQLite path should be absolute/configurable and should avoid surprising import-time state changes.
 
-Recommended test-first order:
+Recommended test-first order for the remaining work:
 
-1. Registered clients are persisted; unknown clients and unregistered redirects are rejected.
-2. Refresh exchange rotates the refresh token and invalidates the previous token.
-3. Persisted refresh credentials are one-way hashes, not bearer tokens.
-4. Repeated password failures are throttled without making successful local use brittle.
-5. Metadata describes only flows the service implements.
-6. Remove wildcard CORS and enable a safe MCP host/origin policy without breaking the deployed chatbot.
+1. Repeated password failures are throttled without making successful local use brittle.
+2. Metadata describes only flows the service implements.
+3. Remove wildcard CORS and enable a safe MCP host/origin policy without breaking the deployed chatbot.
 
 Keep backward compatibility for existing legitimate loopback and HTTPS clients where possible. If a security correction necessarily invalidates old registrations or refresh tokens, document the one-time re-login requirement.
 

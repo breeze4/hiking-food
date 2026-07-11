@@ -75,8 +75,15 @@ Discovery endpoints are below that path prefix:
 
 The server supports dynamic client registration, authorization code with PKCE
 S256, one-hour access tokens, refresh tokens, and the `hiking-food` plus
-`offline_access` scopes. HTTPS and loopback HTTP redirect URIs are accepted;
-arbitrary insecure HTTP callbacks are rejected.
+`offline_access` scopes. Registered redirect URIs must match exactly. HTTPS and
+loopback HTTP redirect URIs are accepted; arbitrary insecure HTTP callbacks are
+rejected. Refresh tokens are hashed at rest and rotate after every successful
+exchange, so clients must retain the replacement returned by `/token`.
+
+Clients holding a refresh token from before this policy was deployed can use it
+once and receive a rotated token without logging in again. A client that has no
+usable refresh token may need to dynamically register again before authorization,
+because older client IDs were not persisted by the previous server.
 
 Production secrets live only on BeeBaby in
 `~/.config/hiking-food/mcp.env`. Never commit, print, or copy that file into a
