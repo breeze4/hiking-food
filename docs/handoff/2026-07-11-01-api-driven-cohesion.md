@@ -1,6 +1,6 @@
 # API-driven cohesion cleanup handoff
 
-Checkpoint: 2026-07-11 12:28 PDT
+Checkpoint: 2026-07-11 12:58 PDT
 
 ## Start here
 
@@ -27,7 +27,11 @@ The intended starting state is a clean `main` worktree whose latest commits are:
 - `2d868ca` — specify the cleanup and compatibility matrix
 - `f81a9ac` — unify trip, inventory, and assignment mutations across REST and MCP
 - `9e0760d` — harden database paths, versioned migrations, foreign keys, test isolation, and dependency locks
-- the checkpoint commit containing this handoff — move trip and daily-plan projections behind `TripPlanningService`
+- `de7006b` — move trip and daily-plan projections behind `TripPlanningService`
+- `ee9ac40` — persist OAuth clients and rotate/hash refresh tokens
+- `05376b4` — make trip routes deep-linkable
+- `f8232f3` — keep invalid trip routes navigable
+- the checkpoint commit containing this handoff (docs only)
 
 ## What is now true
 
@@ -42,8 +46,8 @@ The intended starting state is a clean `main` worktree whose latest commits are:
 - Refresh tokens are stored only as SHA-256 hashes, rotate atomically on use, and
   cannot be replayed. Existing plaintext refresh-token rows migrate to hashes
   while preserving the next legitimate refresh exchange.
-- At this checkpoint the full backend suite passes 159 tests; frontend lint and
-  production build also pass.
+- At this checkpoint the full backend suite passes 159 tests and the frontend
+  harness passes 17 tests; frontend lint and production build also pass.
 
 Important implementation files:
 
@@ -90,8 +94,12 @@ The route/context divergence is fixed. Canonical trip URLs are:
 The route trip ID controls context, the selector preserves the current trip
 subroute, global pages retain selection without navigating away, legacy root and
 packing URLs redirect, invalid paths have stable boundaries, and stale responses
-cannot overwrite a newer route. The frontend harness covers these behaviors plus
-every global page and recipe new/edit deep link.
+cannot overwrite a newer route. Unknown trip IDs no longer hijack context: an
+unrecognized route trip does not become the active trip, the planner nav links
+and selector stay pointed at a valid trip so the app remains navigable, and
+selection recovers to a real trip if the current selection disappears from the
+list. The frontend harness covers these behaviors plus every global page and
+recipe new/edit deep link.
 
 ## Remaining frontend slice
 
