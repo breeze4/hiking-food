@@ -54,6 +54,7 @@
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
+| 41 | [Agent Trip Planning API Playbook](41-agent-trip-planning-api-playbook.md) | Golden-path API workflow for cloning a same-season/year trip, adjusting it, and validating the finished plan | None |
 
 ## Specs
 
