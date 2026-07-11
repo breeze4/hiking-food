@@ -206,6 +206,9 @@ describe('trip deep links', () => {
 
     expect(await screen.findByText('Trip not found.')).toBeVisible();
     expect(window.location.pathname).toBe('/hiking-food/trips/999/packing');
+    for (const link of screen.getAllByRole('link', { name: 'Trip Planner' })) {
+      expect(link).toHaveAttribute('href', '/hiking-food/trips/1');
+    }
     expect(fetch).not.toHaveBeenCalledWith(
       '/hiking-food/api/trips/999/packing',
       expect.anything(),

@@ -16,7 +16,12 @@ export function TripProvider({ children }) {
   const [tripsLoaded, setTripsLoaded] = useState(false);
   const [tripDetail, setTripDetail] = useState(null);
   const [summary, setSummary] = useState(null);
-  const activeTripId = routeTrip?.tripId ?? selectedTripId;
+  const routeTripIsKnown = !tripsLoaded || trips.some(
+    (trip) => trip.id === routeTrip?.tripId,
+  );
+  const activeTripId = routeTrip && routeTripIsKnown
+    ? routeTrip.tripId
+    : selectedTripId;
   const activeTripIdRef = useRef(activeTripId);
 
   useEffect(() => {
@@ -27,7 +32,9 @@ export function TripProvider({ children }) {
     try {
       const data = await get('/trips');
       setTrips(data);
-      setSelectedTripId((currentId) => currentId ?? data[0]?.id ?? null);
+      setSelectedTripId((currentId) => (
+        data.some((trip) => trip.id === currentId) ? currentId : data[0]?.id ?? null
+      ));
     } catch (err) {
       console.error('Failed to load trips', err);
     } finally {
@@ -66,8 +73,10 @@ export function TripProvider({ children }) {
 
   useEffect(() => { loadTrips(); }, [loadTrips]);
   useEffect(() => {
-    if (routeTrip?.tripId) setSelectedTripId(routeTrip.tripId);
-  }, [routeTrip?.tripId]);
+    if (routeTrip?.tripId && routeTripIsKnown) {
+      setSelectedTripId(routeTrip.tripId);
+    }
+  }, [routeTrip?.tripId, routeTripIsKnown]);
   useEffect(() => { loadTripDetail(); }, [loadTripDetail]);
   useEffect(() => { loadSummary(); }, [loadSummary]);
 
