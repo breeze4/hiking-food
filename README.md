@@ -17,8 +17,9 @@ Based on [Andrew Skurka's meal planning method](https://andrewskurka.com/).
 
 - **Backend**: Python, FastAPI, SQLAlchemy, SQLite
 - **Frontend**: React, Vite, Tailwind CSS, shadcn/ui
-- **Hosting**: Self-hosted on a Linux mini PC, accessed via Tailscale
-- **Auth**: None (Tailscale network handles access)
+- **Hosting**: Self-hosted on a Linux mini PC, with HTTPS ingress for remote chatbot clients
+- **Web app auth**: Tailscale network access
+- **Chatbot auth**: OAuth 2.0 authorization code + PKCE for the remote MCP endpoint
 
 ## Development
 
@@ -26,7 +27,7 @@ Start the backend:
 
 ```sh
 cd backend
-python -m venv venv
+python3.12 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 uvicorn main:app --reload
@@ -46,6 +47,22 @@ Run tests:
 cd backend
 venv/bin/pytest
 ```
+
+Python 3.10 or newer is required because the backend includes the official Python MCP SDK.
+
+## Chatbot MCP
+
+The deployed Streamable HTTP MCP endpoint is:
+
+```text
+https://beebaby.tailc65f2f.ts.net/hiking-food/mcp
+```
+
+It exposes a compact tool set for listing and reading trips, creating or cloning
+plans, changing trip targets and food quantities, regenerating the daily plan,
+and moving individual daily assignments. See
+[`docs/agents/hiking-food-mcp.md`](docs/agents/hiking-food-mcp.md) for client setup,
+tool semantics, and the safe planning workflow.
 
 ## Deploy
 

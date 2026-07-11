@@ -49,6 +49,7 @@
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
+| 42 | [Remote Chatbot MCP](42-remote-chatbot-mcp.md) | OAuth-protected BeeBaby MCP for trip planning from Codex, ChatGPT, and Claude | None |
 
 ## Not Started
 

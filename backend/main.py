@@ -5,6 +5,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
+from mcp.server.fastmcp.server import StreamableHTTPASGIApp
+from starlette.routing import Route
 
 from sqlalchemy import text, inspect
 
@@ -17,8 +19,12 @@ from routers.trips import router as trips_router
 from routers.daily_plan import router as daily_plan_router
 from routers.settings import router as settings_router
 from routers.food_intake import router as food_intake_router
+from mcp_oauth.app import create_router as create_oauth_router
+from mcp_oauth.auth import BearerAuthMiddleware
+from mcp_server import build_mcp_server
 
 FRONTEND_DIR = Path(__file__).parent / ".." / "frontend" / "dist"
+MCP_SERVER = build_mcp_server()
 
 
 def _add_column_if_missing(conn, table: str, column: str, col_type: str = "TEXT"):
@@ -90,7 +96,8 @@ async def lifespan(inner_app: FastAPI):
     with engine.connect() as conn:
         _run_migrations(conn)
         conn.commit()
-    yield
+    async with MCP_SERVER.session_manager.run():
+        yield
 
 
 inner = FastAPI(lifespan=lifespan)
@@ -110,6 +117,16 @@ inner.include_router(trips_router)
 inner.include_router(daily_plan_router)
 inner.include_router(settings_router)
 inner.include_router(food_intake_router)
+inner.include_router(create_oauth_router())
+
+# Mount streamable HTTP at the exact /mcp path. The outer app contributes the
+# public /hiking-food prefix; an exact Route avoids redirecting OAuth clients.
+MCP_SERVER.streamable_http_app()
+inner.router.routes.append(Route(
+    "/mcp",
+    endpoint=BearerAuthMiddleware(StreamableHTTPASGIApp(MCP_SERVER.session_manager)),
+    methods=["GET", "POST", "DELETE"],
+))
 
 
 @inner.get("/api/health")

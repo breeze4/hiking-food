@@ -3,6 +3,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+test -f "$HOME/.config/hiking-food/mcp.env"
+
 if [[ ! -x backend/venv/bin/python ]]; then
   python3 -m venv backend/venv
 fi

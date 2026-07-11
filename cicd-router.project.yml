@@ -43,7 +43,8 @@ deploy:
       command: bash deploy/remote-bootstrap.sh
   restart_units:
     - hiking-food.service
-  env_files: []
+  env_files:
+    - ~/.config/hiking-food/mcp.env
 
 smoke:
   attempts: 5

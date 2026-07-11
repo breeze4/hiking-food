@@ -28,7 +28,9 @@ Specs, plans, and session logs live in `docs/`; `docs/plans/INDEX.md` is the aut
 
 **Dependencies**: Four unpinned packages: `fastapi`, `uvicorn`, `sqlalchemy`, `pydantic`.
 
-**CORS/Auth**: Wide-open CORS (`*`), no authentication or authorization.
+**CORS/Auth**: The browser API retains wide-open CORS and relies on Tailscale network access. The separate `/mcp` transport is protected by OAuth 2.0 authorization code + PKCE, dynamically registered public clients, short-lived JWT access tokens, and persistent refresh tokens.
+
+**MCP**: `mcp_server.py` exposes a compact domain-level FastMCP tool surface over exact-path Streamable HTTP. It operates directly against the same SQLAlchemy models and transaction boundary as the REST API. OAuth discovery, registration, authorization, and token endpoints live in `mcp_oauth/`; the outer `/hiking-food` ASGI mount becomes the public issuer prefix.
 
 **Static serving**: In production, FastAPI serves the built frontend from `frontend/dist/` with a catch-all route that falls back to `index.html` for SPA routing.
 
@@ -62,7 +64,7 @@ Specs, plans, and session logs live in `docs/`; `docs/plans/INDEX.md` is the aut
 
 **Method**: `cicd-router` watches verified commits to `main`, runs the exact-SHA project gates from `scripts/cicd-router-gates.sh`, rsyncs the approved source to `beebaby`, runs `deploy/remote-bootstrap.sh`, restarts the user systemd service, and performs the configured health check.
 
-**Service**: Runs as a user-level systemd unit (`hiking-food.service`) on port 8000 with no reverse proxy in this repo. `loginctl enable-linger` keeps it alive after logout.
+**Service**: Runs as a user-level systemd unit (`hiking-food.service`) on port 8000. `loginctl enable-linger` keeps it alive after logout. BeeBaby's Tailscale Funnel publishes the OAuth-protected `/hiking-food` MCP path through a recognized-certificate HTTPS hostname for remote chatbot clients.
 
 **Database persistence**: The SQLite file on the server is never overwritten — rsync excludes `*.db`, and schema changes are applied by the idempotent startup migrations.
 

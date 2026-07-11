@@ -43,7 +43,7 @@ def test_session():
     return _TestSession
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def c():
     with TestClient(test_app, raise_server_exceptions=True) as tc:
         yield tc

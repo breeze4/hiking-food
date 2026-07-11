@@ -3,6 +3,7 @@ Test: `cd backend && venv/bin/pytest`
 Frontend checks: `cd frontend && pnpm lint && pnpm build`
 Deploy: commits to `main` are gated and deployed to beebaby by cicd-router using `cicd-router.project.yml`. Push the exact verified commit; do not use a direct deploy script.
 Access: `http://beebaby:8000/hiking-food/`
+Chatbot MCP: read `docs/agents/hiking-food-mcp.md` before planning trips through MCP.
 
 ## Plans
 
