@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { get, post, del, patch } from '../api';
+import { useMutation } from '../hooks/useMutation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -246,44 +247,41 @@ function DailyPlanPage() {
 
   useEffect(() => { loadPlan(); }, [loadPlan]);
 
-  async function handleAutoFill() {
-    try {
-      setPlan(await post(`/trips/${tripId}/daily-plan/auto-fill`));
-      setError(null);
-      setResetOpen(false);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
+  // Assignment mutations return the fresh plan body; the hook standardizes
+  // pending/error while each still assigns the response into `plan` state.
+  const autoFillMutation = useMutation(async () => {
+    setPlan(await post(`/trips/${tripId}/daily-plan/auto-fill`));
+    setResetOpen(false);
+  });
+  const planMutation = useMutation(async (apiCall) => {
+    setPlan(await apiCall());
+  });
+  const mutationError = autoFillMutation.error || planMutation.error;
 
-  async function removeAssignment(assignmentId) {
-    try {
-      setPlan(await del(`/trips/${tripId}/daily-plan/assignments/${assignmentId}`));
-    } catch (err) { setError(err.message); }
-  }
+  const handleAutoFill = () => autoFillMutation.run();
 
-  async function incrementServings(assignmentId, currentServings, amount = 1) {
-    try {
-      setPlan(await patch(`/trips/${tripId}/daily-plan/assignments/${assignmentId}`, {
-        servings: currentServings + amount,
-      }));
-    } catch (err) { setError(err.message); }
-  }
+  const removeAssignment = (assignmentId) => planMutation.run(
+    () => del(`/trips/${tripId}/daily-plan/assignments/${assignmentId}`),
+  );
 
-  async function addToDay(item, dayNumber) {
+  const incrementServings = (assignmentId, currentServings, amount = 1) => planMutation.run(
+    () => patch(`/trips/${tripId}/daily-plan/assignments/${assignmentId}`, {
+      servings: currentServings + amount,
+    }),
+  );
+
+  function addToDay(item, dayNumber) {
     const key = `${item.source_type}:${item.source_id}`;
     const servings = item.remaining_servings < 1
       ? item.remaining_servings
       : (allocAmounts[key] ?? 1);
-    try {
-      setPlan(await post(`/trips/${tripId}/daily-plan/assignments`, {
-        day_number: dayNumber,
-        slot: defaultSlotForItem(item),
-        source_type: item.source_type,
-        source_id: item.source_id,
-        servings,
-      }));
-    } catch (err) { setError(err.message); }
+    return planMutation.run(() => post(`/trips/${tripId}/daily-plan/assignments`, {
+      day_number: dayNumber,
+      slot: defaultSlotForItem(item),
+      source_type: item.source_type,
+      source_id: item.source_id,
+      servings,
+    }));
   }
 
   if (loading) return <p className="text-muted-foreground p-4">Loading...</p>;
@@ -312,11 +310,15 @@ function DailyPlanPage() {
               Reset Auto-Fill
             </Button>
           ) : (
-            <Button onClick={handleAutoFill}>Auto-Fill</Button>
+            <Button onClick={handleAutoFill} disabled={autoFillMutation.pending}>Auto-Fill</Button>
           )}
           <Button variant="outline" onClick={() => navigate(`/trips/${tripId}`)}>Back to Planner</Button>
         </div>
       </div>
+
+      {mutationError && (
+        <p className="text-destructive text-sm">{mutationError.message}</p>
+      )}
 
       {/* Warnings */}
       {plan.warnings.length > 0 && (
@@ -375,6 +377,7 @@ function DailyPlanPage() {
                           }))}
                           className="text-xs h-9 w-10 sm:h-6 sm:w-8 rounded border font-medium bg-muted/50 hover:bg-muted"
                           title={`Allocate ${isHalf ? '1' : '½'} serving`}
+                          aria-label={`Allocate ${isHalf ? '1' : '½'} serving of ${item.name}`}
                         >
                           {isHalf ? '½' : '1'}
                         </button>
@@ -389,6 +392,8 @@ function DailyPlanPage() {
                             key={day.day_number}
                             size="sm"
                             variant="outline"
+                            aria-label={`Assign ${item.name} to day ${day.day_number}`}
+                            disabled={planMutation.pending}
                             className={`h-9 w-10 sm:h-6 sm:w-8 text-xs px-0 relative ${count > 0 ? 'bg-blue-50 border-blue-300 dark:bg-blue-950 dark:border-blue-700' : ''}`}
                             onClick={() => addToDay(item, day.day_number)}
                           >
@@ -465,20 +470,26 @@ function DailyPlanPage() {
                                 <>
                                   <button
                                     onClick={() => incrementServings(item.id, item.servings, 0.5)}
-                                    className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-muted opacity-0 group-hover:opacity-100 touch-visible transition-opacity"
+                                    disabled={planMutation.pending}
+                                    className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-muted opacity-0 group-hover:opacity-100 touch-visible transition-opacity disabled:opacity-50"
                                     title="Add half serving"
+                                    aria-label={`Add half serving of ${item.name}`}
                                   >½</button>
                                   <button
                                     onClick={() => incrementServings(item.id, item.servings)}
-                                    className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-muted opacity-0 group-hover:opacity-100 touch-visible transition-opacity"
+                                    disabled={planMutation.pending}
+                                    className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-muted opacity-0 group-hover:opacity-100 touch-visible transition-opacity disabled:opacity-50"
                                     title="Add serving"
+                                    aria-label={`Add serving of ${item.name}`}
                                   >+</button>
                                 </>
                               )}
                               <button
                                 onClick={() => removeAssignment(item.id)}
-                                className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 touch-visible transition-opacity"
+                                disabled={planMutation.pending}
+                                className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 touch-visible transition-opacity disabled:opacity-50"
                                 title="Remove"
+                                aria-label={`Remove ${item.name}`}
                               >×</button>
                             </div>
                           );
@@ -505,7 +516,7 @@ function DailyPlanPage() {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setResetOpen(false)}>Cancel</Button>
-            <Button onClick={handleAutoFill}>Reset</Button>
+            <Button onClick={handleAutoFill} disabled={autoFillMutation.pending}>Reset</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

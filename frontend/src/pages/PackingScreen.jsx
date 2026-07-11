@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { get, put, patch } from '../api';
+import { useMutation } from '../hooks/useMutation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -39,36 +40,24 @@ function PackingScreen() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  async function toggleOnHand(ingredientId) {
-    try {
-      await patch(`/ingredients/${ingredientId}/on-hand`);
-      loadData();
-    } catch (err) { setError(err.message); }
-  }
+  // A single mutation wrapper for every packing edit: run the API call, then
+  // refetch the packing + shopping-list projections. Pending/error are shared;
+  // errors render inline so a failure never blanks the page.
+  const mutation = useMutation(async (apiCall) => {
+    await apiCall();
+    await loadData();
+  });
+  const { pending: mutating } = mutation;
 
-  async function toggleMealPacked(mealId, packed) {
-    await put(`/trips/${tripId}/meals/${mealId}`, { packed });
-    loadData();
-  }
-
-  async function setMealWeight(mealId, weight) {
-    await put(`/trips/${tripId}/meals/${mealId}`, {
-      actual_weight_oz: weight ? parseFloat(weight) : null,
-    });
-    loadData();
-  }
-
-  async function toggleSnackPacked(snackId, packed) {
-    await put(`/trips/${tripId}/snacks/${snackId}`, { packed });
-    loadData();
-  }
-
-  async function setSnackWeight(snackId, weight) {
-    await put(`/trips/${tripId}/snacks/${snackId}`, {
-      actual_weight_oz: weight ? parseFloat(weight) : null,
-    });
-    loadData();
-  }
+  const toggleOnHand = (ingredientId) => mutation.run(() => patch(`/ingredients/${ingredientId}/on-hand`));
+  const toggleMealPacked = (mealId, packed) => mutation.run(() => put(`/trips/${tripId}/meals/${mealId}`, { packed }));
+  const setMealWeight = (mealId, weight) => mutation.run(() => put(`/trips/${tripId}/meals/${mealId}`, {
+    actual_weight_oz: weight ? parseFloat(weight) : null,
+  }));
+  const toggleSnackPacked = (snackId, packed) => mutation.run(() => put(`/trips/${tripId}/snacks/${snackId}`, { packed }));
+  const setSnackWeight = (snackId, weight) => mutation.run(() => put(`/trips/${tripId}/snacks/${snackId}`, {
+    actual_weight_oz: weight ? parseFloat(weight) : null,
+  }));
 
   if (error) return <p className="text-destructive">{error}</p>;
   if (!packing) return <p className="text-muted-foreground">Loading...</p>;
@@ -82,6 +71,10 @@ function PackingScreen() {
         <h2 className="text-2xl font-semibold tracking-tight">Packing: {packing.trip_name}</h2>
         <Button variant="outline" onClick={() => navigate(`/trips/${tripId}`)}>Back to Planner</Button>
       </div>
+
+      {mutation.error && (
+        <p className="text-destructive text-sm">{mutation.error.message}</p>
+      )}
 
       {/* Recipe Assembly */}
       <div>
@@ -101,6 +94,7 @@ function PackingScreen() {
                 <div className="flex items-center gap-3 flex-wrap">
                   <Checkbox
                     checked={meal.packed}
+                    disabled={mutating}
                     onCheckedChange={(checked) => toggleMealPacked(meal.id, checked)}
                   />
                   <span className={`font-medium ${meal.packed ? 'line-through' : ''}`}>
@@ -113,6 +107,8 @@ function PackingScreen() {
                     <Input
                       type="number"
                       step="any"
+                      aria-label={`${meal.recipe_name} actual weight`}
+                      disabled={mutating}
                       defaultValue={meal.actual_weight_oz || ''}
                       onBlur={(e) => setMealWeight(meal.id, e.target.value)}
                       className="w-20 h-8"
@@ -194,6 +190,8 @@ function PackingScreen() {
                             <TableCell>
                               <Checkbox
                                 checked={s.packed}
+                                disabled={mutating}
+                                aria-label={`${s.ingredient_name} packed`}
                                 onCheckedChange={(checked) => toggleSnackPacked(s.id, checked)}
                               />
                             </TableCell>
@@ -207,6 +205,8 @@ function PackingScreen() {
                               <Input
                                 type="number"
                                 step="any"
+                                aria-label={`${s.ingredient_name} actual weight`}
+                                disabled={mutating}
                                 defaultValue={s.actual_weight_oz || ''}
                                 onBlur={(e) => setSnackWeight(s.id, e.target.value)}
                                 className="w-20 h-7 ml-auto"
@@ -249,6 +249,8 @@ function PackingScreen() {
                     <TableCell>
                       <Checkbox
                         checked={item.on_hand}
+                        disabled={mutating}
+                        aria-label={`${item.ingredient_name} on hand`}
                         onCheckedChange={() => toggleOnHand(item.ingredient_id)}
                       />
                     </TableCell>

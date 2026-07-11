@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { get, post, put, del } from '../api';
 import { useTrip } from '../context/TripContext';
+import { useMutation } from '../hooks/useMutation';
 import ProgressMeter from './ProgressMeter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -62,30 +63,36 @@ function MealSelection() {
     get('/recipes').then(setRecipes).catch(() => {});
   }, []);
 
-  if (!tripDetail) return null;
-
-  const meals = tripDetail.meals || [];
-  const totalWeight = meals.reduce((sum, m) => sum + (m.total_weight || 0), 0);
-  const mealCount = meals.reduce((sum, m) => sum + m.quantity, 0);
-
-  async function handleAdd() {
-    if (!addRecipeId) return;
+  const addMutation = useMutation(async () => {
     await post(`/trips/${tripDetail.id}/meals`, {
       recipe_id: parseInt(addRecipeId),
       quantity: 1,
     });
     setAddRecipeId('');
     refreshTrip();
-  }
+  });
 
-  async function updateQuantity(mealId, newQty) {
+  const quantityMutation = useMutation(async (mealId, newQty) => {
     if (newQty <= 0) {
       await del(`/trips/${tripDetail.id}/meals/${mealId}`);
     } else {
       await put(`/trips/${tripDetail.id}/meals/${mealId}`, { quantity: newQty });
     }
     refreshTrip();
+  });
+
+  if (!tripDetail) return null;
+
+  const meals = tripDetail.meals || [];
+  const totalWeight = meals.reduce((sum, m) => sum + (m.total_weight || 0), 0);
+  const mealCount = meals.reduce((sum, m) => sum + m.quantity, 0);
+
+  function handleAdd() {
+    if (!addRecipeId) return;
+    addMutation.run();
   }
+
+  const mutationError = addMutation.error || quantityMutation.error;
 
   const breakfastRecipes = recipes.filter((r) => r.category === 'breakfast');
   const dinnerRecipes = recipes.filter((r) => r.category === 'dinner');
@@ -132,10 +139,14 @@ function MealSelection() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Button variant="outline" size="icon" className="h-7 w-7"
-                          onClick={() => updateQuantity(m.id, m.quantity - 1)}>-</Button>
+                          aria-label={`Decrease ${m.recipe_name} quantity`}
+                          disabled={quantityMutation.pending}
+                          onClick={() => quantityMutation.run(m.id, m.quantity - 1)}>-</Button>
                         <span className="w-8 text-center text-sm">{m.quantity}</span>
                         <Button variant="outline" size="icon" className="h-7 w-7"
-                          onClick={() => updateQuantity(m.id, m.quantity + 1)}>+</Button>
+                          aria-label={`Increase ${m.recipe_name} quantity`}
+                          disabled={quantityMutation.pending}
+                          onClick={() => quantityMutation.run(m.id, m.quantity + 1)}>+</Button>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">{m.weight_per_unit}</TableCell>
@@ -175,8 +186,12 @@ function MealSelection() {
                   </optgroup>
                 )}
               </select>
-              <Button onClick={handleAdd} disabled={!addRecipeId} size="sm">Add</Button>
+              <Button onClick={handleAdd} disabled={!addRecipeId || addMutation.pending} size="sm">Add</Button>
             </div>
+
+            {mutationError && (
+              <p className="text-destructive text-sm mt-2">{mutationError.message}</p>
+            )}
           </CardContent>
         </CollapsibleContent>
       </Card>

@@ -67,37 +67,37 @@ Facts confirmed in code (2026-07-11):
 Write the failing test before each behavior change, following the existing
 whole-App render + fetch-stub pattern.
 
-- [ ] Extract the shared fetch-mock helpers from `App.test.jsx` into
+- [x] Extract the shared fetch-mock helpers from `App.test.jsx` into
   `frontend/src/test/` with all 17 existing tests still passing.
-- [ ] Add the shared mutation hook with tests: pending is true during an
+- [x] Add the shared mutation hook with tests: pending is true during an
   in-flight mutation (resolver-controlled promise, like the existing stale-
   response test), error state is set on rejection and clears on retry.
-- [ ] Adopt the hook in `MealSelection` and `SnackSelection`: tests prove a
+- [x] Adopt the hook in `MealSelection` and `SnackSelection`: tests prove a
   failed add/update/remove surfaces an error message, controls disable while
   pending, and a successful mutation refreshes the trip projections
   (refetch called, updated values rendered).
-- [ ] Adopt the hook in `TripCalculator`, `PackingScreen`, and `TripContext`
+- [x] Adopt the hook in `TripCalculator`, `PackingScreen`, and `TripContext`
   create/clone/delete with the same pending/error coverage.
-- [ ] `DailyPlanPage`: keep its response-body refresh, adopt the hook for
+- [x] `DailyPlanPage`: keep its response-body refresh, adopt the hook for
   pending state, and verify assignment mutations update the rendered plan.
-- [ ] Add accessible names to all quantity, half-serving, add, remove, notes,
+- [x] Add accessible names to all quantity, half-serving, add, remove, notes,
   and slot controls listed in Context; tests locate each control by role and
   accessible name (e.g. `getByRole('button', { name: /increase .* quantity/i })`).
-- [ ] Convert route pages in `App.jsx` to `React.lazy` with a `Suspense`
+- [x] Convert route pages in `App.jsx` to `React.lazy` with a `Suspense`
   fallback; all tests still pass (async `findBy*` where needed) and
   `pnpm build` completes without the chunk-size warning.
-- [ ] Run `cd frontend && pnpm test && pnpm lint && pnpm build` — all green.
+- [x] Run `cd frontend && pnpm test && pnpm lint && pnpm build` — all green.
 
 ## Acceptance criteria
 
-- [ ] Every mutation call site exposes pending and error state to the UI;
+- [x] Every mutation call site exposes pending and error state to the UI;
   no fire-and-forget mutation remains.
-- [ ] Failed mutations show a visible error and leave the app usable;
+- [x] Failed mutations show a visible error and leave the app usable;
   successful mutations refresh the correct projections.
-- [ ] Quantity, half-serving, add, and remove controls (desktop and mobile
+- [x] Quantity, half-serving, add, and remove controls (desktop and mobile
   layouts) have accessible names that identify the item they act on.
-- [ ] Route pages are code-split; `pnpm build` emits no large-bundle warning.
-- [ ] Frontend suite, lint, and production build pass.
+- [x] Route pages are code-split; `pnpm build` emits no large-bundle warning.
+- [x] Frontend suite, lint, and production build pass.
 
 ## Done when
 

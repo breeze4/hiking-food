@@ -3,6 +3,7 @@ import {
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { get, post, del } from '../api';
+import { useMutation } from '../hooks/useMutation';
 import { pathAfterTripSelection, readTripLocation, tripPath } from '../routes/tripRoutes';
 
 const TripContext = createContext();
@@ -88,35 +89,44 @@ export function TripProvider({ children }) {
 
   const selectTrip = (id) => activateTrip(id);
 
-  const createTrip = async (name) => {
+  // create/clone/delete share one mutation so the trip selector can expose
+  // pending + error state; each still owns its own trip-list/navigation update.
+  const tripMutation = useMutation((action) => action());
+
+  const createTrip = (name) => tripMutation.run(async () => {
     const trip = await post('/trips', { name, first_day_fraction: 1, full_days: 0, last_day_fraction: 0 });
     setTrips((current) => [...current, { id: trip.id, name: trip.name }]);
     activateTrip(trip.id);
     return trip;
+  });
+
+  const cloneTrip = () => {
+    if (!activeTripId) return Promise.resolve(undefined);
+    return tripMutation.run(async () => {
+      const clone = await post(`/trips/${activeTripId}/clone`);
+      setTrips((current) => [...current, { id: clone.id, name: clone.name }]);
+      activateTrip(clone.id);
+      return clone;
+    });
   };
 
-  const cloneTrip = async () => {
-    if (!activeTripId) return;
-    const clone = await post(`/trips/${activeTripId}/clone`);
-    setTrips((current) => [...current, { id: clone.id, name: clone.name }]);
-    activateTrip(clone.id);
-    return clone;
-  };
-
-  const deleteTrip = async () => {
-    if (!activeTripId) return;
-    await del(`/trips/${activeTripId}`);
-    const remaining = trips.filter((t) => t.id !== activeTripId);
-    setTrips(remaining);
-    const nextTripId = remaining[0]?.id ?? null;
-    setSelectedTripId(nextTripId);
-    const currentRoute = readTripLocation(location.pathname);
-    if (currentRoute) {
-      navigate(
-        nextTripId ? tripPath(nextTripId, currentRoute.section) : '/',
-        { replace: true },
-      );
-    }
+  const deleteTrip = () => {
+    if (!activeTripId) return Promise.resolve(undefined);
+    return tripMutation.run(async () => {
+      await del(`/trips/${activeTripId}`);
+      const remaining = trips.filter((t) => t.id !== activeTripId);
+      setTrips(remaining);
+      const nextTripId = remaining[0]?.id ?? null;
+      setSelectedTripId(nextTripId);
+      const currentRoute = readTripLocation(location.pathname);
+      if (currentRoute) {
+        navigate(
+          nextTripId ? tripPath(nextTripId, currentRoute.section) : '/',
+          { replace: true },
+        );
+      }
+      return true;
+    });
   };
 
   const refreshTrip = useCallback(async () => {
@@ -127,7 +137,7 @@ export function TripProvider({ children }) {
   return (
     <TripContext.Provider value={{
       trips, tripsLoaded, activeTripId, tripDetail, summary,
-      selectTrip, createTrip, cloneTrip, deleteTrip,
+      selectTrip, createTrip, cloneTrip, deleteTrip, tripMutation,
       refreshTrip, refreshTrips: loadTrips,
     }}>
       {children}

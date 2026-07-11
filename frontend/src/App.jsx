@@ -1,18 +1,21 @@
 import {
   BrowserRouter, Routes, Route, NavLink, Navigate, Outlet, useParams,
 } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, Suspense, lazy } from 'react';
 import { TripProvider, useTrip } from './context/TripContext';
 import TripSelector from './components/TripSelector';
-import IngredientsPage from './pages/IngredientsPage';
-import SnackCatalogPage from './pages/SnackCatalogPage';
-import IntakePage from './pages/IntakePage';
-import RecipesPage from './pages/RecipesPage';
-import RecipeEditPage from './pages/RecipeEditPage';
-import TripPlannerPage from './pages/TripPlannerPage';
-import PackingScreen from './pages/PackingScreen';
-import DailyPlanPage from './pages/DailyPlanPage';
 import SettingsModal from './components/SettingsModal';
+
+// Route pages are code-split so they load on demand and keep the entry chunk
+// under Vite's size-warning threshold.
+const IngredientsPage = lazy(() => import('./pages/IngredientsPage'));
+const SnackCatalogPage = lazy(() => import('./pages/SnackCatalogPage'));
+const IntakePage = lazy(() => import('./pages/IntakePage'));
+const RecipesPage = lazy(() => import('./pages/RecipesPage'));
+const RecipeEditPage = lazy(() => import('./pages/RecipeEditPage'));
+const TripPlannerPage = lazy(() => import('./pages/TripPlannerPage'));
+const PackingScreen = lazy(() => import('./pages/PackingScreen'));
+const DailyPlanPage = lazy(() => import('./pages/DailyPlanPage'));
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
@@ -151,21 +154,23 @@ function App() {
         <div className="min-h-screen bg-background font-sans antialiased">
           <AppHeader />
           <main className="p-4 md:p-6 max-w-7xl mx-auto">
-            <Routes>
-              <Route path="/" element={<TripIndexRedirect />} />
-              <Route path="/ingredients" element={<IngredientsPage />} />
-              <Route path="/snacks" element={<SnackCatalogPage />} />
-              <Route path="/intake" element={<IntakePage />} />
-              <Route path="/recipes" element={<RecipesPage />} />
-              <Route path="/recipes/:id" element={<RecipeEditPage />} />
-              <Route path="/trips/:tripId" element={<TripRouteBoundary />}>
-                <Route index element={<TripPlannerPage />} />
-                <Route path="daily-plan" element={<DailyPlanPage />} />
-                <Route path="packing" element={<PackingScreen />} />
-                <Route path="*" element={<p className="text-destructive">Trip page not found.</p>} />
-              </Route>
-              <Route path="/packing" element={<PackingRedirect />} />
-            </Routes>
+            <Suspense fallback={<p className="text-muted-foreground p-4">Loading...</p>}>
+              <Routes>
+                <Route path="/" element={<TripIndexRedirect />} />
+                <Route path="/ingredients" element={<IngredientsPage />} />
+                <Route path="/snacks" element={<SnackCatalogPage />} />
+                <Route path="/intake" element={<IntakePage />} />
+                <Route path="/recipes" element={<RecipesPage />} />
+                <Route path="/recipes/:id" element={<RecipeEditPage />} />
+                <Route path="/trips/:tripId" element={<TripRouteBoundary />}>
+                  <Route index element={<TripPlannerPage />} />
+                  <Route path="daily-plan" element={<DailyPlanPage />} />
+                  <Route path="packing" element={<PackingScreen />} />
+                  <Route path="*" element={<p className="text-destructive">Trip page not found.</p>} />
+                </Route>
+                <Route path="/packing" element={<PackingRedirect />} />
+              </Routes>
+            </Suspense>
           </main>
         </div>
       </TripProvider>

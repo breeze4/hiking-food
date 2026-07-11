@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { put } from '../api';
 import { useTrip } from '../context/TripContext';
+import { useMutation } from '../hooks/useMutation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,11 @@ function TripCalculator() {
     }
   }, [tripDetail]);
 
+  const saveMutation = useMutation(async (payload) => {
+    await put(`/trips/${tripDetail.id}`, payload);
+    refreshTrip();
+  });
+
   if (!tripDetail) return null;
 
   const totalDays = form.first_day_fraction + form.full_days + form.last_day_fraction;
@@ -36,9 +42,8 @@ function TripCalculator() {
     const updated = { ...form, [field]: value };
     setForm(updated);
     clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      await put(`/trips/${tripDetail.id}`, updated);
-      refreshTrip();
+    saveTimer.current = setTimeout(() => {
+      saveMutation.run(updated);
     }, 500);
   }
 
@@ -66,6 +71,7 @@ function TripCalculator() {
                 <Input
                   id="first-day"
                   type="number"
+                  disabled={saveMutation.pending}
                   min="0" max="1" step="0.25"
                   value={form.first_day_fraction}
                   onChange={(e) => handleChange('first_day_fraction', parseFloat(e.target.value) || 0)}
@@ -77,6 +83,7 @@ function TripCalculator() {
                 <Input
                   id="full-days"
                   type="number"
+                  disabled={saveMutation.pending}
                   min="0" step="1"
                   value={form.full_days}
                   onChange={(e) => handleChange('full_days', parseInt(e.target.value) || 0)}
@@ -88,6 +95,7 @@ function TripCalculator() {
                 <Input
                   id="last-day"
                   type="number"
+                  disabled={saveMutation.pending}
                   min="0" max="1" step="0.25"
                   value={form.last_day_fraction}
                   onChange={(e) => handleChange('last_day_fraction', parseFloat(e.target.value) || 0)}
@@ -99,6 +107,7 @@ function TripCalculator() {
                 <Input
                   id="drink-mixes"
                   type="number"
+                  disabled={saveMutation.pending}
                   min="0" step="1"
                   value={form.drink_mixes_per_day}
                   onChange={(e) => handleChange('drink_mixes_per_day', parseInt(e.target.value) || 0)}
@@ -110,6 +119,7 @@ function TripCalculator() {
                 <Input
                   id="oz-per-day"
                   type="number"
+                  disabled={saveMutation.pending}
                   min="0" step="0.5"
                   value={form.oz_per_day}
                   onChange={(e) => handleChange('oz_per_day', parseFloat(e.target.value) || 0)}
@@ -121,6 +131,7 @@ function TripCalculator() {
                 <Input
                   id="cal-per-oz"
                   type="number"
+                  disabled={saveMutation.pending}
                   min="0" step="1"
                   value={form.cal_per_oz}
                   onChange={(e) => handleChange('cal_per_oz', parseFloat(e.target.value) || 0)}
@@ -133,6 +144,9 @@ function TripCalculator() {
               {' '}&middot; Target: {totalWeight} oz
               {' '}&middot; {totalCal.toLocaleString()} cal
             </p>
+            {saveMutation.error && (
+              <p className="text-destructive text-sm mt-2">{saveMutation.error.message}</p>
+            )}
           </CardContent>
         </CollapsibleContent>
       </Card>

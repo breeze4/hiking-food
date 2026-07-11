@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { get, post, put, del } from '../api';
 import { useTrip } from '../context/TripContext';
+import { useMutation } from '../hooks/useMutation';
 import ProgressMeter from './ProgressMeter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,6 +56,40 @@ function SnackSelection() {
     if (addingSlot && searchRef.current) searchRef.current.focus();
   }, [addingSlot]);
 
+  const addMutation = useMutation(async (catalogId, slot) => {
+    await post(`/trips/${tripDetail.id}/snacks`, {
+      catalog_item_id: catalogId,
+      servings: 1,
+      slot,
+    });
+    setAddingSlot(null);
+    setSearch('');
+    setCategoryFilter('');
+    refreshTrip();
+  });
+
+  const servingsMutation = useMutation(async (snackId, newServings) => {
+    await put(`/trips/${tripDetail.id}/snacks/${snackId}`, {
+      servings: newServings < 0 ? 0 : newServings,
+    });
+    refreshTrip();
+  });
+
+  const removeMutation = useMutation(async (snackId) => {
+    await del(`/trips/${tripDetail.id}/snacks/${snackId}`);
+    refreshTrip();
+  });
+
+  const notesMutation = useMutation(async (snackId, trip_notes) => {
+    await put(`/trips/${tripDetail.id}/snacks/${snackId}`, { trip_notes: trip_notes || null });
+    refreshTrip();
+  });
+
+  const slotMutation = useMutation(async (snackId, slot) => {
+    await put(`/trips/${tripDetail.id}/snacks/${snackId}`, { slot });
+    refreshTrip();
+  });
+
   if (!tripDetail) return null;
 
   const snacks = tripDetail.snacks || [];
@@ -73,39 +108,20 @@ function SnackSelection() {
     bySlot[key].push(s);
   }
 
-  async function handleAdd(catalogId, slot) {
+  const mutating = addMutation.pending || servingsMutation.pending
+    || removeMutation.pending || notesMutation.pending || slotMutation.pending;
+  const mutationError = addMutation.error || servingsMutation.error
+    || removeMutation.error || notesMutation.error || slotMutation.error;
+
+  function handleAdd(catalogId, slot) {
     if (!catalogId) return;
-    await post(`/trips/${tripDetail.id}/snacks`, {
-      catalog_item_id: catalogId,
-      servings: 1,
-      slot,
-    });
-    setAddingSlot(null);
-    setSearch('');
-    setCategoryFilter('');
-    refreshTrip();
+    addMutation.run(catalogId, slot);
   }
 
-  async function updateServings(snackId, newServings) {
-    if (newServings < 0) newServings = 0;
-    await put(`/trips/${tripDetail.id}/snacks/${snackId}`, { servings: newServings });
-    refreshTrip();
-  }
-
-  async function removeSnack(snackId) {
-    await del(`/trips/${tripDetail.id}/snacks/${snackId}`);
-    refreshTrip();
-  }
-
-  async function updateNotes(snackId, trip_notes) {
-    await put(`/trips/${tripDetail.id}/snacks/${snackId}`, { trip_notes: trip_notes || null });
-    refreshTrip();
-  }
-
-  async function updateSlot(snackId, slot) {
-    await put(`/trips/${tripDetail.id}/snacks/${snackId}`, { slot });
-    refreshTrip();
-  }
+  const updateServings = (snackId, newServings) => servingsMutation.run(snackId, newServings);
+  const removeSnack = (snackId) => removeMutation.run(snackId);
+  const updateNotes = (snackId, trip_notes) => notesMutation.run(snackId, trip_notes);
+  const updateSlot = (snackId, slot) => slotMutation.run(snackId, slot);
 
   function openAddPanel(slot) {
     setAddingSlot(slot);
@@ -142,11 +158,16 @@ function SnackSelection() {
         <CardTitle className="text-base">Snacks</CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-4">
+        {mutationError && (
+          <p className="text-destructive text-sm">{mutationError.message}</p>
+        )}
+
         {/* Drink Mixes section */}
         <DrinkMixSection
           snacks={drinkMixes}
           tripDetail={tripDetail}
           summary={summary}
+          mutating={mutating}
           isAdding={addingSlot === 'drink_mix'}
           onStartAdd={() => openAddPanel('drink_mix')}
           onCancelAdd={closeAddPanel}
@@ -169,6 +190,7 @@ function SnackSelection() {
             label={slotLabel}
             snacks={bySlot[slotValue]}
             summary={summary}
+            mutating={mutating}
             isAdding={addingSlot === slotValue}
             onStartAdd={() => openAddPanel(slotValue)}
             onCancelAdd={closeAddPanel}
@@ -210,7 +232,7 @@ function SlotMeters({ slot, summary }) {
 }
 
 function SlotSection({
-  slot, label, snacks, summary, isAdding,
+  slot, label, snacks, summary, mutating, isAdding,
   onStartAdd, onCancelAdd, onAdd,
   onUpdateServings, onUpdateNotes, onUpdateSlot, onRemove,
   search, setSearch, categoryFilter, setCategoryFilter,
@@ -234,6 +256,7 @@ function SlotSection({
           slot={slot}
           onAdd={onAdd}
           onCancel={onCancelAdd}
+          mutating={mutating}
           search={search}
           setSearch={setSearch}
           categoryFilter={categoryFilter}
@@ -270,10 +293,14 @@ function SlotSection({
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Button variant="outline" size="icon" className="h-7 w-7"
+                            aria-label={`Decrease ${s.ingredient_name} servings`}
+                            disabled={mutating}
                             onClick={() => onUpdateServings(s.id, s.servings - 1)}>-</Button>
                           <Input
                             type="number"
                             step="0.5"
+                            aria-label={`${s.ingredient_name} servings`}
+                            disabled={mutating}
                             value={s.servings}
                             onChange={(e) => {
                               const val = parseFloat(e.target.value);
@@ -282,6 +309,8 @@ function SlotSection({
                             className="w-14 text-center h-7"
                           />
                           <Button variant="outline" size="icon" className="h-7 w-7"
+                            aria-label={`Increase ${s.ingredient_name} servings`}
+                            disabled={mutating}
                             onClick={() => onUpdateServings(s.id, s.servings + 1)}>+</Button>
                         </div>
                       </TableCell>
@@ -291,14 +320,16 @@ function SlotSection({
                       <TableCell>
                         <Input
                           defaultValue={s.trip_notes || ''}
+                          aria-label={`${s.ingredient_name} notes`}
+                          disabled={mutating}
                           onBlur={(e) => onUpdateNotes(s.id, e.target.value)}
                           placeholder="notes..."
                           className="h-7 text-xs w-28"
                         />
                       </TableCell>
                       <TableCell>
-                        <Select value={s.slot || slot} onValueChange={(v) => onUpdateSlot(s.id, v)}>
-                          <SelectTrigger className="h-7 text-xs w-28">
+                        <Select value={s.slot || slot} disabled={mutating} onValueChange={(v) => onUpdateSlot(s.id, v)}>
+                          <SelectTrigger className="h-7 text-xs w-28" aria-label={`${s.ingredient_name} slot`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -310,6 +341,8 @@ function SlotSection({
                       </TableCell>
                       <TableCell>
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                          aria-label={`Remove ${s.ingredient_name}`}
+                          disabled={mutating}
                           onClick={() => onRemove(s.id)}>×</Button>
                       </TableCell>
                     </TableRow>
@@ -326,8 +359,8 @@ function SlotSection({
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-sm">{s.ingredient_name}</span>
                   <div className="flex items-center gap-1">
-                    <Select value={s.slot || slot} onValueChange={(v) => onUpdateSlot(s.id, v)}>
-                      <SelectTrigger className="h-7 text-xs w-28">
+                    <Select value={s.slot || slot} disabled={mutating} onValueChange={(v) => onUpdateSlot(s.id, v)}>
+                      <SelectTrigger className="h-7 text-xs w-28" aria-label={`${s.ingredient_name} slot`}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -337,15 +370,21 @@ function SlotSection({
                       </SelectContent>
                     </Select>
                     <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                      aria-label={`Remove ${s.ingredient_name}`}
+                      disabled={mutating}
                       onClick={() => onRemove(s.id)}>×</Button>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     <Button variant="outline" size="icon" className="h-8 w-8"
+                      aria-label={`Decrease ${s.ingredient_name} servings`}
+                      disabled={mutating}
                       onClick={() => onUpdateServings(s.id, s.servings - 1)}>-</Button>
                     <span className="w-10 text-center font-medium">{s.servings}</span>
                     <Button variant="outline" size="icon" className="h-8 w-8"
+                      aria-label={`Increase ${s.ingredient_name} servings`}
+                      disabled={mutating}
                       onClick={() => onUpdateServings(s.id, s.servings + 1)}>+</Button>
                   </div>
                   <div className="text-xs text-muted-foreground text-right">
@@ -385,7 +424,7 @@ function DrinkMixMeters({ snacks, summary, budget }) {
 }
 
 function DrinkMixSection({
-  snacks, tripDetail, summary, isAdding, onStartAdd, onCancelAdd, onAdd, onRemove,
+  snacks, tripDetail, summary, mutating, isAdding, onStartAdd, onCancelAdd, onAdd, onRemove,
   onUpdateServings, onUpdateNotes,
   search, setSearch, categoryFilter, setCategoryFilter, filtered, searchRef,
 }) {
@@ -411,6 +450,7 @@ function DrinkMixSection({
           slot="drink_mix"
           onAdd={onAdd}
           onCancel={onCancelAdd}
+          mutating={mutating}
           search={search}
           setSearch={setSearch}
           categoryFilter={categoryFilter}
@@ -445,9 +485,13 @@ function DrinkMixSection({
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Button variant="outline" size="icon" className="h-7 w-7"
+                            aria-label={`Decrease ${s.ingredient_name} servings`}
+                            disabled={mutating}
                             onClick={() => onUpdateServings(s.id, s.servings - 1)}>-</Button>
                           <span className="w-10 text-center font-medium">{s.servings}</span>
                           <Button variant="outline" size="icon" className="h-7 w-7"
+                            aria-label={`Increase ${s.ingredient_name} servings`}
+                            disabled={mutating}
                             onClick={() => onUpdateServings(s.id, s.servings + 1)}>+</Button>
                         </div>
                       </TableCell>
@@ -456,6 +500,8 @@ function DrinkMixSection({
                       <TableCell>
                         <Input
                           defaultValue={s.trip_notes || ''}
+                          aria-label={`${s.ingredient_name} notes`}
+                          disabled={mutating}
                           onBlur={(e) => onUpdateNotes(s.id, e.target.value)}
                           placeholder="notes..."
                           className="h-7 text-xs w-28"
@@ -463,6 +509,8 @@ function DrinkMixSection({
                       </TableCell>
                       <TableCell>
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                          aria-label={`Remove ${s.ingredient_name}`}
+                          disabled={mutating}
                           onClick={() => onRemove(s.id)}>×</Button>
                       </TableCell>
                     </TableRow>
@@ -477,14 +525,20 @@ function DrinkMixSection({
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-sm">{s.ingredient_name}</span>
                   <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                    aria-label={`Remove ${s.ingredient_name}`}
+                    disabled={mutating}
                     onClick={() => onRemove(s.id)}>×</Button>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     <Button variant="outline" size="icon" className="h-8 w-8"
+                      aria-label={`Decrease ${s.ingredient_name} servings`}
+                      disabled={mutating}
                       onClick={() => onUpdateServings(s.id, s.servings - 1)}>-</Button>
                     <span className="w-10 text-center font-medium">{s.servings}</span>
                     <Button variant="outline" size="icon" className="h-8 w-8"
+                      aria-label={`Increase ${s.ingredient_name} servings`}
+                      disabled={mutating}
                       onClick={() => onUpdateServings(s.id, s.servings + 1)}>+</Button>
                   </div>
                   <div className="text-xs text-muted-foreground text-right">
@@ -503,7 +557,7 @@ function DrinkMixSection({
   );
 }
 
-function AddPanel({ onAdd, onCancel, search, setSearch, categoryFilter, setCategoryFilter, filtered, searchRef, hideCategoryFilter }) {
+function AddPanel({ onAdd, onCancel, mutating, search, setSearch, categoryFilter, setCategoryFilter, filtered, searchRef, hideCategoryFilter }) {
   return (
     <div className="mb-4 border rounded-lg bg-muted/30">
       <div className="p-3 border-b flex items-center gap-2">
@@ -542,7 +596,9 @@ function AddPanel({ onAdd, onCancel, search, setSearch, categoryFilter, setCateg
           <button
             key={c.id}
             onClick={() => onAdd(c.id)}
-            className="w-full text-left px-3 py-2 hover:bg-accent transition-colors flex items-center justify-between gap-4 border-b last:border-b-0"
+            disabled={mutating}
+            aria-label={`Add ${c.ingredient_name}`}
+            className="w-full text-left px-3 py-2 hover:bg-accent transition-colors flex items-center justify-between gap-4 border-b last:border-b-0 disabled:opacity-50 disabled:pointer-events-none"
           >
             <div className="flex items-center gap-2 min-w-0">
               <span className="font-medium text-sm truncate">{c.ingredient_name}</span>
