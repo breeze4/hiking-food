@@ -24,7 +24,7 @@ function TripCalculator() {
         cal_per_oz: tripDetail.cal_per_oz ?? 125,
       });
     }
-  }, [tripDetail?.id]);
+  }, [tripDetail]);
 
   if (!tripDetail) return null;
 

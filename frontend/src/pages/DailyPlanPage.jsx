@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { get, post, del, patch } from '../api';
 import { Button } from '@/components/ui/button';
@@ -233,9 +233,7 @@ function DailyPlanPage() {
   const [resetOpen, setResetOpen] = useState(false);
   const [allocAmounts, setAllocAmounts] = useState({});
 
-  useEffect(() => { loadPlan(); }, [tripId]);
-
-  async function loadPlan() {
+  const loadPlan = useCallback(async () => {
     try {
       setPlan(await get(`/trips/${tripId}/daily-plan`));
       setError(null);
@@ -244,7 +242,9 @@ function DailyPlanPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [tripId]);
+
+  useEffect(() => { loadPlan(); }, [loadPlan]);
 
   async function handleAutoFill() {
     try {

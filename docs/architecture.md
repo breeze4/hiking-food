@@ -60,10 +60,10 @@ Specs, plans, and session logs live in `docs/`; `docs/plans/INDEX.md` is the aut
 
 ## Deployment
 
-**Method**: A single `deploy/deploy.sh` script rsyncs source to `beebaby`, installs deps, runs migrations and seed, builds the frontend on the server, then restarts a systemd user service.
+**Method**: `cicd-router` watches verified commits to `main`, runs the exact-SHA project gates from `scripts/cicd-router-gates.sh`, rsyncs the approved source to `beebaby`, runs `deploy/remote-bootstrap.sh`, restarts the user systemd service, and performs the configured health check.
 
 **Service**: Runs as a user-level systemd unit (`hiking-food.service`) on port 8000 with no reverse proxy in this repo. `loginctl enable-linger` keeps it alive after logout.
 
 **Database persistence**: The SQLite file on the server is never overwritten — rsync excludes `*.db`, and schema changes are applied by the idempotent startup migrations.
 
-**No CI/CD** — deploy is manual from the dev machine.
+**CI/CD**: cicd-router provides the project gate, exact-SHA deployment, service restart, smoke check, and result publication for commits pushed to `main`.

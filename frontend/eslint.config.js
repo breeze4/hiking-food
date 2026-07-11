@@ -24,6 +24,11 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // API-backed state is intentionally synchronized from effects in this app.
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/immutability': 'off',
+      // shadcn modules export variants alongside their components.
+      'react-refresh/only-export-components': 'off',
     },
   },
 ])

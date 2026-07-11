@@ -389,7 +389,6 @@ function DrinkMixSection({
   onUpdateServings, onUpdateNotes,
   search, setSearch, categoryFilter, setCategoryFilter, filtered, searchRef,
 }) {
-  const totalServings = snacks.reduce((sum, s) => sum + s.servings, 0);
   const mixesPerDay = tripDetail.drink_mixes_per_day || 2;
   const totalDays = (tripDetail.first_day_fraction || 0) + (tripDetail.full_days || 0) + (tripDetail.last_day_fraction || 0);
   const budget = mixesPerDay * totalDays;
@@ -504,7 +503,7 @@ function DrinkMixSection({
   );
 }
 
-function AddPanel({ slot, onAdd, onCancel, search, setSearch, categoryFilter, setCategoryFilter, filtered, searchRef, hideCategoryFilter }) {
+function AddPanel({ onAdd, onCancel, search, setSearch, categoryFilter, setCategoryFilter, filtered, searchRef, hideCategoryFilter }) {
   return (
     <div className="mb-4 border rounded-lg bg-muted/30">
       <div className="p-3 border-b flex items-center gap-2">

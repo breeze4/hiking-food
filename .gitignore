@@ -19,3 +19,6 @@ dist/
 
 # PDF (managed separately)
 *.pdf
+
+# Generated browser verification artifacts
+screenshots/

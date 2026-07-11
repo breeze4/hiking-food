@@ -12,5 +12,6 @@ backend/venv/bin/pip install --quiet -r backend/requirements.txt
 backend/venv/bin/pip install --quiet pytest httpx
 backend/venv/bin/python -m pytest backend/tests
 
-npm --prefix frontend ci
-npm --prefix frontend run build
+pnpm --dir frontend install --frozen-lockfile
+pnpm --dir frontend lint
+pnpm --dir frontend build

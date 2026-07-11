@@ -13,13 +13,11 @@ export function TripProvider({ children }) {
     try {
       const data = await get('/trips');
       setTrips(data);
-      if (data.length > 0 && !activeTripId) {
-        setActiveTripId(data[0].id);
-      }
+      setActiveTripId((currentId) => currentId ?? data[0]?.id ?? null);
     } catch (err) {
       console.error('Failed to load trips', err);
     }
-  }, [activeTripId]);
+  }, []);
 
   const loadTripDetail = useCallback(async () => {
     if (!activeTripId) {
@@ -42,9 +40,9 @@ export function TripProvider({ children }) {
     }
   }, [activeTripId]);
 
-  useEffect(() => { loadTrips(); }, []);
-  useEffect(() => { loadTripDetail(); }, [activeTripId]);
-  useEffect(() => { loadSummary(); }, [activeTripId]);
+  useEffect(() => { loadTrips(); }, [loadTrips]);
+  useEffect(() => { loadTripDetail(); }, [loadTripDetail]);
+  useEffect(() => { loadSummary(); }, [loadSummary]);
 
   const selectTrip = (id) => setActiveTripId(id);
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { get, put, patch } from '../api';
 import { Button } from '@/components/ui/button';
@@ -23,9 +23,7 @@ function PackingScreen() {
   const [shoppingList, setShoppingList] = useState({ items: [], essentials: [] });
   const [error, setError] = useState(null);
 
-  useEffect(() => { loadData(); }, [tripId]);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       const [packingData, shopData] = await Promise.all([
         get(`/trips/${tripId}/packing`),
@@ -37,7 +35,9 @@ function PackingScreen() {
     } catch (err) {
       setError(err.message);
     }
-  }
+  }, [tripId]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   async function toggleOnHand(ingredientId) {
     try {

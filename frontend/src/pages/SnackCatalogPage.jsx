@@ -74,11 +74,6 @@ function SnackCatalogPage() {
     });
   }
 
-  function sortArrow(col) {
-    if (sortCol !== col) return '';
-    return sortAsc ? ' \u25B2' : ' \u25BC';
-  }
-
   async function handleAdd(e) {
     e.preventDefault();
     try {

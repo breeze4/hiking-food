@@ -36,8 +36,8 @@ Start the frontend (Vite proxies `/api` to `:8000`):
 
 ```sh
 cd frontend
-npm install
-npm run dev
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
 Run tests:

@@ -43,7 +43,7 @@ function RecipeEditPage() {
         setRecipeIngredients(data.ingredients || []);
       }).catch((err) => setError(err.message));
     }
-  }, [id]);
+  }, [id, isNew]);
 
   const ingLookup = useMemo(() => {
     const map = {};
