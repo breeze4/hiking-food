@@ -1,5 +1,13 @@
 # Agent Trip Planning API Playbook
 
+## Status
+
+Superseded by [Plan 42: Remote Chatbot MCP](42-remote-chatbot-mcp.md). The MCP
+now provides the canonical, authenticated conversational interface and embeds
+the safety and idempotency rules this raw-REST playbook was intended to teach.
+This plan is retained as historical design context and should not be implemented
+as a second agent-facing contract.
+
 ## Goal
 
 Make creating a new food plan from a recent, seasonally similar trip a quick agent workflow: select the best prior trip, clone it through the API, update the new trip's identity and duration, regenerate the daily allocation, validate the result, and hand the new plan back to the user for small edits in the app.

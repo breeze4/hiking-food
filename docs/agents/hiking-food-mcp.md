@@ -90,7 +90,7 @@ chat. The systemd unit reads it through `EnvironmentFile`.
 codex mcp add hiking-food \
   --url https://beebaby.tailc65f2f.ts.net/hiking-food/mcp \
   --oauth-resource https://beebaby.tailc65f2f.ts.net/hiking-food/mcp
-codex mcp login hiking-food --scopes "hiking-food offline_access"
+codex mcp login hiking-food --scopes hiking-food
 codex mcp get hiking-food --json
 ```
 
@@ -99,11 +99,27 @@ injected into the task.
 
 ### ChatGPT
 
-In a plan/workspace that permits custom MCP apps, enable developer mode, create
-a custom app, choose a remote MCP endpoint, enter the public endpoint above,
-scan tools, and complete OAuth. Test a read with "list my hiking food trips"
-before approving a write. Write/modify MCP actions depend on the ChatGPT plan
-and workspace controls.
+In the Plugins directory, choose **Create app** and enter:
+
+- Name: `Hiking Food`
+- Description: `Create, clone, review, and adjust backpacking trip food plans.`
+- Connection: `Server URL`
+- MCP Server URL: `https://beebaby.tailc65f2f.ts.net/hiking-food/mcp`
+- Authentication: `OAuth`
+
+Accept the unreviewed-server warning, create the plugin, and authorize it with
+the same single-user password used by the Brain MCP. Test a read with "list my
+hiking food trips" before approving a write. Write/modify MCP actions depend on
+the ChatGPT plan and workspace controls.
+
+A useful first planning prompt is:
+
+```text
+Use the Hiking Food plugin. First list my existing trips. Before making changes,
+confirm the source trip and whether the destination already exists. After any
+changes, regenerate the daily plan and verify unallocated food, daily calories,
+total calories, and total weight. Finish by summarizing what changed.
+```
 
 ### Claude
 

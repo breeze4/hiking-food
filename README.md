@@ -64,6 +64,9 @@ and moving individual daily assignments. See
 [`docs/agents/hiking-food-mcp.md`](docs/agents/hiking-food-mcp.md) for client setup,
 tool semantics, and the safe planning workflow.
 
+The live endpoint and OAuth flow have been verified with Codex and a custom
+ChatGPT plugin. Claude can use the same remote MCP URL and OAuth contract.
+
 ## Deploy
 
 Deploys run automatically through cicd-router on each commit to `main` (see `cicd-router.project.yml`); there is no manual deploy script.
