@@ -10,9 +10,7 @@ from mcp.types import ToolAnnotations
 from sqlalchemy.orm import Session
 
 from database import SessionLocal
-from models import (
-    Ingredient, Recipe, SnackCatalogItem, Trip, TripDayAssignment, TripMeal, TripSnack,
-)
+from models import Ingredient, SnackCatalogItem, Trip
 from routers.daily_plan import get_daily_plan as build_daily_plan
 from routers.daily_plan import run_auto_fill
 from routers.recipes import list_recipes as build_recipe_list
@@ -21,6 +19,7 @@ from routers.trips import (
     _build_trip_detail, get_packing_detail, get_shopping_list, get_trip_summary,
 )
 from services.autofill import build_day_list
+from services.trip_planning import TripPlanningService
 
 
 READ_ONLY = ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True)
@@ -45,18 +44,6 @@ def _trip(db: Session, trip_id: int) -> Trip:
     if not trip:
         raise ValueError(f"Trip {trip_id} was not found")
     return trip
-
-
-def _ensure_unique_name(db: Session, name: str, exclude_id: int | None = None) -> None:
-    query = db.query(Trip).filter(Trip.name == name.strip())
-    if exclude_id is not None:
-        query = query.filter(Trip.id != exclude_id)
-    if query.first():
-        raise ValueError(f'A trip named "{name.strip()}" already exists')
-
-
-def _clear_assignments(db: Session, trip_id: int) -> None:
-    db.query(TripDayAssignment).filter(TripDayAssignment.trip_id == trip_id).delete()
 
 
 def build_mcp_server() -> FastMCP:
@@ -147,21 +134,16 @@ def build_mcp_server() -> FastMCP:
         oz_per_day: float = 22.0, cal_per_oz: float = 125.0,
     ) -> dict:
         """Create a new empty trip. Prefer clone_trip when a relevant prior plan exists."""
-        if not name.strip() or full_days < 0:
-            raise ValueError("name is required and full_days cannot be negative")
-        if first_day_fraction < 0 or last_day_fraction < 0:
-            raise ValueError("day fractions cannot be negative")
         with _session() as db:
-            _ensure_unique_name(db, name)
-            trip = Trip(
-                name=name.strip(), first_day_fraction=first_day_fraction,
-                full_days=full_days, last_day_fraction=last_day_fraction,
-                drink_mixes_per_day=drink_mixes_per_day,
-                oz_per_day=oz_per_day, cal_per_oz=cal_per_oz,
-            )
-            db.add(trip)
-            db.commit()
-            db.refresh(trip)
+            trip = TripPlanningService(db).create_trip({
+                "name": name,
+                "first_day_fraction": first_day_fraction,
+                "full_days": full_days,
+                "last_day_fraction": last_day_fraction,
+                "drink_mixes_per_day": drink_mixes_per_day,
+                "oz_per_day": oz_per_day,
+                "cal_per_oz": cal_per_oz,
+            })
             return {"trip": _build_trip_detail(trip, db), "daily_plan_needs_autofill": True}
 
     @mcp.tool(annotations=WRITE_NEW)
@@ -173,32 +155,17 @@ def build_mcp_server() -> FastMCP:
     ) -> dict:
         """Clone a prior trip into a uniquely named destination and optionally change its shape."""
         with _session() as db:
-            source = _trip(db, source_trip_id)
-            _ensure_unique_name(db, name)
-            destination = Trip(
-                name=name.strip(),
-                first_day_fraction=source.first_day_fraction if first_day_fraction is None else first_day_fraction,
-                full_days=source.full_days if full_days is None else full_days,
-                last_day_fraction=source.last_day_fraction if last_day_fraction is None else last_day_fraction,
-                drink_mixes_per_day=(source.drink_mixes_per_day if drink_mixes_per_day is None else drink_mixes_per_day),
-                oz_per_day=source.oz_per_day if oz_per_day is None else oz_per_day,
-                cal_per_oz=source.cal_per_oz if cal_per_oz is None else cal_per_oz,
-            )
-            db.add(destination)
-            db.flush()
-            for snack in db.query(TripSnack).filter(TripSnack.trip_id == source.id).all():
-                db.add(TripSnack(
-                    trip_id=destination.id, catalog_item_id=snack.catalog_item_id,
-                    servings=snack.servings, slot=snack.slot, trip_notes=snack.trip_notes,
-                ))
-            for meal in db.query(TripMeal).filter(TripMeal.trip_id == source.id).all():
-                db.add(TripMeal(
-                    trip_id=destination.id, recipe_id=meal.recipe_id, quantity=meal.quantity,
-                ))
-            db.commit()
-            db.refresh(destination)
+            destination = TripPlanningService(db).clone_trip(source_trip_id, {
+                "name": name,
+                "first_day_fraction": first_day_fraction,
+                "full_days": full_days,
+                "last_day_fraction": last_day_fraction,
+                "drink_mixes_per_day": drink_mixes_per_day,
+                "oz_per_day": oz_per_day,
+                "cal_per_oz": cal_per_oz,
+            })
             return {
-                "source_trip_id": source.id,
+                "source_trip_id": source_trip_id,
                 "trip": _build_trip_detail(destination, db),
                 "daily_plan_needs_autofill": True,
             }
@@ -212,56 +179,30 @@ def build_mcp_server() -> FastMCP:
     ) -> dict:
         """Update a trip's name, duration, drink-mix target, or calorie/weight targets."""
         updates = {
-            "name": name.strip() if name is not None else None,
+            "name": name,
             "first_day_fraction": first_day_fraction, "full_days": full_days,
             "last_day_fraction": last_day_fraction,
             "drink_mixes_per_day": drink_mixes_per_day,
             "oz_per_day": oz_per_day, "cal_per_oz": cal_per_oz,
         }
         with _session() as db:
-            trip = _trip(db, trip_id)
-            if name is not None:
-                if not name.strip():
-                    raise ValueError("name cannot be blank")
-                _ensure_unique_name(db, name, exclude_id=trip_id)
-            for field, value in updates.items():
-                if value is not None:
-                    setattr(trip, field, value)
-            _clear_assignments(db, trip_id)
-            db.commit()
-            db.refresh(trip)
+            trip = TripPlanningService(db).update_trip(
+                trip_id,
+                {field: value for field, value in updates.items() if value is not None},
+            )
             return {"trip": _build_trip_detail(trip, db), "daily_plan_needs_autofill": True}
 
     @mcp.tool(annotations=WRITE_UPDATE)
     def set_trip_meal_quantity(trip_id: int, recipe_id: int, quantity: int) -> dict:
         """Set a recipe's total quantity on a trip. Use zero to remove it."""
-        if quantity < 0:
-            raise ValueError("quantity cannot be negative")
         with _session() as db:
-            _trip(db, trip_id)
-            recipe = db.get(Recipe, recipe_id)
-            if not recipe:
-                raise ValueError(f"Recipe {recipe_id} was not found")
-            rows = db.query(TripMeal).filter(
-                TripMeal.trip_id == trip_id, TripMeal.recipe_id == recipe_id
-            ).all()
-            if quantity == 0:
-                for row in rows:
-                    db.delete(row)
-                action = "removed"
-            elif rows:
-                rows[0].quantity = quantity
-                for duplicate in rows[1:]:
-                    db.delete(duplicate)
-                action = "updated"
-            else:
-                db.add(TripMeal(trip_id=trip_id, recipe_id=recipe_id, quantity=quantity))
-                action = "added"
-            _clear_assignments(db, trip_id)
-            db.commit()
+            result = TripPlanningService(db).set_meal_quantity(
+                trip_id, recipe_id, quantity
+            )
             return {
-                "trip_id": trip_id, "recipe_id": recipe_id, "recipe_name": recipe.name,
-                "quantity": quantity, "action": action, "daily_plan_needs_autofill": True,
+                "trip_id": trip_id, "recipe_id": recipe_id, "recipe_name": result.name,
+                "quantity": int(result.amount), "action": result.action,
+                "daily_plan_needs_autofill": True,
             }
 
     @mcp.tool(annotations=WRITE_UPDATE)
@@ -269,44 +210,14 @@ def build_mcp_server() -> FastMCP:
         trip_id: int, catalog_item_id: int, servings: float, slot: str | None = None,
     ) -> dict:
         """Set a snack catalog item's total servings on a trip. Use zero to remove it."""
-        if servings < 0:
-            raise ValueError("servings cannot be negative")
-        if slot is not None and slot not in {"lunch", "snacks"}:
-            raise ValueError("slot must be lunch or snacks")
         with _session() as db:
-            _trip(db, trip_id)
-            item = db.get(SnackCatalogItem, catalog_item_id)
-            if not item:
-                raise ValueError(f"Snack catalog item {catalog_item_id} was not found")
-            ingredient = db.get(Ingredient, item.ingredient_id)
-            rows = db.query(TripSnack).filter(
-                TripSnack.trip_id == trip_id,
-                TripSnack.catalog_item_id == catalog_item_id,
-            ).all()
-            if servings == 0:
-                for row in rows:
-                    db.delete(row)
-                action = "removed"
-            elif rows:
-                rows[0].servings = servings
-                if slot is not None:
-                    rows[0].slot = slot
-                for duplicate in rows[1:]:
-                    db.delete(duplicate)
-                action = "updated"
-            else:
-                default_slot = "lunch" if item.category == "lunch" else "snacks"
-                db.add(TripSnack(
-                    trip_id=trip_id, catalog_item_id=catalog_item_id,
-                    servings=servings, slot=slot or default_slot,
-                ))
-                action = "added"
-            _clear_assignments(db, trip_id)
-            db.commit()
+            result = TripPlanningService(db).set_snack_servings(
+                trip_id, catalog_item_id, servings, slot
+            )
             return {
                 "trip_id": trip_id, "catalog_item_id": catalog_item_id,
-                "ingredient_name": ingredient.name, "servings": servings,
-                "action": action, "daily_plan_needs_autofill": True,
+                "ingredient_name": result.name, "servings": result.amount,
+                "action": result.action, "daily_plan_needs_autofill": True,
             }
 
     @mcp.tool(annotations=WRITE_UPDATE)
@@ -319,30 +230,29 @@ def build_mcp_server() -> FastMCP:
     @mcp.tool(annotations=WRITE_UPDATE)
     def update_daily_assignment(
         trip_id: int, assignment_id: int, day_number: int | None = None,
-        slot: Literal["breakfast", "lunch", "snacks", "dinner"] | None = None,
+        slot: Literal[
+            "breakfast", "breakfast_drinks", "morning_snacks", "lunch",
+            "snacks", "afternoon_snacks", "dinner", "evening_drinks",
+            "all_day_drinks",
+        ] | None = None,
         servings: float | None = None,
     ) -> dict:
         """Move, resize, or remove one existing daily-plan assignment. Set servings to zero to remove."""
         with _session() as db:
-            trip = _trip(db, trip_id)
-            assignment = db.get(TripDayAssignment, assignment_id)
-            if not assignment or assignment.trip_id != trip_id:
-                raise ValueError(f"Assignment {assignment_id} was not found on trip {trip_id}")
-            if day_number is not None:
-                valid_days = {day["day_number"] for day in build_day_list(trip)}
-                if day_number not in valid_days:
-                    raise ValueError(f"day_number must be one of {sorted(valid_days)}")
-                assignment.day_number = day_number
-            if slot is not None:
-                assignment.slot = slot
-            if servings is not None:
-                if servings < 0:
-                    raise ValueError("servings cannot be negative")
-                if servings == 0:
-                    db.delete(assignment)
-                else:
-                    assignment.servings = servings
-            db.commit()
+            planner = TripPlanningService(db)
+            if servings == 0:
+                planner.remove_assignment(trip_id, assignment_id)
+            else:
+                fields = {
+                    "day_number": day_number,
+                    "slot": "afternoon_snacks" if slot == "snacks" else slot,
+                    "servings": servings,
+                }
+                planner.update_assignment(
+                    trip_id,
+                    assignment_id,
+                    {field: value for field, value in fields.items() if value is not None},
+                )
             return {"trip_id": trip_id, "daily_plan": build_daily_plan(trip_id, db)}
 
     return mcp

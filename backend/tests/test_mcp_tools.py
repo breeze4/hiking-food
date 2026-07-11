@@ -102,3 +102,22 @@ def test_inventory_change_clears_stale_assignments(test_session):
     tools["set_trip_meal_quantity"].fn(source_id, recipe_id, 1)
     with test_session() as db:
         assert db.query(TripDayAssignment).filter_by(trip_id=source_id).count() == 0
+
+
+def test_assignment_update_cannot_exceed_trip_inventory():
+    tools = _tools()
+    trip_id = tools["list_trips"].fn()["trips"][0]["id"]
+    plan = tools["auto_fill_daily_plan"].fn(trip_id)["daily_plan"]
+    assignment = next(
+        item
+        for day in plan["days"]
+        for item in day["items"]
+        if item["source_type"] == "snack"
+    )
+
+    with pytest.raises(ValueError, match="Cannot allocate"):
+        tools["update_daily_assignment"].fn(
+            trip_id,
+            assignment["id"],
+            servings=5,
+        )

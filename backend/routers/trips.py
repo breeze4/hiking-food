@@ -1,5 +1,3 @@
-import math
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -16,17 +14,16 @@ from schemas import (
 )
 from calculator import compute_trip_targets
 from services.recipe_calc import compute_recipe_totals
+from services.trip_planning import (
+    FoodOptionNotFoundError,
+    TripConflictError,
+    TripNotFoundError,
+    TripPlanningError,
+    TripPlanningService,
+    TripSelectionNotFoundError,
+)
 
 router = APIRouter(prefix="/api/trips", tags=["trips"])
-
-CATEGORY_TO_SLOT = {
-    "drink_mix": "snacks",
-    "bars_energy": "snacks",
-    "lunch": "lunch",
-    "salty": "snacks",
-    "sweet": "snacks",
-}
-
 
 def get_db():
     db = SessionLocal()
@@ -141,120 +138,113 @@ def get_trip(trip_id: int, db: Session = Depends(get_db)):
 
 @router.post("", response_model=TripDetailRead, status_code=201)
 def create_trip(data: TripCreate, db: Session = Depends(get_db)):
-    trip = Trip(**data.model_dump())
-    db.add(trip)
-    db.commit()
-    db.refresh(trip)
+    try:
+        trip = TripPlanningService(db).create_trip(data.model_dump())
+    except TripConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except TripPlanningError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return _build_trip_detail(trip, db)
 
 
 @router.put("/{trip_id}", response_model=TripDetailRead)
 def update_trip(trip_id: int, data: TripUpdate, db: Session = Depends(get_db)):
-    trip = db.get(Trip, trip_id)
-    if not trip:
-        raise HTTPException(status_code=404, detail="Trip not found")
-    updates = data.model_dump(exclude_unset=True)
-    for key, value in updates.items():
-        setattr(trip, key, value)
-    db.commit()
-    db.refresh(trip)
+    try:
+        trip = TripPlanningService(db).update_trip(
+            trip_id,
+            data.model_dump(exclude_unset=True),
+        )
+    except TripNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except TripConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except TripPlanningError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return _build_trip_detail(trip, db)
 
 
 @router.delete("/{trip_id}", status_code=204)
 def delete_trip(trip_id: int, db: Session = Depends(get_db)):
-    trip = db.get(Trip, trip_id)
-    if not trip:
-        raise HTTPException(status_code=404, detail="Trip not found")
-    db.query(TripSnack).filter(TripSnack.trip_id == trip_id).delete()
-    db.query(TripMeal).filter(TripMeal.trip_id == trip_id).delete()
-    db.delete(trip)
-    db.commit()
+    try:
+        TripPlanningService(db).delete_trip(trip_id)
+    except TripNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 # --- Trip Snacks ---
 
 @router.post("/{trip_id}/snacks", response_model=TripSnackRead, status_code=201)
 def add_trip_snack(trip_id: int, data: TripSnackCreate, db: Session = Depends(get_db)):
-    trip = db.get(Trip, trip_id)
-    if not trip:
-        raise HTTPException(status_code=404, detail="Trip not found")
-    cat_item = db.get(SnackCatalogItem, data.catalog_item_id)
-    if not cat_item:
-        raise HTTPException(status_code=400, detail="Snack catalog item not found")
-    fields = data.model_dump()
-    if not fields.get("slot"):
-        fields["slot"] = CATEGORY_TO_SLOT.get(cat_item.category, "snacks")
-    if cat_item.category == "drink_mix":
-        fields["servings"] = max(1, math.ceil(fields.get("servings") or 1))
-    ts = TripSnack(trip_id=trip_id, **fields)
-    db.add(ts)
-    db.commit()
-    db.refresh(ts)
+    try:
+        ts = TripPlanningService(db).add_snack(trip_id, data.model_dump())
+    except TripNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except FoodOptionNotFoundError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except TripPlanningError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return _build_trip_snack(ts, db)
 
 
 @router.put("/{trip_id}/snacks/{snack_id}", response_model=TripSnackRead)
 def update_trip_snack(trip_id: int, snack_id: int, data: TripSnackUpdate, db: Session = Depends(get_db)):
-    ts = db.get(TripSnack, snack_id)
-    if not ts or ts.trip_id != trip_id:
-        raise HTTPException(status_code=404, detail="Trip snack not found")
-    updates = data.model_dump(exclude_unset=True)
-    if "servings" in updates:
-        cat_item = db.get(SnackCatalogItem, ts.catalog_item_id)
-        if cat_item and cat_item.category == "drink_mix":
-            updates["servings"] = math.ceil(updates["servings"])
-    for key, value in updates.items():
-        setattr(ts, key, value)
-    db.commit()
-    db.refresh(ts)
+    try:
+        ts = TripPlanningService(db).update_snack(
+            trip_id,
+            snack_id,
+            data.model_dump(exclude_unset=True),
+        )
+    except TripSelectionNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except TripPlanningError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return _build_trip_snack(ts, db)
 
 
 @router.delete("/{trip_id}/snacks/{snack_id}", status_code=204)
 def remove_trip_snack(trip_id: int, snack_id: int, db: Session = Depends(get_db)):
-    ts = db.get(TripSnack, snack_id)
-    if not ts or ts.trip_id != trip_id:
-        raise HTTPException(status_code=404, detail="Trip snack not found")
-    db.delete(ts)
-    db.commit()
+    try:
+        TripPlanningService(db).remove_snack(trip_id, snack_id)
+    except TripSelectionNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 # --- Trip Meals ---
 
 @router.post("/{trip_id}/meals", response_model=TripMealRead, status_code=201)
 def add_trip_meal(trip_id: int, data: TripMealCreate, db: Session = Depends(get_db)):
-    trip = db.get(Trip, trip_id)
-    if not trip:
-        raise HTTPException(status_code=404, detail="Trip not found")
-    if not db.get(Recipe, data.recipe_id):
-        raise HTTPException(status_code=400, detail="Recipe not found")
-    tm = TripMeal(trip_id=trip_id, **data.model_dump())
-    db.add(tm)
-    db.commit()
-    db.refresh(tm)
+    try:
+        tm = TripPlanningService(db).add_meal(trip_id, data.model_dump())
+    except TripNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except FoodOptionNotFoundError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except TripPlanningError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return _build_trip_meal(tm, db)
 
 
 @router.put("/{trip_id}/meals/{meal_id}", response_model=TripMealRead)
 def update_trip_meal(trip_id: int, meal_id: int, data: TripMealUpdate, db: Session = Depends(get_db)):
-    tm = db.get(TripMeal, meal_id)
-    if not tm or tm.trip_id != trip_id:
-        raise HTTPException(status_code=404, detail="Trip meal not found")
-    for key, value in data.model_dump(exclude_unset=True).items():
-        setattr(tm, key, value)
-    db.commit()
-    db.refresh(tm)
+    try:
+        tm = TripPlanningService(db).update_meal(
+            trip_id,
+            meal_id,
+            data.model_dump(exclude_unset=True),
+        )
+    except TripSelectionNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except TripPlanningError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return _build_trip_meal(tm, db)
 
 
 @router.delete("/{trip_id}/meals/{meal_id}", status_code=204)
 def remove_trip_meal(trip_id: int, meal_id: int, db: Session = Depends(get_db)):
-    tm = db.get(TripMeal, meal_id)
-    if not tm or tm.trip_id != trip_id:
-        raise HTTPException(status_code=404, detail="Trip meal not found")
-    db.delete(tm)
-    db.commit()
+    try:
+        TripPlanningService(db).remove_meal(trip_id, meal_id)
+    except TripSelectionNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 # --- Summary ---
@@ -564,38 +554,8 @@ def get_shopping_list(trip_id: int, db: Session = Depends(get_db)):
 
 @router.post("/{trip_id}/clone", response_model=TripDetailRead, status_code=201)
 def clone_trip(trip_id: int, db: Session = Depends(get_db)):
-    trip = db.get(Trip, trip_id)
-    if not trip:
-        raise HTTPException(status_code=404, detail="Trip not found")
-
-    new_trip = Trip(
-        name=f"{trip.name} (copy)",
-        first_day_fraction=trip.first_day_fraction,
-        full_days=trip.full_days,
-        last_day_fraction=trip.last_day_fraction,
-        drink_mixes_per_day=trip.drink_mixes_per_day,
-        oz_per_day=trip.oz_per_day,
-        cal_per_oz=trip.cal_per_oz,
-    )
-    db.add(new_trip)
-    db.flush()
-
-    for ts in db.query(TripSnack).filter(TripSnack.trip_id == trip_id).all():
-        db.add(TripSnack(
-            trip_id=new_trip.id,
-            catalog_item_id=ts.catalog_item_id,
-            servings=ts.servings,
-            slot=ts.slot,
-            trip_notes=ts.trip_notes,
-        ))
-
-    for tm in db.query(TripMeal).filter(TripMeal.trip_id == trip_id).all():
-        db.add(TripMeal(
-            trip_id=new_trip.id,
-            recipe_id=tm.recipe_id,
-            quantity=tm.quantity,
-        ))
-
-    db.commit()
-    db.refresh(new_trip)
+    try:
+        new_trip = TripPlanningService(db).clone_trip(trip_id, {})
+    except TripNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     return _build_trip_detail(new_trip, db)

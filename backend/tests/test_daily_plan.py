@@ -378,6 +378,48 @@ def test_single_full_day_trip(c):
     assert "Mixed Nuts" in names
 
 
+def test_first_day_fraction_one_is_a_full_day(c):
+    """The frontend's default one-day trip has full-day meal eligibility."""
+    trip = _create_trip(
+        c,
+        first_day_fraction=1.0,
+        full_days=0,
+        last_day_fraction=0.0,
+    )
+    _add_meal(c, trip["id"], "Oatmeal", quantity=1)
+    _add_meal(c, trip["id"], "Rice & Beans", quantity=1)
+
+    plan = _autofill(c, trip["id"])
+
+    assert len(plan["days"]) == 1
+    assert plan["days"][0]["day_type"] == "full"
+    assert {item["slot"] for item in plan["days"][0]["items"]} == {
+        "breakfast",
+        "dinner",
+    }
+
+
+def test_last_day_fraction_one_is_a_full_day(c):
+    """A whole last-day fraction also has full-day meal eligibility."""
+    trip = _create_trip(
+        c,
+        first_day_fraction=0.0,
+        full_days=0,
+        last_day_fraction=1.0,
+    )
+    _add_meal(c, trip["id"], "Oatmeal", quantity=1)
+    _add_meal(c, trip["id"], "Rice & Beans", quantity=1)
+
+    plan = _autofill(c, trip["id"])
+
+    assert len(plan["days"]) == 1
+    assert plan["days"][0]["day_type"] == "full"
+    assert {item["slot"] for item in plan["days"][0]["items"]} == {
+        "breakfast",
+        "dinner",
+    }
+
+
 def test_all_partial_trip(c):
     """Trip with only partial days (half + half, no full days)."""
     trip = _create_trip(c, first_day_fraction=0.5, full_days=0, last_day_fraction=0.5)

@@ -13,6 +13,12 @@ from models import (
 from calculator import compute_trip_targets
 from services.autofill import auto_fill, build_day_list
 from services.recipe_calc import compute_recipe_totals
+from services.trip_planning import (
+    TripNotFoundError,
+    TripPlanningError,
+    TripPlanningService,
+    TripSelectionNotFoundError,
+)
 
 router = APIRouter(prefix="/api/trips", tags=["daily-plan"])
 
@@ -352,38 +358,44 @@ class AssignmentCreate(BaseModel):
 
 
 class AssignmentUpdate(BaseModel):
+    day_number: Optional[int] = None
+    slot: Optional[str] = None
     servings: Optional[float] = None
 
 
 @router.post("/{trip_id}/daily-plan/assignments", status_code=201)
 def add_assignment(trip_id: int, data: AssignmentCreate, db: Session = Depends(get_db)):
+    try:
+        TripPlanningService(db).add_assignment(trip_id, data.model_dump())
+    except TripNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except TripPlanningError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     trip = db.get(Trip, trip_id)
-    if not trip:
-        raise HTTPException(status_code=404, detail="Trip not found")
-    assignment = TripDayAssignment(trip_id=trip_id, **data.model_dump())
-    db.add(assignment)
-    db.commit()
     return _build_daily_plan_response(db, trip)
 
 
 @router.delete("/{trip_id}/daily-plan/assignments/{assignment_id}")
 def delete_assignment(trip_id: int, assignment_id: int, db: Session = Depends(get_db)):
-    assignment = db.get(TripDayAssignment, assignment_id)
-    if not assignment or assignment.trip_id != trip_id:
-        raise HTTPException(status_code=404, detail="Assignment not found")
-    db.delete(assignment)
-    db.commit()
+    try:
+        TripPlanningService(db).remove_assignment(trip_id, assignment_id)
+    except TripSelectionNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     trip = db.get(Trip, trip_id)
     return _build_daily_plan_response(db, trip)
 
 
 @router.patch("/{trip_id}/daily-plan/assignments/{assignment_id}")
 def update_assignment(trip_id: int, assignment_id: int, data: AssignmentUpdate, db: Session = Depends(get_db)):
-    assignment = db.get(TripDayAssignment, assignment_id)
-    if not assignment or assignment.trip_id != trip_id:
-        raise HTTPException(status_code=404, detail="Assignment not found")
-    if data.servings is not None:
-        assignment.servings = data.servings
-    db.commit()
+    try:
+        TripPlanningService(db).update_assignment(
+            trip_id,
+            assignment_id,
+            data.model_dump(exclude_unset=True),
+        )
+    except TripSelectionNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except TripPlanningError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     trip = db.get(Trip, trip_id)
     return _build_daily_plan_response(db, trip)

@@ -33,7 +33,8 @@ def build_day_list(trip):
     day_num = 1
 
     if trip.first_day_fraction and trip.first_day_fraction > 0:
-        days.append({"day_number": day_num, "type": "first_partial", "fraction": trip.first_day_fraction})
+        day_type = "full" if trip.first_day_fraction >= 1 else "first_partial"
+        days.append({"day_number": day_num, "type": day_type, "fraction": trip.first_day_fraction})
         day_num += 1
 
     for _ in range(trip.full_days or 0):
@@ -41,7 +42,8 @@ def build_day_list(trip):
         day_num += 1
 
     if trip.last_day_fraction and trip.last_day_fraction > 0:
-        days.append({"day_number": day_num, "type": "last_partial", "fraction": trip.last_day_fraction})
+        day_type = "full" if trip.last_day_fraction >= 1 else "last_partial"
+        days.append({"day_number": day_num, "type": day_type, "fraction": trip.last_day_fraction})
 
     return days
 
