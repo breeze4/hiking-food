@@ -73,7 +73,7 @@ Facts confirmed in code (2026-07-11):
   changes, and the corrected router/test-fixture counts.
 - [x] Run the full gates: `cd backend && venv/bin/pytest -q` and
   `cd frontend && pnpm test && pnpm lint && pnpm build`.
-- [ ] Commit, push, and inspect the exact-SHA cicd-router result for this
+- [x] Commit, push, and inspect the exact-SHA cicd-router result for this
   commit; verify BeeBaby health at `http://beebaby:8000/hiking-food/` plus
   representative REST reads and MCP discovery/tool reads.
 - [x] Write the spec-behavior accounting table into this step's handoff file;
@@ -88,7 +88,7 @@ Facts confirmed in code (2026-07-11):
 - [x] `docs/architecture.md` accurately describes the service boundary,
   migrations, database configuration, dependency locks, and MCP/OAuth
   topology as they exist after plans 43 and 44.
-- [ ] All backend and frontend gates pass; the deployed commit is verified
+- [x] All backend and frontend gates pass; the deployed commit is verified
   healthy on BeeBaby with working REST and MCP reads.
 - [x] Every spec behavior bullet is explicitly accounted for.
 
