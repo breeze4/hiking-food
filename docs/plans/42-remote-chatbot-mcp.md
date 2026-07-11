@@ -17,9 +17,9 @@ from Codex, ChatGPT, and Claude.
 - [x] Invalidate stale daily assignments after duration or inventory changes.
 - [x] Add OAuth-flow and end-to-end tool-workflow tests.
 - [x] Document Codex, ChatGPT, and Claude setup and the canonical planning workflow.
-- [ ] Publish the route through BeeBaby's HTTPS Funnel.
-- [ ] Verify live OAuth discovery, authorization, `tools/list`, and a read-only tool call.
-- [ ] Register and authenticate the live server in Codex.
+- [x] Publish the route through BeeBaby's HTTPS Funnel.
+- [x] Verify live OAuth discovery, authorization, `tools/list`, and a read-only tool call.
+- [x] Register and authenticate the live server in Codex.
 
 ## Verification
 

@@ -44,12 +44,12 @@
 | 38 | [Auto-Fill Distribute All Servings](autofill-distribute-all-servings.md) | Multi-pass snack/drink distribution to eliminate unallocated items |
 | 39 | [Food Intake Capture](39-food-intake-capture.md) | food_intake table + CRUD API + Intake page |
 | 40 | [Intake Research Agent](40-intake-research-agent.md) | Agent that turns pending intake rows into ingredients/snacks via USDA |
+| 42 | [Remote Chatbot MCP](42-remote-chatbot-mcp.md) | OAuth-protected BeeBaby MCP for trip planning from Codex, ChatGPT, and Claude |
 
 ## In Progress
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
-| 42 | [Remote Chatbot MCP](42-remote-chatbot-mcp.md) | OAuth-protected BeeBaby MCP for trip planning from Codex, ChatGPT, and Claude | None |
 
 ## Not Started
 
