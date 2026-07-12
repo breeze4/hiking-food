@@ -2,7 +2,9 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import App from './App';
-import { apiResponse, defaultTrips as trips } from './test/apiMock';
+import {
+  apiResponse, createApiMock, makeTripDetail, defaultTrips as trips,
+} from './test/apiMock';
 
 describe('trip deep links', () => {
   beforeEach(() => {
@@ -100,6 +102,45 @@ describe('trip deep links', () => {
     render(<App />);
     expect(await screen.findByRole('heading', { name: 'Goat Rocks' })).toBeVisible();
     expect(window.location.pathname).toBe('/hiking-food/trips/2');
+  });
+
+  test('editing a snack refreshes in place without unmounting the planner', async () => {
+    window.history.replaceState({}, '', '/hiking-food/trips/1');
+    const detail = makeTripDetail({
+      id: 1,
+      name: 'Wonderland Trail',
+      snacks: [{
+        id: 10, catalog_item_id: 5, ingredient_name: 'Trail Mix',
+        category: 'salty', slot: 'snacks', servings: 2,
+        weight_per_serving: 2, calories_per_serving: 250,
+        total_weight: 4, total_calories: 500, calories_per_oz: 125, trip_notes: '',
+      }],
+    });
+    let detailCalls = 0;
+    vi.stubGlobal('fetch', vi.fn(createApiMock({
+      trips: [{ id: 1, name: 'Wonderland Trail' }],
+      tripDetails: { 1: detail },
+      handler: (path, method) => {
+        if (method === 'GET' && path === '/hiking-food/api/trips/1') {
+          detailCalls += 1;
+          // Let the refresh triggered by the edit hang, so a collapse would be
+          // observable: pre-fix, the detail was blanked and the whole planner
+          // fell back to its placeholder.
+          if (detailCalls >= 2) return new Promise(() => {});
+        }
+        return undefined;
+      },
+    })));
+    render(<App />);
+
+    const increase = await screen.findAllByRole('button', { name: 'Increase Trail Mix servings' });
+    fireEvent.click(increase[0]);
+
+    await waitFor(() => expect(detailCalls).toBeGreaterThanOrEqual(2));
+    // Planner content is still mounted; the placeholder never appeared.
+    expect(screen.getAllByRole('heading', { name: 'Wonderland Trail' }).length).toBeGreaterThan(0);
+    expect(screen.queryByText('Select or create a trip to get started.')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Trail Mix').length).toBeGreaterThan(0);
   });
 
   test('switching the selected trip on a global page keeps that page open', async () => {

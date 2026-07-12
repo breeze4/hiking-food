@@ -25,6 +25,9 @@ export function TripProvider({ children }) {
     ? routeTrip.tripId
     : selectedTripId;
   const activeTripIdRef = useRef(activeTripId);
+  // Which trip the current `summary` belongs to, so an in-place refresh can
+  // keep it mounted (the summary projection carries no trip id of its own).
+  const summaryTripIdRef = useRef(null);
 
   useEffect(() => {
     activeTripIdRef.current = activeTripId;
@@ -57,7 +60,12 @@ export function TripProvider({ children }) {
       return;
     }
     const requestedTripId = activeTripId;
-    setTripDetail(null);
+    // Keep the current detail mounted while refreshing the same trip in place
+    // (e.g. after a snack/meal edit); only clear it when switching to another
+    // trip, so we don't flash the previous trip's data. Blanking on every
+    // refresh collapsed the whole planner to a one-line placeholder, which
+    // reset the page scroll to the top.
+    setTripDetail((current) => (current?.id === requestedTripId ? current : null));
     try {
       const detail = await get(`/trips/${requestedTripId}`);
       if (activeTripIdRef.current === requestedTripId) setTripDetail(detail);
@@ -68,15 +76,24 @@ export function TripProvider({ children }) {
   }, [activeTripId]);
 
   const loadSummary = useCallback(async () => {
-    if (!activeTripId) { setSummary(null); return; }
+    if (!activeTripId) { setSummary(null); summaryTripIdRef.current = null; return; }
     const requestedTripId = activeTripId;
-    setSummary(null);
+    // Same as detail: keep the current summary (and its meters) in place during
+    // a refresh, clearing only when the trip changes, so the meters don't flash
+    // empty and shift the layout under the user's scroll.
+    if (summaryTripIdRef.current !== requestedTripId) setSummary(null);
     try {
       const nextSummary = await get(`/trips/${requestedTripId}/summary`);
-      if (activeTripIdRef.current === requestedTripId) setSummary(nextSummary);
+      if (activeTripIdRef.current === requestedTripId) {
+        setSummary(nextSummary);
+        summaryTripIdRef.current = requestedTripId;
+      }
     } catch (err) {
       console.error('Failed to load summary', err);
-      if (activeTripIdRef.current === requestedTripId) setSummary(null);
+      if (activeTripIdRef.current === requestedTripId) {
+        setSummary(null);
+        summaryTripIdRef.current = null;
+      }
     }
   }, [activeTripId]);
 
