@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
+import os
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from mcp.server.fastmcp.server import StreamableHTTPASGIApp
 from starlette.routing import Route
 
@@ -16,7 +17,10 @@ from routers.trips import router as trips_router
 from routers.daily_plan import router as daily_plan_router
 from routers.settings import router as settings_router
 from routers.food_intake import router as food_intake_router
-from mcp_oauth.app import create_router as create_oauth_router
+from mcp_oauth.app import (
+    authorization_server_metadata,
+    create_router as create_oauth_router,
+)
 from mcp_oauth.auth import BearerAuthMiddleware
 from mcp_server import build_mcp_server
 from migrations import run_migrations as _run_migrations
@@ -84,6 +88,18 @@ if FRONTEND_DIR.is_dir():
 app = FastAPI(lifespan=lifespan)
 app.state.database_engine = engine
 app.state.mcp_server = MCP_SERVER
+
+
+def _oauth_issuer() -> str:
+    return os.environ.get(
+        "HIKING_FOOD_OAUTH_ISSUER", "http://localhost:8000/hiking-food"
+    ).rstrip("/")
+
+
+@app.get("/.well-known/oauth-authorization-server/hiking-food")
+@app.get("/.well-known/openid-configuration/hiking-food")
+async def codex_hiking_food_oauth_metadata():
+    return JSONResponse(authorization_server_metadata(_oauth_issuer()))
 
 
 @app.get("/hiking-food")

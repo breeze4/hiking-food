@@ -15,7 +15,7 @@ from mcp.server.transport_security import TransportSecurityMiddleware
 
 from database import Base, create_database_engine
 from models import Trip, TripDayAssignment
-from main import inner, lifespan
+from main import app, inner, lifespan
 from mcp_server import build_mcp_server, build_transport_security
 
 
@@ -117,6 +117,22 @@ def test_api_responses_carry_no_cors_allow_origin_header():
 
     assert response.status_code == 200
     assert "access-control-allow-origin" not in response.headers
+
+
+def test_outer_app_serves_codex_path_issuer_discovery_aliases(monkeypatch):
+    issuer = "https://food.funnel.ts.net/hiking-food"
+    monkeypatch.setenv("HIKING_FOOD_OAUTH_ISSUER", issuer)
+    client = TestClient(app)
+
+    for path in (
+        "/.well-known/oauth-authorization-server/hiking-food",
+        "/.well-known/openid-configuration/hiking-food",
+    ):
+        response = client.get(path)
+
+        assert response.status_code == 200
+        assert response.json()["issuer"] == issuer
+        assert response.json()["registration_endpoint"] == f"{issuer}/register"
 
 
 def test_mcp_transport_security_defaults_reject_unexpected_host(monkeypatch):

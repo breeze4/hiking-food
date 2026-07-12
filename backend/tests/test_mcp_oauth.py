@@ -97,14 +97,13 @@ def test_successful_authorization_resets_failure_counter(tmp_path, monkeypatch):
     assert client.post("/authorize", data=good, follow_redirects=False).status_code == 302
 
 
-def test_discovery_drops_oidc_and_jwks_and_advertises_only_supported(tmp_path, monkeypatch):
+def test_discovery_keeps_codex_openid_alias_and_drops_jwks(tmp_path, monkeypatch):
     issuer = "https://food.example.test/hiking-food"
     monkeypatch.setenv("HIKING_FOOD_OAUTH_ISSUER", issuer)
     app = FastAPI()
     app.include_router(create_router(db_path=str(tmp_path / "auth.db"), issuer=issuer))
     client = TestClient(app)
 
-    assert client.get("/.well-known/openid-configuration").status_code == 404
     assert client.get("/jwks").status_code == 404
 
     metadata = client.get("/.well-known/oauth-authorization-server").json()
@@ -115,6 +114,10 @@ def test_discovery_drops_oidc_and_jwks_and_advertises_only_supported(tmp_path, m
     assert set(metadata["scopes_supported"]) == {"hiking-food", "offline_access"}
     assert "jwks_uri" not in metadata
     assert "id_token_signing_alg_values_supported" not in metadata
+
+    openid = client.get("/.well-known/openid-configuration")
+    assert openid.status_code == 200
+    assert openid.json() == metadata
 
 
 def test_oauth_metadata_registration_code_and_refresh_flow(tmp_path, monkeypatch):

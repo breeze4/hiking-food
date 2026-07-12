@@ -86,6 +86,20 @@ def _valid_redirect_uri(uri: str) -> bool:
     return parsed.scheme == "http" and parsed.hostname in {"127.0.0.1", "localhost", "::1"}
 
 
+def authorization_server_metadata(issuer: str) -> dict[str, Any]:
+    return {
+        "issuer": issuer,
+        "authorization_endpoint": f"{issuer}/authorize",
+        "token_endpoint": f"{issuer}/token",
+        "registration_endpoint": f"{issuer}/register",
+        "response_types_supported": ["code"],
+        "grant_types_supported": ["authorization_code", "refresh_token"],
+        "code_challenge_methods_supported": ["S256"],
+        "token_endpoint_auth_methods_supported": ["none"],
+        "scopes_supported": [RESOURCE_SCOPE, OFFLINE_SCOPE],
+    }
+
+
 def create_router(
     *, db_path: str | None = None, issuer: str | None = None,
     now: Callable[[], float] = time.time,
@@ -104,20 +118,14 @@ def create_router(
     router = APIRouter()
 
     def metadata() -> dict[str, Any]:
-        return {
-            "issuer": issuer,
-            "authorization_endpoint": f"{issuer}/authorize",
-            "token_endpoint": f"{issuer}/token",
-            "registration_endpoint": f"{issuer}/register",
-            "response_types_supported": ["code"],
-            "grant_types_supported": ["authorization_code", "refresh_token"],
-            "code_challenge_methods_supported": ["S256"],
-            "token_endpoint_auth_methods_supported": ["none"],
-            "scopes_supported": [RESOURCE_SCOPE, OFFLINE_SCOPE],
-        }
+        return authorization_server_metadata(issuer)
 
     @router.get("/.well-known/oauth-authorization-server")
     def authorization_metadata() -> JSONResponse:
+        return JSONResponse(metadata())
+
+    @router.get("/.well-known/openid-configuration")
+    def openid_configuration() -> JSONResponse:
         return JSONResponse(metadata())
 
     @router.get("/.well-known/oauth-protected-resource")

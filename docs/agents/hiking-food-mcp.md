@@ -73,6 +73,15 @@ Discovery endpoints are below that path prefix:
 - `/.well-known/oauth-authorization-server`
 - `/.well-known/openid-configuration`
 
+The OpenID path is a compatibility alias for MCP clients that probe it while
+handling path-mounted issuers. It returns the same authorization-server metadata
+as `/.well-known/oauth-authorization-server`; the server does not issue ID
+tokens or publish JWKS. The BeeBaby outer app also serves
+`/.well-known/oauth-authorization-server/hiking-food` and
+`/.well-known/openid-configuration/hiking-food` so Codex native OAuth discovery
+does not fall through to the shared host's root OAuth metadata for another
+service.
+
 The server supports dynamic client registration, authorization code with PKCE
 S256, one-hour access tokens, refresh tokens, and the `hiking-food` plus
 `offline_access` scopes. Registered redirect URIs must match exactly. HTTPS and

@@ -103,6 +103,9 @@ they do not assert private helper calls.
   are persisted.
 - Repeated failed password attempts are throttled.
 - Browser API responses do not grant arbitrary cross-origin access.
+- Path-mounted OAuth discovery remains unambiguous for Codex and other MCP
+  clients that probe OpenID or root-style well-known aliases before dynamic
+  client registration.
 
 ### Operational behaviors to add
 
