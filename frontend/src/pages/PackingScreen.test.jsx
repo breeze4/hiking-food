@@ -25,6 +25,31 @@ afterEach(() => {
 });
 
 describe('PackingScreen', () => {
+  test('recipe assembly shows per-serving amounts with a per-baggie multiplier', async () => {
+    vi.stubGlobal('fetch', vi.fn(createApiMock({
+      packings: {
+        1: {
+          trip_name: 'Wonderland Trail',
+          meals: [{
+            id: 7, recipe_name: 'Granola', category: 'breakfast', quantity: 4,
+            at_home_prep: null, packed: false, actual_weight_oz: null,
+            ingredients: [{
+              name: 'Rolled Oats', amount_oz: 4, total_oz: 16,
+              essentials: false, packing_method: 'bag',
+            }],
+          }],
+          snacks: [],
+        },
+      },
+    })));
+    render(<App />);
+
+    expect(await screen.findByText('Assemble 4 baggies — per-serving amounts below.')).toBeVisible();
+    // Per-serving amount is shown, not the 16oz combined total.
+    expect(screen.getByRole('cell', { name: '4' })).toBeVisible();
+    expect(screen.getByRole('cell', { name: '×4 = 16' })).toBeVisible();
+  });
+
   test('a failed pack toggle shows an inline error without blanking the page', async () => {
     vi.stubGlobal('fetch', vi.fn(createApiMock({
       packings: { 1: packing() },

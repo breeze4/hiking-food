@@ -116,11 +116,19 @@ function PackingScreen() {
                     <span className="text-sm text-muted-foreground">oz</span>
                   </div>
                 </div>
+                {meal.quantity > 1 && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Assemble {meal.quantity} baggies &mdash; per-serving amounts below.
+                  </p>
+                )}
                 <div className="overflow-x-auto mt-2"><Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-xs">Ingredient</TableHead>
-                      <TableHead className="text-xs text-right">Amount (oz)</TableHead>
+                      <TableHead className="text-xs text-right">Per serving (oz)</TableHead>
+                      {meal.quantity > 1 && (
+                        <TableHead className="text-xs text-right">Total (oz)</TableHead>
+                      )}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -132,6 +140,11 @@ function PackingScreen() {
                           {ing.packing_method && <span className="text-xs text-muted-foreground ml-1">[{ing.packing_method}]</span>}
                         </TableCell>
                         <TableCell className="py-1 text-sm text-right">{ing.amount_oz}</TableCell>
+                        {meal.quantity > 1 && (
+                          <TableCell className="py-1 text-sm text-right text-muted-foreground">
+                            &times;{meal.quantity} = {ing.total_oz}
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>

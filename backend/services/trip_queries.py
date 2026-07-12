@@ -324,7 +324,12 @@ def packing_view(db: Session, trip: Trip) -> dict:
             "ingredients": [
                 {
                     "name": ingredient.name,
-                    "amount_oz": round(recipe_ingredient.amount_oz * selection.quantity, 2),
+                    # amount_oz is per single serving/baggie; total_oz is the
+                    # combined amount across all `quantity` servings. Assembly
+                    # packs one baggie per serving, so the per-serving amount is
+                    # what the user measures out N times.
+                    "amount_oz": round(recipe_ingredient.amount_oz, 2),
+                    "total_oz": round(recipe_ingredient.amount_oz * selection.quantity, 2),
                     "essentials": bool(ingredient.essentials),
                     "packing_method": ingredient.packing_method,
                 }
