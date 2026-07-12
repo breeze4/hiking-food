@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { get, post, del } from '../api';
 import { useMutation } from '../hooks/useMutation';
 import { pathAfterTripSelection, readTripLocation, tripPath } from '../routes/tripRoutes';
+import { readLastTripId, writeLastTripId } from '../lib/lastTrip';
 
 const TripContext = createContext();
 
@@ -13,7 +14,7 @@ export function TripProvider({ children }) {
   const navigate = useNavigate();
   const routeTrip = readTripLocation(location.pathname);
   const [trips, setTrips] = useState([]);
-  const [selectedTripId, setSelectedTripId] = useState(routeTrip?.tripId ?? null);
+  const [selectedTripId, setSelectedTripId] = useState(routeTrip?.tripId ?? readLastTripId());
   const [tripsLoaded, setTripsLoaded] = useState(false);
   const [tripDetail, setTripDetail] = useState(null);
   const [summary, setSummary] = useState(null);
@@ -28,6 +29,13 @@ export function TripProvider({ children }) {
   useEffect(() => {
     activeTripIdRef.current = activeTripId;
   }, [activeTripId]);
+
+  // Remember the last trip the user was on so a fresh visit lands on it.
+  // Only persist once trips have loaded, so an unrecognized stored id that
+  // falls back to another trip doesn't overwrite the real last selection.
+  useEffect(() => {
+    if (tripsLoaded && activeTripId) writeLastTripId(activeTripId);
+  }, [tripsLoaded, activeTripId]);
 
   const loadTrips = useCallback(async () => {
     try {

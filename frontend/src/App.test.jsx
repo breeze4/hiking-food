@@ -88,6 +88,20 @@ describe('trip deep links', () => {
     expect(window.location.pathname).toBe('/hiking-food/trips/1');
   });
 
+  test('a fresh visit to root lands on the last-selected trip, not the first', async () => {
+    // Land on trip 2 first so the app remembers it.
+    window.history.replaceState({}, '', '/hiking-food/trips/2');
+    const first = render(<App />);
+    expect(await screen.findByRole('heading', { name: 'Goat Rocks' })).toBeVisible();
+    first.unmount();
+
+    // Returning to the bare root should redirect to trip 2, not default to trip 1.
+    window.history.replaceState({}, '', '/hiking-food/');
+    render(<App />);
+    expect(await screen.findByRole('heading', { name: 'Goat Rocks' })).toBeVisible();
+    expect(window.location.pathname).toBe('/hiking-food/trips/2');
+  });
+
   test('switching the selected trip on a global page keeps that page open', async () => {
     window.history.replaceState({}, '', '/hiking-food/recipes');
     render(<App />);
