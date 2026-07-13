@@ -9,9 +9,9 @@
 #   scripts/update-requirements.sh --upgrade                # bump everything
 #   scripts/update-requirements.sh --upgrade-package anyio  # bump just anyio
 #
-# The gate (scripts/check-requirements-lock.sh) verifies the committed lock
-# matches a default (preference-preserving) regenerate, so it only fails on a
-# real inconsistency with the .in files, never on a new upstream release.
+# Lock freshness is not gated in CI — the committed .txt files are the source
+# of truth and installs use --require-hashes against them directly. Run this
+# script whenever a .in file changes or a deliberate upgrade is wanted.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

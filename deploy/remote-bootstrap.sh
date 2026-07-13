@@ -9,8 +9,7 @@ if [[ ! -x backend/venv/bin/python ]]; then
   python3 -m venv backend/venv
 fi
 
-backend/venv/bin/pip install --quiet --upgrade pip
-backend/venv/bin/pip install --quiet -r backend/requirements.txt
+backend/venv/bin/pip install --quiet --require-hashes -r backend/requirements.txt
 
 (
   cd backend
