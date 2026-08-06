@@ -26,10 +26,10 @@ AFK
 
 ## Acceptance criteria
 
-- [ ] `venv/bin/pytest` passes with new tests: a 0.5+2+0.5 trip @ 4/day with 12 units assigned gets 1+1 on each half day and 2+2 on full days; over-quota selections spill evenly (existing snack spill posture); under-quota leaves later slots empty with units unallocated-free; a legacy trip's auto-fill output is unchanged (snapshot assertion).
-- [ ] `snack_unit` assignments round-trip through the existing assignment add/remove/patch endpoints and appear in `daily_plan_view` with name/weight/calories.
-- [ ] Removing a unit assignment returns its quantity to the unallocated pool.
-- [ ] Day page renders unit items in morning/afternoon snack slots for a structured trip; `pnpm lint && pnpm build && pnpm test` pass (existing `DailyPlanPage` tests untouched except added cases).
+- [x] `venv/bin/pytest` passes with new tests: a 0.5+2+0.5 trip @ 4/day with 12 units assigned gets 1+1 on each half day and 2+2 on full days; over-quota selections spill evenly (existing snack spill posture); under-quota leaves later slots empty with units unallocated-free; a legacy trip's auto-fill output is unchanged (snapshot assertion).
+- [x] `snack_unit` assignments round-trip through the existing assignment add/remove/patch endpoints and appear in `daily_plan_view` with name/weight/calories.
+- [x] Removing a unit assignment returns its quantity to the unallocated pool.
+- [x] Day page renders unit items in morning/afternoon snack slots for a structured trip; `pnpm lint && pnpm build && pnpm test` pass (existing `DailyPlanPage` tests untouched except added cases).
 
 ## Owns
 
@@ -58,8 +58,8 @@ AFK
 
 ## Tasks
 
-- [ ] `distribute_snack_units`: walk days with per-day quotas from `snack_units.unit_quota`, fill morning then afternoon alternately up to ceil/floor split (2+2 on a 4-quota day, 1+1 on a 2-quota day), spreading unit types across days for variety (round-robin by type, matching `distribute_snacks`' heaviest-first order).
-- [ ] Structured branch in `auto_fill`: snacks-slot distribution uses units; lunch (`TripSnack` slot `lunch`) and drink mixes flow exactly as today.
-- [ ] `_snack_unit_info` + assignment item rendering + source-type validation on the assignment endpoints.
-- [ ] Backend tests per criteria, including legacy snapshot.
-- [ ] Day page unit rendering + component test cases.
+- [x] `distribute_snack_units`: walk days with per-day quotas from `snack_units.unit_quota`, fill morning then afternoon alternately up to ceil/floor split (2+2 on a 4-quota day, 1+1 on a 2-quota day), spreading unit types across days for variety (round-robin by type, matching `distribute_snacks`' heaviest-first order).
+- [x] Structured branch in `auto_fill`: snacks-slot distribution uses units; lunch (`TripSnack` slot `lunch`) and drink mixes flow exactly as today.
+- [x] `_snack_unit_info` + assignment item rendering + source-type validation on the assignment endpoints.
+- [x] Backend tests per criteria, including legacy snapshot.
+- [x] Day page unit rendering + component test cases.

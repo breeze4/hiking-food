@@ -42,3 +42,28 @@ and a proposed fix when obvious.
     — better for screen readers and unambiguous in tests. Also note that a Base UI
     modal hides the background from the accessibility tree, so assertions about
     the table behind an open dialog must dismiss it first.
+
+- date: 2026-08-06
+  context: hiking-food step 4 (daily plan units); legacy-model backend tests
+  category: friction
+  body: Flipping the `POST /api/trips` default to the structured snack model made
+    older test modules quietly stop testing what they claim. Step 3 hit one module
+    (`test_slots.py`); step 4 hit three more (`test_daily_plan.py`,
+    `test_daily_plan_macros.py`, `test_trip_workflows.py`) with seven failures,
+    each because a helper created a trip through the API and assumed the legacy
+    snack behavior. The failures read as broken features, not as stale fixtures.
+  fix: When a model default flips, every test helper that creates the entity
+    through the API is now suspect. Pin the model explicitly in the helper and say
+    in its docstring which model the module exercises, so the next default change
+    fails loudly in one place instead of scattering assertion errors.
+
+- date: 2026-08-06
+  context: hiking-food step 4; whole-App vitest page test
+  category: friction
+  body: After a mutation re-rendered the plan, `findByText(/Fig Bar/)` resolved to
+    the pre-mutation unallocated-pool node, which React had already detached, so
+    `toBeVisible()` failed on an element that was not in the document. The name
+    existed in two places before and after the click, and the query picked the
+    stale one.
+  fix: Assert on something only the post-mutation tree has — a per-item control's
+    accessible name — instead of a text match that also existed before the click.

@@ -60,6 +60,8 @@ def db_setup(test_engine, test_session):
 
 
 def _create_trip(c, **overrides):
+    """A legacy-model trip: the snack macros here come from TripSnack rows,
+    which only the legacy model distributes into the snack slots."""
     payload = {
         "name": "Macro Trip",
         "first_day_fraction": 0.0,
@@ -70,6 +72,8 @@ def _create_trip(c, **overrides):
     payload.update(overrides)
     resp = c.post("/api/trips", json=payload)
     assert resp.status_code == 201
+    resp = c.put(f"/api/trips/{resp.json()['id']}", json={"snack_model": "legacy"})
+    assert resp.status_code == 200
     return resp.json()
 
 

@@ -69,6 +69,12 @@ def db_setup(test_engine, test_session):
 
 
 def _create_trip(c, **overrides):
+    """A legacy-model trip.
+
+    This module asserts how TripSnack rows distribute into the snack slots,
+    which is the legacy model's behavior; new trips are structured, where units
+    own those slots instead (tests/test_daily_plan_units.py).
+    """
     payload = {
         "name": "Test Trip", "first_day_fraction": 0.5,
         "full_days": 2, "last_day_fraction": 0.5,
@@ -77,6 +83,8 @@ def _create_trip(c, **overrides):
     payload.update(overrides)
     resp = c.post("/api/trips", json=payload)
     assert resp.status_code == 201
+    resp = c.put(f"/api/trips/{resp.json()['id']}", json={"snack_model": "legacy"})
+    assert resp.status_code == 200
     return resp.json()
 
 

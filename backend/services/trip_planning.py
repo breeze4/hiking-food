@@ -48,6 +48,14 @@ NEW_TRIP_SNACK_DEFAULTS = {
     "oz_per_snack": 2.0,
 }
 
+# What a day assignment can point at: the model holding the selection, the
+# field carrying how much of it the trip packed, and the label for errors.
+ASSIGNMENT_SOURCES = {
+    "meal": (TripMeal, "quantity", "Meal"),
+    "snack": (TripSnack, "servings", "Snack"),
+    "snack_unit": (TripSnackUnit, "quantity", "Snack unit"),
+}
+
 CATEGORY_TO_SLOT = {
     "drink_mix": "snacks",
     "bars_energy": "snacks",
@@ -512,8 +520,10 @@ class TripPlanningService:
             raise TripPlanningError(
                 f"day_number must be one of {sorted(valid_days)}"
             )
-        if fields.get("source_type") not in {"meal", "snack"}:
-            raise TripPlanningError("source_type must be meal or snack")
+        if fields.get("source_type") not in ASSIGNMENT_SOURCES:
+            raise TripPlanningError(
+                "source_type must be meal, snack, or snack_unit"
+            )
         if fields.get("slot") not in SLOT_RULES:
             raise TripPlanningError(
                 f"Unknown daily-plan slot: {fields.get('slot')}"
@@ -522,12 +532,11 @@ class TripPlanningService:
             raise TripPlanningError(
                 "Assignment servings must be greater than zero"
             )
-        source_model = TripMeal if fields["source_type"] == "meal" else TripSnack
+        source_model, amount_field, label = ASSIGNMENT_SOURCES[fields["source_type"]]
         source = self.db.get(source_model, fields.get("source_id"))
         if not source or source.trip_id != trip_id:
-            label = fields["source_type"].capitalize()
             raise TripPlanningError(f"{label} source is not on this trip")
-        selected = source.quantity if fields["source_type"] == "meal" else source.servings
+        selected = getattr(source, amount_field)
         allocated = sum(
             row.servings
             for row in self.db.query(TripDayAssignment).filter(
@@ -575,17 +584,13 @@ class TripPlanningService:
                 raise TripPlanningError(
                     "Assignment servings must be greater than zero"
                 )
-            source_model = (
-                TripMeal if assignment.source_type == "meal" else TripSnack
-            )
+            source_model, amount_field, label = ASSIGNMENT_SOURCES[
+                assignment.source_type
+            ]
             source = self.db.get(source_model, assignment.source_id)
             if not source or source.trip_id != trip_id:
-                raise TripPlanningError(
-                    f"{assignment.source_type.capitalize()} source is not on this trip"
-                )
-            selected = (
-                source.quantity if assignment.source_type == "meal" else source.servings
-            )
+                raise TripPlanningError(f"{label} source is not on this trip")
+            selected = getattr(source, amount_field)
             allocated_elsewhere = sum(
                 row.servings
                 for row in self.db.query(TripDayAssignment).filter(

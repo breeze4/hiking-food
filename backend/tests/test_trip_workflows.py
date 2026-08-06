@@ -54,6 +54,9 @@ def _create_trip_with_snack(c):
         "/api/trips",
         json={"name": "Plan", "first_day_fraction": 0, "full_days": 1},
     ).json()
+    # Legacy model: auto-fill only puts a TripSnack in a snack slot there, and
+    # these tests need the snack assigned to a day to have something to edit.
+    trip = c.put(f"/api/trips/{trip['id']}", json={"snack_model": "legacy"}).json()
     snack = c.post(
         f"/api/trips/{trip['id']}/snacks",
         json={"catalog_item_id": catalog_item["id"], "servings": 1},
@@ -357,7 +360,7 @@ def test_rest_rejects_unknown_assignment_source_type(c):
     )
 
     assert response.status_code == 422
-    assert response.json()["detail"] == "source_type must be meal or snack"
+    assert response.json()["detail"] == "source_type must be meal, snack, or snack_unit"
 
 
 def test_rest_rejects_unknown_assignment_slot(c):

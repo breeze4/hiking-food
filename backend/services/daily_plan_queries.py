@@ -15,10 +15,11 @@ from models import (
     TripSnack,
 )
 from services.autofill import auto_fill, build_day_list
+from services.snack_units import trip_snack_unit_list_view, unit_quota
 from services.trip_queries import recipe_totals
 
 
-def _autofill_inputs(db: Session, trip: Trip):
+def _autofill_inputs(db: Session, trip: Trip) -> dict:
     recipe_weights: dict[int, float] = {}
     meals = []
     for selection in db.query(TripMeal).filter(TripMeal.trip_id == trip.id):
@@ -47,7 +48,22 @@ def _autofill_inputs(db: Session, trip: Trip):
             "servings": selection.servings,
             "category": catalog_item.category,
         })
-    return meals, snacks, recipe_weights, snack_weights, snack_info
+    units = []
+    unit_weights: dict[int, float] = {}
+    for unit in trip_snack_unit_list_view(db, trip):
+        units.append({"id": unit["id"], "quantity": unit["quantity"]})
+        unit_weights[unit["id"]] = unit["weight_oz"]
+    return {
+        "trip_meals": meals,
+        "trip_snacks": snacks,
+        "recipe_weights": recipe_weights,
+        "snack_weights": snack_weights,
+        "snack_info": snack_info,
+        "trip_units": units,
+        "unit_weights": unit_weights,
+        # The quota math stays in snack_units; auto-fill only reads the answer.
+        "per_day_quota": unit_quota(trip)["per_day"],
+    }
 
 
 def _macro_target(db: Session) -> dict:
@@ -108,6 +124,32 @@ def _snack_info(db: Session, trip_id: int) -> dict[int, dict]:
     return result
 
 
+def _snack_unit_info(db: Session, trip: Trip) -> dict[int, dict]:
+    """Unit selections keyed by id, shaped like _snack_info's per-serving dicts.
+
+    The serving of a unit is the unit itself, so the library's per-unit weight,
+    calories, and macros are already the per-serving values.
+    """
+    result = {}
+    for unit in trip_snack_unit_list_view(db, trip):
+        # A unit with no macro numbers at all reports None, the way a snack
+        # whose ingredient lacks macros does, so the day's coverage stays honest.
+        has_macros = unit["has_full_data"] or any(
+            unit[field] for field in ("protein_g", "fat_g", "carb_g")
+        )
+        result[unit["id"]] = {
+            "name": unit["name"],
+            "category": unit["kind"],
+            "weight_per_serving": unit["weight_oz"],
+            "calories_per_serving": unit["calories"],
+            "total_servings": unit["quantity"],
+            "protein_per_serving": unit["protein_g"] if has_macros else None,
+            "fat_per_serving": unit["fat_g"] if has_macros else None,
+            "carb_per_serving": unit["carb_g"] if has_macros else None,
+        }
+    return result
+
+
 def _assignment_item(assignment: TripDayAssignment, info: dict) -> dict:
     if assignment.source_type == "meal":
         return {
@@ -124,9 +166,11 @@ def _assignment_item(assignment: TripDayAssignment, info: dict) -> dict:
             "fat_g": round(info.get("fat_g", 0) * assignment.servings, 1),
             "carb_g": round(info.get("carb_g", 0) * assignment.servings, 1),
         }
+    # Snacks and units share a shape: both are counted in servings of a thing
+    # with a per-serving weight, calorie, and macro value.
     return {
         "id": assignment.id,
-        "source_type": "snack",
+        "source_type": assignment.source_type,
         "source_id": assignment.source_id,
         "name": info.get("name", "?"),
         "category": info.get("category", "?"),
@@ -197,6 +241,8 @@ def daily_plan_view(db: Session, trip: Trip) -> dict:
     )
     meals = _meal_info(db, trip.id)
     snacks = _snack_info(db, trip.id)
+    units = _snack_unit_info(db, trip)
+    info_by_source = {"meal": meals, "snack": snacks, "snack_unit": units}
     days_out: dict[int, dict] = {}
     allocated: dict[str, float] = {}
     for assignment in assignments:
@@ -212,10 +258,8 @@ def daily_plan_view(db: Session, trip: Trip) -> dict:
             ),
             "items": [],
         })
-        info = (
-            meals.get(assignment.source_id, {})
-            if assignment.source_type == "meal"
-            else snacks.get(assignment.source_id, {})
+        info = info_by_source.get(assignment.source_type, {}).get(
+            assignment.source_id, {}
         )
         day["items"].append(_assignment_item(assignment, info))
         key = f"{assignment.source_type}:{assignment.source_id}"
@@ -246,18 +290,21 @@ def daily_plan_view(db: Session, trip: Trip) -> dict:
                 "calories_per_serving": info["calories"],
                 "weight_per_serving": info["weight"],
             })
-    for source_id, info in snacks.items():
-        remaining = info["total_servings"] - allocated.get(f"snack:{source_id}", 0)
-        if remaining > 0.01:
-            unallocated.append({
-                "source_type": "snack",
-                "source_id": source_id,
-                "name": info["name"],
-                "category": info["category"],
-                "remaining_servings": round(remaining, 2),
-                "calories_per_serving": info["calories_per_serving"],
-                "weight_per_serving": info["weight_per_serving"],
-            })
+    for source_type, catalog in (("snack", snacks), ("snack_unit", units)):
+        for source_id, info in catalog.items():
+            remaining = info["total_servings"] - allocated.get(
+                f"{source_type}:{source_id}", 0
+            )
+            if remaining > 0.01:
+                unallocated.append({
+                    "source_type": source_type,
+                    "source_id": source_id,
+                    "name": info["name"],
+                    "category": info["category"],
+                    "remaining_servings": round(remaining, 2),
+                    "calories_per_serving": info["calories_per_serving"],
+                    "weight_per_serving": info["weight_per_serving"],
+                })
     return {
         "days": sorted(days_out.values(), key=lambda day: day["day_number"]),
         "unallocated": unallocated,
@@ -281,8 +328,7 @@ def regenerate_daily_plan(db: Session, trip: Trip) -> dict:
     db.query(TripDayAssignment).filter(
         TripDayAssignment.trip_id == trip.id
     ).delete()
-    inputs = _autofill_inputs(db, trip)
-    assignments, warnings = auto_fill(trip, *inputs)
+    assignments, warnings = auto_fill(trip, **_autofill_inputs(db, trip))
     for assignment in assignments:
         db.add(TripDayAssignment(trip_id=trip.id, **assignment))
     db.commit()

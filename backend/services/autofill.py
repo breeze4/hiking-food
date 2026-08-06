@@ -26,6 +26,10 @@ SNACK_SLOT_MAP = {
     "snacks": "afternoon_snacks",
 }
 
+# The two slots a structured trip fills from its unit selections, in the order
+# a day's quota alternates between them.
+SNACK_UNIT_SLOTS = ("morning_snacks", "afternoon_snacks")
+
 
 def build_day_list(trip):
     """Build list of days with their type and fraction."""
@@ -154,6 +158,95 @@ def distribute_snacks(days, trip_snacks, snack_weights):
     return assignments
 
 
+def _unit_day_capacity(per_day_quota, total_units):
+    """How many units each day holds, with any surplus spread evenly.
+
+    Under quota the day keeps its quota and simply runs dry. Over quota the
+    extras ride along on top, evenly spaced the same way a snack's leftover
+    servings are.
+    """
+    num_days = len(per_day_quota)
+    surplus = total_units - sum(per_day_quota)
+    if num_days == 0 or surplus <= 0:
+        return list(per_day_quota)
+
+    base = surplus // num_days
+    leftover = surplus % num_days
+    if leftover > 0:
+        stride = num_days / leftover
+        extra_indices = set(int(i * stride) % num_days for i in range(leftover))
+    else:
+        extra_indices = set()
+
+    return [
+        quota + base + (1 if idx in extra_indices else 0)
+        for idx, quota in enumerate(per_day_quota)
+    ]
+
+
+def _unit_deal_order(trip_units, unit_weights):
+    """Selection ids, one unit at a time, round-robin across the selections.
+
+    Ordered heaviest-first then by id like distribute_snacks, but dealt a unit
+    per selection per pass rather than a whole selection at a time — four of
+    the same bag is not a day's worth of snacks.
+    """
+    selections = sorted(
+        trip_units,
+        key=lambda unit: (-unit_weights.get(unit["id"], 0), unit["id"]),
+    )
+    remaining = [[unit["id"], int(unit["quantity"] or 0)] for unit in selections]
+    order = []
+    while any(count > 0 for _, count in remaining):
+        for row in remaining:
+            if row[1] > 0:
+                order.append(row[0])
+                row[1] -= 1
+    return order
+
+
+def distribute_snack_units(days, per_day_quota, trip_units, unit_weights):
+    """Distribute a structured trip's unit selections. Returns assignment dicts.
+
+    per_day_quota: snack_units.unit_quota(trip)["per_day"], one entry per day
+    trip_units: list of {id, quantity}
+    unit_weights: dict of trip_snack_unit_id -> weight_oz
+
+    A day's units alternate morning, afternoon, so a 4-unit day reads 2 + 2 and
+    an odd quota favors the morning. SLOT_RULES does not gate these slots: a
+    half day carries its whole (already scaled) quota across both of them.
+    """
+    order = _unit_deal_order(trip_units, unit_weights)
+    capacity = _unit_day_capacity(per_day_quota, len(order))
+
+    placed = {}
+    cursor = 0
+    for index, day in enumerate(days):
+        if cursor >= len(order):
+            break
+        for position in range(capacity[index] if index < len(capacity) else 0):
+            if cursor >= len(order):
+                break
+            key = (
+                day["day_number"],
+                SNACK_UNIT_SLOTS[position % len(SNACK_UNIT_SLOTS)],
+                order[cursor],
+            )
+            placed[key] = placed.get(key, 0) + 1
+            cursor += 1
+
+    return [
+        {
+            "day_number": day_number,
+            "slot": slot,
+            "source_type": "snack_unit",
+            "source_id": source_id,
+            "servings": count,
+        }
+        for (day_number, slot, source_id), count in placed.items()
+    ]
+
+
 def distribute_drink_mixes(days, trip_snacks, snack_info):
     """Distribute drink mixes by subcategory. Returns (assignments, warnings).
 
@@ -234,7 +327,17 @@ def distribute_drink_mixes(days, trip_snacks, snack_info):
     return assignments, warnings
 
 
-def auto_fill(trip, trip_meals, trip_snacks, recipe_weights, snack_weights, snack_info):
+def auto_fill(
+    trip,
+    trip_meals,
+    trip_snacks,
+    recipe_weights,
+    snack_weights,
+    snack_info,
+    trip_units=None,
+    unit_weights=None,
+    per_day_quota=None,
+):
     """Run the full auto-fill algorithm. Returns (assignments, warnings).
 
     trip: Trip model instance
@@ -243,6 +346,9 @@ def auto_fill(trip, trip_meals, trip_snacks, recipe_weights, snack_weights, snac
     recipe_weights: dict of recipe_id -> total_weight
     snack_weights: dict of trip_snack_id -> weight_per_serving
     snack_info: dict of trip_snack_id -> {drink_mix_type, ...}
+    trip_units: list of {id, quantity} — structured trips only
+    unit_weights: dict of trip_snack_unit_id -> weight_oz
+    per_day_quota: unit_quota(trip)["per_day"]; the caller owns the quota math
     """
     days = build_day_list(trip)
     if not days:
@@ -251,8 +357,26 @@ def auto_fill(trip, trip_meals, trip_snacks, recipe_weights, snack_weights, snac
     assignments = []
     warnings = []
 
+    structured = (trip.snack_model or "legacy") == "structured"
+    slot_snacks = trip_snacks
+    if structured:
+        # Only units fill the snack slots. A TripSnack the user moved into the
+        # slot waits in the unallocated pool instead of crowding the quota.
+        slot_snacks = [
+            snack for snack in trip_snacks
+            if SNACK_SLOT_MAP.get(snack["slot"], "afternoon_snacks")
+            not in SNACK_UNIT_SLOTS
+        ]
+
     assignments.extend(distribute_meals(days, trip_meals, recipe_weights))
-    assignments.extend(distribute_snacks(days, trip_snacks, snack_weights))
+    assignments.extend(distribute_snacks(days, slot_snacks, snack_weights))
+    if structured:
+        assignments.extend(distribute_snack_units(
+            days,
+            per_day_quota or [],
+            trip_units or [],
+            unit_weights or {},
+        ))
 
     drink_assignments, drink_warnings = distribute_drink_mixes(days, trip_snacks, snack_info)
     assignments.extend(drink_assignments)

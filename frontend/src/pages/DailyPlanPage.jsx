@@ -62,9 +62,22 @@ function defaultSlotForItem(item) {
   if (item.source_type === 'meal') {
     return item.category === 'breakfast' ? 'breakfast' : 'dinner';
   }
+  // A unit's category is its kind (bag / packaged), never a slot hint.
+  if (item.source_type === 'snack_unit') return 'afternoon_snacks';
   if (item.category === 'drink_mix') return 'all_day_drinks';
   if (item.category === 'lunch') return 'lunch';
   return 'afternoon_snacks';
+}
+
+// Snack units are whole things: they count up by one and never by a half.
+function isUnit(item) {
+  return item.source_type === 'snack_unit';
+}
+
+function itemMeasure(item) {
+  return isUnit(item)
+    ? `${item.weight.toFixed(1)} oz · ${Math.round(item.calories)} cal`
+    : `${Math.round(item.calories)} cal`;
 }
 
 // --- Stacked Bar Chart ---
@@ -365,11 +378,11 @@ function DailyPlanPage() {
                       <span className="font-medium">{item.name}</span>
                       <Badge variant="outline" className="text-xs">{item.category}</Badge>
                       <span className="text-muted-foreground text-xs">
-                        {item.remaining_servings} serving{item.remaining_servings !== 1 ? 's' : ''}
+                        {item.remaining_servings} {isUnit(item) ? 'unit' : 'serving'}{item.remaining_servings !== 1 ? 's' : ''}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1 items-center">
-                      {item.remaining_servings >= 1 && (
+                      {!isUnit(item) && item.remaining_servings >= 1 && (
                         <button
                           onClick={() => setAllocAmounts(prev => ({
                             ...prev,
@@ -453,7 +466,7 @@ function DailyPlanPage() {
                         {bySlot[slot].map((item) => {
                           const key = `${item.source_type}:${item.source_id}`;
                           const runsOut = lastDayBySource[key];
-                          const showRunsOut = item.source_type === 'snack' && runsOut && runsOut < totalDays && runsOut === day.day_number;
+                          const showRunsOut = item.source_type !== 'meal' && runsOut && runsOut < totalDays && runsOut === day.day_number;
 
                           return (
                             <div key={item.id} className="flex items-center gap-1 py-0.5 group">
@@ -464,25 +477,25 @@ function DailyPlanPage() {
                                 )}
                               </span>
                               <span className="text-xs text-muted-foreground mr-1">
-                                {Math.round(item.calories)} cal
+                                {itemMeasure(item)}
                               </span>
                               {item.source_type === 'snack' && (
-                                <>
-                                  <button
-                                    onClick={() => incrementServings(item.id, item.servings, 0.5)}
-                                    disabled={planMutation.pending}
-                                    className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-muted opacity-0 group-hover:opacity-100 touch-visible transition-opacity disabled:opacity-50"
-                                    title="Add half serving"
-                                    aria-label={`Add half serving of ${item.name}`}
-                                  >½</button>
-                                  <button
-                                    onClick={() => incrementServings(item.id, item.servings)}
-                                    disabled={planMutation.pending}
-                                    className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-muted opacity-0 group-hover:opacity-100 touch-visible transition-opacity disabled:opacity-50"
-                                    title="Add serving"
-                                    aria-label={`Add serving of ${item.name}`}
-                                  >+</button>
-                                </>
+                                <button
+                                  onClick={() => incrementServings(item.id, item.servings, 0.5)}
+                                  disabled={planMutation.pending}
+                                  className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-muted opacity-0 group-hover:opacity-100 touch-visible transition-opacity disabled:opacity-50"
+                                  title="Add half serving"
+                                  aria-label={`Add half serving of ${item.name}`}
+                                >½</button>
+                              )}
+                              {item.source_type !== 'meal' && (
+                                <button
+                                  onClick={() => incrementServings(item.id, item.servings)}
+                                  disabled={planMutation.pending}
+                                  className="text-xs p-2 sm:px-1 sm:py-0 rounded hover:bg-muted opacity-0 group-hover:opacity-100 touch-visible transition-opacity disabled:opacity-50"
+                                  title={isUnit(item) ? 'Add unit' : 'Add serving'}
+                                  aria-label={`${isUnit(item) ? 'Add unit of' : 'Add serving of'} ${item.name}`}
+                                >+</button>
                               )}
                               <button
                                 onClick={() => removeAssignment(item.id)}

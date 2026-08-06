@@ -52,6 +52,7 @@
 | 46 | [Trip Snack Mode + Schema](2026-08-06-01-trip-snack-mode-schema.md) | snack_model/snacks_per_day/oz_per_snack columns, unit tables, calculator fields |
 | 47 | [Snack Unit Type Library](2026-08-06-02-snack-unit-library.md) | Reusable bag compositions with derived values + library UI |
 | 48 | [Trip Unit Selections + Quota](2026-08-06-03-trip-unit-selections.md) | Unit selection endpoints, quota meter, structured planner UI |
+| 49 | [Daily Plan Units](2026-08-06-04-daily-plan-units.md) | Auto-fill units 2+2 into snack slots, day page rendering |
 
 ## In Progress
 
@@ -62,7 +63,6 @@
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
-| 49 | [Daily Plan Units](2026-08-06-04-daily-plan-units.md) | Auto-fill units 2+2 into snack slots, day page rendering | 48 |
 | 50 | [Shopping + Packing Units](2026-08-06-05-shopping-packing-units.md) | Bag expansion on shopping list, bag-assembly packing view | 48 |
 | 51 | [MCP + Plan-Food Agent Units](2026-08-06-06-mcp-agent-units.md) | Unit tools, quota readout, structured agent flow | 48 |
 
