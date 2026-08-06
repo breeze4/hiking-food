@@ -59,9 +59,16 @@
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
+| 46 | [Trip Snack Mode + Schema](2026-08-06-01-trip-snack-mode-schema.md) | snack_model/snacks_per_day/oz_per_snack columns, unit tables, calculator fields | — |
+| 47 | [Snack Unit Type Library](2026-08-06-02-snack-unit-library.md) | Reusable bag compositions with derived values + library UI | 46 |
+| 48 | [Trip Unit Selections + Quota](2026-08-06-03-trip-unit-selections.md) | Unit selection endpoints, quota meter, structured planner UI | 46, 47 |
+| 49 | [Daily Plan Units](2026-08-06-04-daily-plan-units.md) | Auto-fill units 2+2 into snack slots, day page rendering | 48 |
+| 50 | [Shopping + Packing Units](2026-08-06-05-shopping-packing-units.md) | Bag expansion on shopping list, bag-assembly packing view | 48 |
+| 51 | [MCP + Plan-Food Agent Units](2026-08-06-06-mcp-agent-units.md) | Unit tools, quota readout, structured agent flow | 48 |
 
 ## Specs
 
+- [Structured Snack Units](../specs/2026-08-06-01-structured-snack-units.md) — 4 × 2 oz/day snack model for new trips; covers plans 46-51
 - [API-Driven Cohesion and Hardening](../specs/2026-07-11-01-api-driven-cohesion.md) — unifies REST and MCP trip workflows and hardens persistence, security, and frontend state
 - [Macronutrient Tracking](../specs/10-macronutrient-tracking.md) — covers plans 27-32
 - [Macro Research Agent](../specs/11-macro-research-agent.md) — covers plan 37
