@@ -10,7 +10,9 @@ from sqlalchemy.pool import StaticPool
 
 from database import Base, create_database_engine
 from main import inner as test_app
-from routers import trips, snacks, recipes, ingredients, daily_plan, settings, food_intake
+from routers import (
+    trips, snacks, snack_units, recipes, ingredients, daily_plan, settings, food_intake,
+)
 
 _engine = create_database_engine(
     "sqlite:///:memory:",
@@ -29,7 +31,9 @@ def _override_get_db():
         db.close()
 
 
-for mod in (trips, snacks, recipes, ingredients, daily_plan, settings, food_intake):
+for mod in (
+    trips, snacks, snack_units, recipes, ingredients, daily_plan, settings, food_intake,
+):
     test_app.dependency_overrides[mod.get_db] = _override_get_db
 
 

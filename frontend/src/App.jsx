@@ -10,6 +10,7 @@ import SettingsModal from './components/SettingsModal';
 // under Vite's size-warning threshold.
 const IngredientsPage = lazy(() => import('./pages/IngredientsPage'));
 const SnackCatalogPage = lazy(() => import('./pages/SnackCatalogPage'));
+const SnackUnitLibraryPage = lazy(() => import('./pages/SnackUnitLibraryPage'));
 const IntakePage = lazy(() => import('./pages/IntakePage'));
 const RecipesPage = lazy(() => import('./pages/RecipesPage'));
 const RecipeEditPage = lazy(() => import('./pages/RecipeEditPage'));
@@ -29,6 +30,7 @@ function NavLinks({ onClick }) {
       <PlannerLink className={linkClass} onClick={onClick} />
       <NavLink to="/recipes" className={linkClass} onClick={onClick}>Recipes</NavLink>
       <NavLink to="/snacks" className={linkClass} onClick={onClick}>Snack Catalog</NavLink>
+      <NavLink to="/snack-units" className={linkClass} onClick={onClick}>Snack Units</NavLink>
       <NavLink to="/ingredients" className={linkClass} onClick={onClick}>Ingredients</NavLink>
       <NavLink to="/intake" className={linkClass} onClick={onClick}>Intake</NavLink>
       <DailyPlanLink onClick={onClick} />
@@ -159,6 +161,7 @@ function App() {
                 <Route path="/" element={<TripIndexRedirect />} />
                 <Route path="/ingredients" element={<IngredientsPage />} />
                 <Route path="/snacks" element={<SnackCatalogPage />} />
+                <Route path="/snack-units" element={<SnackUnitLibraryPage />} />
                 <Route path="/intake" element={<IntakePage />} />
                 <Route path="/recipes" element={<RecipesPage />} />
                 <Route path="/recipes/:id" element={<RecipeEditPage />} />

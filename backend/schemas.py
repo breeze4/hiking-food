@@ -99,6 +99,50 @@ class SnackRead(BaseModel):
     rating: Optional[int] = None
 
 
+# --- Snack Unit Types (bags) ---
+
+class SnackUnitIngredientCreate(BaseModel):
+    ingredient_id: int
+    amount_oz: float
+
+
+class SnackUnitIngredientRead(BaseModel):
+    id: int
+    ingredient_id: int
+    ingredient_name: str
+    amount_oz: float
+    calories: Optional[float] = None
+
+
+class SnackUnitTypeCreate(BaseModel):
+    name: str
+    notes: Optional[str] = None
+    composition: list[SnackUnitIngredientCreate] = []
+
+
+class SnackUnitTypeUpdate(BaseModel):
+    name: Optional[str] = None
+    notes: Optional[str] = None
+    composition: Optional[list[SnackUnitIngredientCreate]] = None
+
+
+class SnackUnitTypeRead(BaseModel):
+    id: int
+    name: str
+    notes: Optional[str] = None
+    composition: list[SnackUnitIngredientRead] = []
+    weight_oz: float
+    calories: float
+    cal_per_oz: Optional[float] = None
+    protein_g: float = 0
+    fat_g: float = 0
+    carb_g: float = 0
+    # Non-blocking: the bag is outside +/-25% of the 2 oz default.
+    weight_warning: bool = False
+    # False when a composition ingredient lacks per-oz calorie or macro data.
+    has_full_data: bool = True
+
+
 # --- Recipes ---
 
 class RecipeIngredientCreate(BaseModel):

@@ -27,10 +27,10 @@ AFK
 
 ## Acceptance criteria
 
-- [ ] `venv/bin/pytest` passes with a new backend test module covering: CRUD round-trip; derived weight equals sum of composition oz; derived calories equal Σ(amount_oz × ingredient calories_per_oz); macros likewise; `weight_warning` true at 1.4 oz and 2.6 oz, false at 1.5–2.5 oz.
-- [ ] DELETE on a unit type referenced by any `trip_snack_units` row returns 409 with a clear message; unreferenced types delete with 204.
-- [ ] `GET /api/snack-unit-types` lists types with composition and derived values in one response.
-- [ ] Library UI: create a bag with two ingredients, see derived weight/calories update, see the warning badge on an off-weight bag; `pnpm lint && pnpm build && pnpm test` pass with a component test for the builder.
+- [x] `venv/bin/pytest` passes with a new backend test module covering: CRUD round-trip; derived weight equals sum of composition oz; derived calories equal Σ(amount_oz × ingredient calories_per_oz); macros likewise; `weight_warning` true at 1.4 oz and 2.6 oz, false at 1.5–2.5 oz.
+- [x] DELETE on a unit type referenced by any `trip_snack_units` row returns 409 with a clear message; unreferenced types delete with 204.
+- [x] `GET /api/snack-unit-types` lists types with composition and derived values in one response.
+- [x] Library UI: create a bag with two ingredients, see derived weight/calories update, see the warning badge on an off-weight bag; `pnpm lint && pnpm build && pnpm test` pass with a component test for the builder.
 
 ## Owns
 
@@ -63,11 +63,11 @@ AFK
 
 ## Tasks
 
-- [ ] View functions in `catalog_queries.py` with all composition math (weight, calories, macros, `weight_warning` vs ±25% of 2 oz).
-- [ ] Router: list/create/update/delete unit types, composition managed as nested payload on create/update (like recipe ingredients); 409 delete protection.
-- [ ] Schemas + router registration.
-- [ ] Backend tests per acceptance criteria.
-- [ ] Library page: list with derived values + warning badge, bag builder (name, notes, ingredient rows with oz), delete with error surfacing; component test; nav entry.
+- [x] View functions in `catalog_queries.py` with all composition math (weight, calories, macros, `weight_warning` vs ±25% of 2 oz).
+- [x] Router: list/create/update/delete unit types, composition managed as nested payload on create/update (like recipe ingredients); 409 delete protection.
+- [x] Schemas + router registration.
+- [x] Backend tests per acceptance criteria.
+- [x] Library page: list with derived values + warning badge, bag builder (name, notes, ingredient rows with oz), delete with error surfacing; component test; nav entry.
 
 ## Implementation notes
 

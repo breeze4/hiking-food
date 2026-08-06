@@ -48,6 +48,27 @@ export function makeTripDetail(overrides = {}) {
   };
 }
 
+// A snack unit type (bag) as the library endpoint returns it: composition plus
+// every derived value. `snackUnitTypes` accepts an array or a function, so a
+// test can return a different library on the refetch after a mutation.
+export function makeSnackUnitType(overrides = {}) {
+  return {
+    id: 1,
+    name: 'Trail Mix Bag',
+    notes: null,
+    composition: [],
+    weight_oz: 2,
+    calories: 300,
+    cal_per_oz: 150,
+    protein_g: 8,
+    fat_g: 20,
+    carb_g: 26,
+    weight_warning: false,
+    has_full_data: true,
+    ...overrides,
+  };
+}
+
 export function makeSummary(overrides = {}) {
   return {
     total_days: 1,
@@ -88,6 +109,7 @@ export function createApiMock(config = {}) {
     tripDetails = {}, // { [id]: full detail object }
     recipes = [], // GET /recipes list
     snacks = [], // GET /snacks catalog
+    snackUnitTypes = [], // GET /snack-unit-types library
     ingredients = [],
     foodIntake = [],
     recipesById = DEFAULT_RECIPES_BY_ID,
@@ -140,6 +162,9 @@ export function createApiMock(config = {}) {
     if (path === '/hiking-food/api/trips') return jsonResponse(trips);
     if (path === '/hiking-food/api/recipes') return jsonResponse(recipes);
     if (path === '/hiking-food/api/snacks') return jsonResponse(snacks);
+    if (path === '/hiking-food/api/snack-unit-types') {
+      return jsonResponse(typeof snackUnitTypes === 'function' ? snackUnitTypes() : snackUnitTypes);
+    }
     if (path === '/hiking-food/api/ingredients') return jsonResponse(ingredients);
     if (path === '/hiking-food/api/food-intake') return jsonResponse(foodIntake);
 

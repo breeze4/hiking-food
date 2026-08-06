@@ -19,3 +19,26 @@ and a proposed fix when obvious.
     preferences; the gate now fails only on genuine `.in`-vs-lock inconsistency.
     Added `scripts/update-requirements.sh` for deliberate regen/upgrades. A pinned
     lockfile should only change on intentional upgrade, never on upstream drift.
+
+- date: 2026-08-06
+  context: hiking-food step 2 (snack unit library); backend test fixtures
+  category: friction
+  body: Test fixtures passed `calories_per_oz` alongside macros when creating
+    ingredients, and three assertions failed with numbers nobody expected. The
+    ingredients router derives `calories_per_oz` from macros (4/9/4 Atwater)
+    whenever macros are present and silently drops the supplied value.
+  fix: Recorded in the step-2 handoff so later plans' fixtures state macros only
+    and assert against the derived per-oz calories. A comment on the derivation
+    branch in `routers/ingredients.py` would catch this at the source.
+
+- date: 2026-08-06
+  context: hiking-food step 2; whole-App vitest page test
+  category: friction
+  body: A page test clicked `getByRole('button', { name: 'Delete' })` and hit the
+    TripSelector's Delete in the header instead of the table row's, deleting a
+    trip and leaving the assertion to fail somewhere unrelated. Whole-App renders
+    put the header's generic control names in scope for every page test.
+  fix: Give repeated table row actions per-item accessible names (`Delete {name}`)
+    — better for screen readers and unambiguous in tests. Also note that a Base UI
+    modal hides the background from the accessibility tree, so assertions about
+    the table behind an open dialog must dismiss it first.

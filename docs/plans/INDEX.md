@@ -49,6 +49,8 @@
 | 43 | [OAuth + Server Hardening](43-oauth-server-hardening.md) | Password throttling, honest metadata, CORS removal, MCP host policy, lazy absolute OAuth DB |
 | 44 | [Frontend Mutation UX](44-frontend-mutation-ux.md) | Mutation pending/error state, accessible control names, lazy-loaded routes |
 | 45 | [Catalog Projections + Audit](45-catalog-projections-audit.md) | Shared catalog projections, architecture.md refresh, completion audit |
+| 46 | [Trip Snack Mode + Schema](2026-08-06-01-trip-snack-mode-schema.md) | snack_model/snacks_per_day/oz_per_snack columns, unit tables, calculator fields |
+| 47 | [Snack Unit Type Library](2026-08-06-02-snack-unit-library.md) | Reusable bag compositions with derived values + library UI |
 
 ## In Progress
 
@@ -59,8 +61,6 @@
 
 | # | Plan | Description | Blocked by |
 |---|------|-------------|------------|
-| 46 | [Trip Snack Mode + Schema](2026-08-06-01-trip-snack-mode-schema.md) | snack_model/snacks_per_day/oz_per_snack columns, unit tables, calculator fields | — |
-| 47 | [Snack Unit Type Library](2026-08-06-02-snack-unit-library.md) | Reusable bag compositions with derived values + library UI | 46 |
 | 48 | [Trip Unit Selections + Quota](2026-08-06-03-trip-unit-selections.md) | Unit selection endpoints, quota meter, structured planner UI | 46, 47 |
 | 49 | [Daily Plan Units](2026-08-06-04-daily-plan-units.md) | Auto-fill units 2+2 into snack slots, day page rendering | 48 |
 | 50 | [Shopping + Packing Units](2026-08-06-05-shopping-packing-units.md) | Bag expansion on shopping list, bag-assembly packing view | 48 |

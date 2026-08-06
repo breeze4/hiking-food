@@ -29,12 +29,12 @@ None - can start immediately.
 
 ## Acceptance criteria
 
-- [ ] `venv/bin/pytest` passes; migration test proves a pre-migration DB backfills every existing trip to `snack_model='legacy'` and creates the three tables.
-- [ ] A legacy trip's `GET /api/trips/{id}/summary` response is identical before and after the migration (assert in a test by comparing full dicts).
-- [ ] `POST /api/trips` returns `snack_model='structured'`, `snacks_per_day=4`, `oz_per_snack=2` without the client sending them.
-- [ ] `POST /api/trips/{id}/clone` on a trip with non-default values copies all three fields exactly.
-- [ ] `PUT /api/trips/{id}` can update `snacks_per_day` and `oz_per_snack`; `snack_model` is accepted on update (no dedicated UI affordance, per spec Out of Scope).
-- [ ] Trip calculator shows "Snacks/day" and "Oz/snack" inputs for a structured trip and hides them for a legacy trip; `pnpm lint && pnpm build && pnpm test` pass.
+- [x] `venv/bin/pytest` passes; migration test proves a pre-migration DB backfills every existing trip to `snack_model='legacy'` and creates the three tables.
+- [x] A legacy trip's `GET /api/trips/{id}/summary` response is identical before and after the migration (assert in a test by comparing full dicts).
+- [x] `POST /api/trips` returns `snack_model='structured'`, `snacks_per_day=4`, `oz_per_snack=2` without the client sending them.
+- [x] `POST /api/trips/{id}/clone` on a trip with non-default values copies all three fields exactly.
+- [x] `PUT /api/trips/{id}` can update `snacks_per_day` and `oz_per_snack`; `snack_model` is accepted on update (no dedicated UI affordance, per spec Out of Scope).
+- [x] Trip calculator shows "Snacks/day" and "Oz/snack" inputs for a structured trip and hides them for a legacy trip; `pnpm lint && pnpm build && pnpm test` pass.
 
 ## Owns
 

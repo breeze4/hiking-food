@@ -40,3 +40,26 @@ export function patch(path, data) {
 export function del(path) {
   return request(path, { method: 'DELETE' });
 }
+
+// --- Snack unit type library ---
+// The library is read by the planner as well as its own page, so the endpoint
+// path lives here once. Responses already carry derived weight/calories/macros;
+// callers never recompute composition math.
+
+const SNACK_UNIT_TYPES = '/snack-unit-types';
+
+export function listSnackUnitTypes() {
+  return get(SNACK_UNIT_TYPES);
+}
+
+export function createSnackUnitType(data) {
+  return post(SNACK_UNIT_TYPES, data);
+}
+
+export function updateSnackUnitType(id, data) {
+  return put(`${SNACK_UNIT_TYPES}/${id}`, data);
+}
+
+export function deleteSnackUnitType(id) {
+  return del(`${SNACK_UNIT_TYPES}/${id}`);
+}
