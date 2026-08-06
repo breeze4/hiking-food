@@ -26,9 +26,9 @@ AFK
 
 ## Acceptance criteria
 
-- [ ] `venv/bin/pytest` passes with new MCP tool tests (prior art `test_mcp_tools.py`): list unit types returns derived values; create a bag type; set/remove trip units; quota readout matches `unit_quota`; unit tools against a legacy trip return the structured-only error; existing tool tests unchanged.
-- [ ] `get_trip_plan` on a structured trip includes `snack_units` (quota, filled, selections); on a legacy trip its output is unchanged.
-- [ ] `.claude/agents/plan-food.md` documents the structured flow (mode check, quota fill, bag creation, tolerance) and keeps the legacy flow for legacy trips.
+- [x] `venv/bin/pytest` passes with new MCP tool tests (prior art `test_mcp_tools.py`): list unit types returns derived values; create a bag type; set/remove trip units; quota readout matches `unit_quota`; unit tools against a legacy trip return the structured-only error; existing tool tests unchanged.
+- [x] `get_trip_plan` on a structured trip includes `snack_units` (quota, filled, selections); on a legacy trip its output is unchanged.
+- [x] `.claude/agents/plan-food.md` documents the structured flow (mode check, quota fill, bag creation, tolerance) and keeps the legacy flow for legacy trips.
 
 ## Owns
 
@@ -55,7 +55,7 @@ None — consumes the service layer defined by plans 02 and 03.
 
 ## Tasks
 
-- [ ] Tools: `list_snack_unit_types`, `create_snack_unit_type`, `set_trip_snack_unit` (add/update quantity by catalog item or unit type), `remove_trip_snack_unit` — all delegating to the plan-02/03 service layer.
-- [ ] Extend `get_trip_plan` with the `snack_units` block on structured trips.
-- [ ] MCP tests per criteria, including the legacy-unchanged assertion.
-- [ ] Update the plan-food agent instructions with the structured flow.
+- [x] Tools: `list_snack_unit_types`, `create_snack_unit_type`, `set_trip_snack_unit` (add/update quantity by catalog item or unit type), `remove_trip_snack_unit` — all delegating to the plan-02/03 service layer.
+- [x] Extend `get_trip_plan` with the `snack_units` block on structured trips.
+- [x] MCP tests per criteria, including the legacy-unchanged assertion.
+- [x] Update the plan-food agent instructions with the structured flow.

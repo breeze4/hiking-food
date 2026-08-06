@@ -187,9 +187,9 @@ All six steps are **goal-directed**: lead with the Goal and Done-when; the agent
 
 ## Interface gates
 
-- [ ] After Step 1: trip fields + three models exist under the exact names Steps 2–6 use
-- [ ] After Step 2: `snack_unit_type_view` shape (composition, derived values, `weight_warning`) present in list endpoint
-- [ ] After Step 3: `unit_quota(trip)`, summary `snack_units` block, and selection REST shape present
+- [x] After Step 1: trip fields + three models exist under the exact names Steps 2–6 use
+- [x] After Step 2: `snack_unit_type_view` shape (composition, derived values, `weight_warning`) present in list endpoint
+- [x] After Step 3: `unit_quota(trip)`, summary `snack_units` block, and selection REST shape present
 
 ## HITL checkpoints
 
@@ -199,11 +199,11 @@ None — end-of-run review of the commits instead.
 
 Target: `http://localhost:5173/hiking-food/` (start `uvicorn main:app --reload` in `backend/` and `pnpm dev` in `frontend/`).
 
-- [ ] Step 1: calculator fields on new vs legacy trip
-- [ ] Step 2: bag builder, derived values, warning badge
-- [ ] Step 3: unit picker + quota meter + tolerance badge; legacy planner unchanged
-- [ ] Step 4: auto-fill 2+2 distribution, unallocated return
-- [ ] Step 5: shopping expansion, bag-assembly packing rows
+- [x] Step 1: calculator fields on new vs legacy trip
+- [x] Step 2: bag builder, derived values, warning badge
+- [x] Step 3: unit picker + quota meter + tolerance badge; legacy planner unchanged
+- [x] Step 4: auto-fill 2+2 distribution, unallocated return
+- [x] Step 5: shopping expansion, bag-assembly packing rows
 - Skipped (no browser surface): Step 6 (MCP tools; exercised via pytest)
 
 ## Completion criteria

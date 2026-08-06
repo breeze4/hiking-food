@@ -27,6 +27,11 @@ Use `curl` via Bash for all API calls.
 | POST | /trips/:id/snacks | Add snack `{ catalog_item_id, servings }` |
 | PUT | /trips/:id/snacks/:id | Update snack `{ servings, trip_notes }` |
 | DELETE | /trips/:id/snacks/:id | Remove snack |
+| GET | /snack-unit-types | Snack unit (bag) library with derived weight/cal/macros |
+| POST | /snack-unit-types | Create a bag `{ name, notes, composition: [{ ingredient_id, amount_oz }] }` |
+| POST | /trips/:id/snack-units | Add unit `{ catalog_item_id \| unit_type_id, quantity }` |
+| PUT | /trips/:id/snack-units/:id | Update unit `{ quantity, trip_notes }` |
+| DELETE | /trips/:id/snack-units/:id | Remove unit |
 | GET | /trips/:id/summary | Weight/calorie targets and actuals |
 | GET | /trips/:id/shopping-list | Aggregated ingredient list |
 | GET | /recipes | List all recipes with weight/cal/category |
@@ -39,7 +44,7 @@ Use `curl` via Bash for all API calls.
 Every time you plan a trip, follow this sequence:
 
 ### 1. Read current state
-- GET the trip detail (days, meals, snacks)
+- GET the trip detail (days, meals, snacks) and read its `snack_model` first — `structured` trips plan snacks as units, `legacy` trips plan them as servings (see Structured Snack Units)
 - GET the trip summary (targets, actuals)
 - GET the recipe library
 - GET the snack catalog
@@ -59,7 +64,7 @@ Make API calls to add/remove/adjust meals and snacks. Work in this order:
 2. **Dinners** second (drives remaining calorie budget)
 3. **Drink mixes** (daily budget, manually allocated)
 4. **Lunch items** (40% of remaining calories — slot `lunch`)
-5. **Snacks** (60% of remaining calories — slot `snacks`, includes bars/energy, salty, sweet)
+5. **Snacks** — legacy trips: 60% of remaining calories (slot `snacks`, includes bars/energy, salty, sweet). Structured trips: fill the unit quota instead, see Structured Snack Units
 
 ### 4. Summarize
 After writing changes, GET the updated summary and present:
@@ -107,6 +112,8 @@ Write these to a memory file using the Write tool.
 - **Minimize unique items.** Aim for 3-5 items per slot, not 10+.
 
 ### Slot calorie targets
+On a structured trip only the lunch half of this applies — the snacks slot has no calorie band there, the unit quota replaces it.
+
 After selecting meals, compute remaining daily calories:
 ```
 remaining_cal_per_day = total_daily_target - breakfast_cal_per_day - dinner_cal_per_day
@@ -123,6 +130,47 @@ Use the midpoint of the low/high calorie target range.
 - Servings are manually set per item, always whole numbers (packets)
 - New drink mixes start at 1 serving
 - Filled separately from slot math — not counted in lunch/snacks calorie targets
+
+## Structured Snack Units
+
+A structured trip (`snack_model: "structured"` on the trip detail) plans snacks as **units** instead of servings. A unit is one grab-and-go item of about `oz_per_snack` (default 2 oz), and the trip needs `snacks_per_day` of them per day (default 4). Legacy trips (`snack_model: "legacy"`) ignore this whole section and keep the 60% snacks band.
+
+Drink mixes and lunch items are still servings on `/trips/:id/snacks` on both models. Only the snacks slot changes.
+
+### 1. Read the quota
+
+`GET /trips/:id/summary` → `snack_units`:
+
+| Field | Meaning |
+|--------|---------|
+| `quota` | Units the whole trip needs |
+| `per_day` | Units per day, first day through last (a partial day gets its share, rounded up) |
+| `filled` | Units currently selected |
+
+The goal is `filled == quota`, exactly. `GET /trips/:id` → `snack_units` lists what fills it, each with `kind` (`packaged` or `bag`), `name`, `quantity`, `weight_oz`, `calories`, and `weight_warning`.
+
+### 2. Pick from two kinds of unit
+
+- **Packaged** — one serving of a snack catalog item, selected by `catalog_item_id`. A 2 oz bag of nuts is a unit; a 6 oz can of Pringles is not.
+- **Bag** — a repackaged mix from the shared unit library, selected by `unit_type_id`. `GET /snack-unit-types` lists each bag with its composition and derived weight, calories, and macros.
+
+Every unit should weigh within **±25% of the trip's `oz_per_snack`** (1.5–2.5 oz at the 2 oz default). The server sets `weight_warning: true` on any selection outside that band — after writing, re-read the trip and swap or rebuild anything flagged instead of leaving it in the plan.
+
+### 3. Build a bag when nothing packaged fits
+
+`POST /snack-unit-types` with `{ "name": ..., "notes": ..., "composition": [{ "ingredient_id": N, "amount_oz": X }] }`. Weight, calories, and macros are derived from the ingredients — never send them. Aim the composition ounces at `oz_per_snack`. Reuse an existing bag when one matches; the library is shared across trips, and a bag a trip uses cannot be deleted.
+
+### 4. Fill the quota
+
+- `POST /trips/:id/snack-units` `{ "catalog_item_id": N, "quantity": Q }` or `{ "unit_type_id": N, "quantity": Q }` — exactly one of the two ids, quantity greater than zero.
+- `PUT /trips/:id/snack-units/:unit_id` `{ "quantity": Q }` to change a count.
+- `DELETE /trips/:id/snack-units/:unit_id` to drop one.
+
+The core philosophy still holds: 3-5 unique units, at least 3 of each, good food spread across the whole trip rather than saved for the end. Changing units clears the day assignments, so run `POST /trips/:id/daily-plan/auto-fill` after the last change.
+
+### 5. Confirm
+
+Re-read the summary and report `filled` against `quota`. A short-of-quota trip is an unfinished plan. A `snack-units` call against a legacy trip answers 409 `Trip does not use the structured snack model` — that means you read `snack_model` wrong, not that the call needs retrying.
 
 ## Snack Category Assignments
 

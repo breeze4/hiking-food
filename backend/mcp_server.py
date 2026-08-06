@@ -12,8 +12,11 @@ from mcp.types import ToolAnnotations
 from sqlalchemy.orm import Session
 
 from database import SessionLocal
-from services import catalog_queries
+from models import Ingredient, SnackUnitIngredient, SnackUnitType
+from schemas import SnackUnitIngredientCreate
+from services import catalog_queries, snack_units
 from services.trip_planning import TripPlanningService
+from services.trip_queries import STRUCTURED_SNACK_MODEL
 
 
 READ_ONLY = ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True)
@@ -62,6 +65,18 @@ def build_transport_security() -> TransportSecuritySettings:
     )
 
 
+def _selected_unit(
+    detail: dict, catalog_item_id: int | None, unit_type_id: int | None
+) -> dict | None:
+    """The trip's existing selection of this unit, if it already packs one."""
+    for unit in detail["snack_units"]:
+        if catalog_item_id is not None and unit["catalog_item_id"] == catalog_item_id:
+            return unit
+        if unit_type_id is not None and unit["unit_type_id"] == unit_type_id:
+            return unit
+    return None
+
+
 @contextmanager
 def _session():
     db = SessionLocal()
@@ -82,7 +97,10 @@ def build_mcp_server() -> FastMCP:
             "Before writing, list trips and inspect the intended source or destination. "
             "Never create a duplicate destination trip. Prefer cloning a relevant prior trip, "
             "then make targeted quantity changes and run auto_fill_daily_plan. After changes, "
-            "read the overview and daily plan to verify totals and unallocated food."
+            "read the overview and daily plan to verify totals and unallocated food. "
+            "A trip whose snack_model is structured plans snacks as fixed-size units rather "
+            "than servings: read its unit quota from the overview summary, browse bags with "
+            "list_snack_unit_types, and fill the quota with set_trip_snack_unit."
         ),
         streamable_http_path="/",
         stateless_http=True,
@@ -100,7 +118,13 @@ def build_mcp_server() -> FastMCP:
         trip_id: int,
         section: Literal["overview", "daily_plan", "packing", "shopping", "all"] = "overview",
     ) -> dict:
-        """Read one trip. Use overview for planning; request heavier sections only when needed."""
+        """Read one trip. Use overview for planning; request heavier sections only when needed.
+
+        On a structured trip the overview carries the snack unit plan in two
+        places: summary.snack_units holds quota, per_day, and filled, and
+        trip.snack_units lists the selections that fill it. A legacy trip has no
+        summary.snack_units block.
+        """
         with _session() as db:
             planner = TripPlanningService(db)
             result: dict = {"trip": planner.read_trip(trip_id)}
@@ -235,6 +259,113 @@ def build_mcp_server() -> FastMCP:
                 "trip_id": trip_id, "catalog_item_id": catalog_item_id,
                 "ingredient_name": result.name, "servings": result.amount,
                 "action": result.action, "daily_plan_needs_autofill": True,
+            }
+
+    @mcp.tool(annotations=READ_ONLY)
+    def list_snack_unit_types() -> dict:
+        """List the snack unit library: each reusable bag with its derived weight and calories."""
+        with _session() as db:
+            return {"unit_types": catalog_queries.snack_unit_type_list_view(db)}
+
+    @mcp.tool(annotations=WRITE_NEW)
+    def create_snack_unit_type(
+        name: str,
+        composition: list[SnackUnitIngredientCreate] | None = None,
+        notes: str | None = None,
+    ) -> dict:
+        """Add a reusable bag to the snack unit library from its ingredient ounces.
+
+        Composition rows are {"ingredient_id": int, "amount_oz": float}. Weight,
+        calories, and macros are derived from the ingredients, never supplied.
+        Aim for a bag near the trip's oz_per_snack target.
+        """
+        rows = [
+            SnackUnitIngredientCreate.model_validate(row) for row in composition or []
+        ]
+        with _session() as db:
+            unit_type = SnackUnitType(name=name, notes=notes)
+            db.add(unit_type)
+            db.flush()
+            for row in rows:
+                if not db.get(Ingredient, row.ingredient_id):
+                    raise ValueError(f"Ingredient {row.ingredient_id} not found")
+                db.add(SnackUnitIngredient(
+                    unit_type_id=unit_type.id,
+                    ingredient_id=row.ingredient_id,
+                    amount_oz=row.amount_oz,
+                ))
+            db.commit()
+            db.refresh(unit_type)
+            return {
+                "unit_type": catalog_queries.snack_unit_type_view(
+                    unit_type, catalog_queries.snack_unit_composition(db, unit_type.id)
+                )
+            }
+
+    @mcp.tool(annotations=WRITE_UPDATE)
+    def set_trip_snack_unit(
+        trip_id: int,
+        catalog_item_id: int | None = None,
+        unit_type_id: int | None = None,
+        quantity: int = 1,
+    ) -> dict:
+        """Set how many units of one packaged snack or library bag a structured trip packs.
+
+        Name exactly one of catalog_item_id (a snack catalog item, packed as
+        whole servings) or unit_type_id (a bag from list_snack_unit_types). Use
+        zero to remove the selection. Structured trips only; a legacy trip plans
+        snacks with set_trip_snack_servings instead.
+        """
+        with _session() as db:
+            planner = TripPlanningService(db)
+            detail = planner.read_trip(trip_id)
+            names_one_unit = (catalog_item_id is None) != (unit_type_id is None)
+            existing = (
+                _selected_unit(detail, catalog_item_id, unit_type_id)
+                if names_one_unit else None
+            )
+            # add_snack_unit checks the snack model, then the reference, then the
+            # quantity, so routing every rejected call through it keeps one copy
+            # of each refusal in the service.
+            if (
+                detail["snack_model"] != STRUCTURED_SNACK_MODEL
+                or not names_one_unit
+                or (existing is None and quantity > 0)
+            ):
+                selection = planner.add_snack_unit(trip_id, {
+                    "catalog_item_id": catalog_item_id,
+                    "unit_type_id": unit_type_id,
+                    "quantity": quantity,
+                })
+                unit = snack_units.trip_snack_unit_view(db, selection)
+                action = "added"
+            elif quantity > 0:
+                selection = planner.update_snack_unit(
+                    trip_id, existing["id"], {"quantity": quantity}
+                )
+                unit = snack_units.trip_snack_unit_view(db, selection)
+                action = "updated"
+            else:
+                if existing is not None:
+                    planner.remove_snack_unit(trip_id, existing["id"])
+                unit = existing
+                action = "removed"
+            return {
+                "trip_id": trip_id, "action": action, "unit": unit,
+                "snack_units": planner.read_summary(trip_id)["snack_units"],
+                "daily_plan_needs_autofill": True,
+            }
+
+    @mcp.tool(annotations=WRITE_UPDATE)
+    def remove_trip_snack_unit(trip_id: int, unit_id: int) -> dict:
+        """Drop one unit selection from a structured trip by its snack_units id."""
+        with _session() as db:
+            planner = TripPlanningService(db)
+            planner.remove_snack_unit(trip_id, unit_id)
+            return {
+                "trip_id": trip_id, "unit_id": unit_id, "action": "removed",
+                "snack_units": planner.read_summary(trip_id)["snack_units"],
+                "daily_plan_needs_autofill": True,
             }
 
     @mcp.tool(annotations=WRITE_UPDATE)
