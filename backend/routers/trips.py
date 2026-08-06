@@ -13,6 +13,9 @@ from schemas import (
     TripMealUpdate,
     TripSnackCreate,
     TripSnackRead,
+    TripSnackUnitCreate,
+    TripSnackUnitRead,
+    TripSnackUnitUpdate,
     TripSnackUpdate,
     TripSummaryRead,
     TripUpdate,
@@ -25,6 +28,7 @@ from services.trip_planning import (
     TripPlanningService,
     TripSelectionNotFoundError,
 )
+from services.snack_units import trip_snack_unit_view
 from services.trip_queries import trip_meal_view, trip_snack_view
 
 
@@ -133,6 +137,51 @@ def remove_trip_snack(
         raise _http_error(exc) from exc
 
 
+@router.post(
+    "/{trip_id}/snack-units", response_model=TripSnackUnitRead, status_code=201
+)
+def add_trip_snack_unit(
+    trip_id: int,
+    data: TripSnackUnitCreate,
+    db: Session = Depends(get_db),
+):
+    try:
+        selection = TripPlanningService(db).add_snack_unit(trip_id, data.model_dump())
+        return trip_snack_unit_view(db, selection)
+    except TripPlanningError as exc:
+        raise _http_error(exc) from exc
+
+
+@router.put("/{trip_id}/snack-units/{unit_id}", response_model=TripSnackUnitRead)
+def update_trip_snack_unit(
+    trip_id: int,
+    unit_id: int,
+    data: TripSnackUnitUpdate,
+    db: Session = Depends(get_db),
+):
+    try:
+        selection = TripPlanningService(db).update_snack_unit(
+            trip_id,
+            unit_id,
+            data.model_dump(exclude_unset=True),
+        )
+        return trip_snack_unit_view(db, selection)
+    except TripPlanningError as exc:
+        raise _http_error(exc) from exc
+
+
+@router.delete("/{trip_id}/snack-units/{unit_id}", status_code=204)
+def remove_trip_snack_unit(
+    trip_id: int,
+    unit_id: int,
+    db: Session = Depends(get_db),
+):
+    try:
+        TripPlanningService(db).remove_snack_unit(trip_id, unit_id)
+    except TripPlanningError as exc:
+        raise _http_error(exc) from exc
+
+
 @router.post("/{trip_id}/meals", response_model=TripMealRead, status_code=201)
 def add_trip_meal(
     trip_id: int,
@@ -176,7 +225,14 @@ def remove_trip_meal(
         raise _http_error(exc) from exc
 
 
-@router.get("/{trip_id}/summary", response_model=TripSummaryRead)
+# exclude_unset keeps the response a mirror of the view: a legacy trip's
+# summary gains no snack_units key, and a structured trip's snacks slot carries
+# no calorie band, exactly as trip_summary_view computes them.
+@router.get(
+    "/{trip_id}/summary",
+    response_model=TripSummaryRead,
+    response_model_exclude_unset=True,
+)
 def get_trip_summary(trip_id: int, db: Session = Depends(get_db)):
     try:
         return TripPlanningService(db).read_summary(trip_id)

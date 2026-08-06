@@ -2,7 +2,6 @@
 import pytest
 
 from database import Base
-from models import TripSnackUnit
 
 
 @pytest.fixture(autouse=True)
@@ -197,17 +196,13 @@ class TestListEndpoint:
 
 
 class TestDeleteProtection:
-    def test_a_unit_type_in_use_by_a_trip_cannot_be_deleted(self, c, test_session):
+    def test_a_unit_type_in_use_by_a_trip_cannot_be_deleted(self, c):
         nuts = _nuts(c)
         bag = _create_unit_type(c, composition=[(nuts["id"], 2.0)])
         trip = c.post("/api/trips", json={"name": "Olympics 2026"}).json()
-
-        # Trip unit selections have no endpoint yet (plan -03 owns them), so the
-        # reference is written straight to the table the guard reads.
-        db = test_session()
-        db.add(TripSnackUnit(trip_id=trip["id"], unit_type_id=bag["id"], quantity=6))
-        db.commit()
-        db.close()
+        assert c.post(f"/api/trips/{trip['id']}/snack-units", json={
+            "unit_type_id": bag["id"], "quantity": 6,
+        }).status_code == 201
 
         resp = c.delete(f"/api/snack-unit-types/{bag['id']}")
         assert resp.status_code == 409

@@ -119,8 +119,10 @@ class _PreStructuredTrip:
     """A trips row as it looked before the structured-snack migration.
 
     Passing this to a read projection proves the projection reads no column
-    that migration 3 introduced, which is how the before/after summary
-    comparison below can run against the pre-migration database at all.
+    that migration 3 introduced beyond `snack_model`, which is how the
+    before/after summary comparison below can run against the pre-migration
+    database at all. `snack_model` stays None here — a row that predates the
+    column has no value for it, and the summary must still read it as legacy.
     """
 
     id: int
@@ -131,6 +133,7 @@ class _PreStructuredTrip:
     drink_mixes_per_day: int
     oz_per_day: float
     cal_per_oz: float
+    snack_model: str | None = None
 
 
 def _build_pre_structured_database(database_path, seed_sql: str):

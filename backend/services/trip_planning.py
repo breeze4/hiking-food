@@ -13,10 +13,12 @@ from models import (
     Ingredient,
     Recipe,
     SnackCatalogItem,
+    SnackUnitType,
     Trip,
     TripDayAssignment,
     TripMeal,
     TripSnack,
+    TripSnackUnit,
 )
 from services.autofill import SLOT_RULES, build_day_list
 from services.daily_plan_queries import daily_plan_view, regenerate_daily_plan
@@ -121,6 +123,15 @@ class TripPlanningService:
             raise TripNotFoundError("Trip not found")
         return trip
 
+    def _structured_trip(self, trip_id: int) -> Trip:
+        """The trip, if it plans snacks as units. Legacy trips reject the call."""
+        trip = self._trip(trip_id)
+        if (trip.snack_model or "legacy") != "structured":
+            raise TripConflictError(
+                "Trip does not use the structured snack model"
+            )
+        return trip
+
     def create_trip(self, values: Mapping[str, Any]) -> Trip:
         fields = dict(values)
         for field, default in NEW_TRIP_SNACK_DEFAULTS.items():
@@ -173,6 +184,18 @@ class TripPlanningService:
                 servings=snack.servings,
                 slot=snack.slot,
                 trip_notes=snack.trip_notes,
+            ))
+        # Unit selections copy like snacks do: what to bring carries over, the
+        # pack-day record (packed flag, actual weight) starts fresh.
+        for unit in self.db.query(TripSnackUnit).filter(
+            TripSnackUnit.trip_id == source_trip_id
+        ):
+            self.db.add(TripSnackUnit(
+                trip_id=destination.id,
+                catalog_item_id=unit.catalog_item_id,
+                unit_type_id=unit.unit_type_id,
+                quantity=unit.quantity,
+                trip_notes=unit.trip_notes,
             ))
         for meal in self.db.query(TripMeal).filter(TripMeal.trip_id == source_trip_id):
             self.db.add(TripMeal(
@@ -402,12 +425,75 @@ class TripPlanningService:
         self.db.delete(snack)
         self.db.commit()
 
+    def add_snack_unit(self, trip_id: int, values: Mapping[str, Any]) -> TripSnackUnit:
+        self._structured_trip(trip_id)
+        fields = dict(values)
+        catalog_item_id = fields.get("catalog_item_id")
+        unit_type_id = fields.get("unit_type_id")
+        # A unit is either a packaged catalog item or a library bag, never both
+        # and never neither. Nothing at the schema level enforces it.
+        if (catalog_item_id is None) == (unit_type_id is None):
+            raise TripPlanningError(
+                "Provide exactly one of catalog_item_id or unit_type_id"
+            )
+        if catalog_item_id is not None and not self.db.get(
+            SnackCatalogItem, catalog_item_id
+        ):
+            raise FoodOptionNotFoundError("Snack catalog item not found")
+        if unit_type_id is not None and not self.db.get(SnackUnitType, unit_type_id):
+            raise FoodOptionNotFoundError("Snack unit type not found")
+        if fields.get("quantity") is None:
+            fields["quantity"] = 1
+        if fields["quantity"] <= 0:
+            raise TripPlanningError("Unit quantity must be greater than zero")
+        selection = TripSnackUnit(trip_id=trip_id, **fields)
+        self.db.add(selection)
+        self._clear_assignments(trip_id)
+        self.db.commit()
+        self.db.refresh(selection)
+        return selection
+
+    def update_snack_unit(
+        self,
+        trip_id: int,
+        unit_id: int,
+        values: Mapping[str, Any],
+    ) -> TripSnackUnit:
+        self._structured_trip(trip_id)
+        selection = self.db.get(TripSnackUnit, unit_id)
+        if not selection or selection.trip_id != trip_id:
+            raise TripSelectionNotFoundError("Trip snack unit not found")
+        fields = dict(values)
+        if "quantity" in fields and (
+            fields["quantity"] is None or fields["quantity"] <= 0
+        ):
+            raise TripPlanningError("Unit quantity must be greater than zero")
+        for field, value in fields.items():
+            setattr(selection, field, value)
+        if "quantity" in fields:
+            self._clear_assignments(trip_id)
+        self.db.commit()
+        self.db.refresh(selection)
+        return selection
+
+    def remove_snack_unit(self, trip_id: int, unit_id: int) -> None:
+        self._structured_trip(trip_id)
+        selection = self.db.get(TripSnackUnit, unit_id)
+        if not selection or selection.trip_id != trip_id:
+            raise TripSelectionNotFoundError("Trip snack unit not found")
+        self._clear_assignments(trip_id)
+        self.db.delete(selection)
+        self.db.commit()
+
     def delete_trip(self, trip_id: int) -> None:
         trip = self.db.get(Trip, trip_id)
         if not trip:
             raise TripNotFoundError("Trip not found")
         self._clear_assignments(trip_id)
         self.db.query(TripSnack).filter(TripSnack.trip_id == trip_id).delete()
+        self.db.query(TripSnackUnit).filter(
+            TripSnackUnit.trip_id == trip_id
+        ).delete()
         self.db.query(TripMeal).filter(TripMeal.trip_id == trip_id).delete()
         self.db.delete(trip)
         self.db.commit()

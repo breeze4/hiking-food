@@ -17,6 +17,18 @@ from models import (
 from calculator import compute_trip_targets
 from services.autofill import build_day_list
 from services.recipe_calc import compute_recipe_totals
+from services.snack_units import (
+    trip_snack_unit_list_view,
+    trip_unit_totals,
+    unit_quota,
+)
+
+
+STRUCTURED_SNACK_MODEL = "structured"
+
+
+def _is_structured(trip: Trip) -> bool:
+    return (trip.snack_model or "legacy") == STRUCTURED_SNACK_MODEL
 
 
 def recipe_totals(db: Session, recipe_id: int) -> dict:
@@ -113,6 +125,7 @@ def trip_detail_view(db: Session, trip: Trip) -> dict:
         ),
         "oz_per_snack": trip.oz_per_snack if trip.oz_per_snack is not None else 2,
         "snacks": [trip_snack_view(db, selection) for selection in snacks],
+        "snack_units": trip_snack_unit_list_view(db, trip),
         "meals": [trip_meal_view(db, selection) for selection in meals],
     }
 
@@ -238,9 +251,30 @@ def trip_summary_view(db: Session, trip: Trip) -> dict:
         if has_macros:
             macro_covered_calories += calories
 
+    structured = _is_structured(trip)
+    snack_units_block = None
+    if structured:
+        units = trip_unit_totals(db, trip)
+        snack_weight += units["weight"]
+        snack_calories += units["calories"]
+        unit_subtotal = slot_subtotals.setdefault("snacks", {"weight": 0, "calories": 0})
+        unit_subtotal["weight"] += units["weight"]
+        unit_subtotal["calories"] += units["calories"]
+        total_protein_g += units["protein_g"]
+        total_fat_g += units["fat_g"]
+        total_carb_g += units["carb_g"]
+        total_all_calories += units["all_calories"]
+        macro_covered_calories += units["macro_covered_calories"]
+        snack_units_block = {**unit_quota(trip), "filled": units["filled"]}
+
     remaining_calories = targets["daytime_cal"] - drink_mix_calories
     total_days = targets["total_days"]
-    for slot, percentage in {"lunch": 0.40, "snacks": 0.60}.items():
+    # On a structured trip the unit meter replaces the snacks calorie band;
+    # lunch keeps its 40% band exactly as it is on a legacy trip.
+    slot_percentages = (
+        {"lunch": 0.40} if structured else {"lunch": 0.40, "snacks": 0.60}
+    )
+    for slot, percentage in slot_percentages.items():
         subtotal = slot_subtotals.setdefault(slot, {"weight": 0, "calories": 0})
         target = round(remaining_calories * percentage, 1)
         daily_target = (
@@ -256,6 +290,14 @@ def trip_summary_view(db: Session, trip: Trip) -> dict:
             ),
             "weight": round(subtotal["weight"], 2),
             "calories": round(subtotal["calories"], 1),
+        })
+    if structured:
+        snacks_subtotal = slot_subtotals.setdefault(
+            "snacks", {"weight": 0, "calories": 0}
+        )
+        snacks_subtotal.update({
+            "weight": round(snacks_subtotal["weight"], 2),
+            "calories": round(snacks_subtotal["calories"], 1),
         })
 
     total_macro_calories = total_protein_g * 4 + total_fat_g * 9 + total_carb_g * 4
@@ -280,7 +322,7 @@ def trip_summary_view(db: Session, trip: Trip) -> dict:
     )
     combined_weight = snack_weight + meal_weight_actual
     combined_calories = snack_calories + meal_calories_actual
-    return {
+    summary = {
         **targets,
         "snack_weight": round(snack_weight, 2),
         "snack_calories": round(snack_calories, 1),
@@ -313,6 +355,10 @@ def trip_summary_view(db: Session, trip: Trip) -> dict:
             if total_all_calories > 0 else None
         ),
     }
+    # A legacy trip's summary never grows a key it did not have before.
+    if snack_units_block is not None:
+        summary["snack_units"] = snack_units_block
+    return summary
 
 
 def packing_view(db: Session, trip: Trip) -> dict:

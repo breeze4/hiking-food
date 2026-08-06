@@ -63,3 +63,23 @@ export function updateSnackUnitType(id, data) {
 export function deleteSnackUnitType(id) {
   return del(`${SNACK_UNIT_TYPES}/${id}`);
 }
+
+// --- Trip snack unit selections ---
+// Structured trips only; the endpoints answer 409 on a legacy trip. A selection
+// names either a packaged catalog item or a library bag, never both.
+
+function tripSnackUnits(tripId) {
+  return `/trips/${tripId}/snack-units`;
+}
+
+export function addTripSnackUnit(tripId, data) {
+  return post(tripSnackUnits(tripId), data);
+}
+
+export function updateTripSnackUnit(tripId, unitId, data) {
+  return put(`${tripSnackUnits(tripId)}/${unitId}`, data);
+}
+
+export function removeTripSnackUnit(tripId, unitId) {
+  return del(`${tripSnackUnits(tripId)}/${unitId}`);
+}

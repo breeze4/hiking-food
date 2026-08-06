@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTrip } from '../context/TripContext';
 import ProgressMeter from './ProgressMeter';
+import SnackUnitMeter from './SnackUnitMeter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
@@ -55,10 +56,13 @@ function TripSummary() {
     const st = summary.slot_subtotals?.[slotName] || { weight: 0, calories: 0, target_cal: 0 };
     const pct = slotPcts[slotName];
     const targetWeight = remainingWeight * pct;
+    // A structured trip's snacks slot carries no calorie band; it is metered by
+    // units instead, so the band collapses to zero and is never drawn.
+    const targetCal = st.target_cal ?? 0;
     slotData[slotName] = {
       actualCal: st.calories,
-      calLow: st.target_cal * 0.9,
-      calHigh: st.target_cal * 1.1,
+      calLow: targetCal * 0.9,
+      calHigh: targetCal * 1.1,
       actualWeight: st.weight,
       weightLow: targetWeight * 0.9,
       weightHigh: targetWeight * 1.1,
@@ -114,6 +118,19 @@ function TripSummary() {
             <span>{summary.total_days} days</span>
           </div>
         </div>
+
+        {/* Structured trips: the unit quota, not a snack calorie band */}
+        {summary.snack_units && (
+          <>
+            <Separator />
+            <SnackUnitMeter
+              label="Snack units"
+              filled={summary.snack_units.filled}
+              quota={summary.snack_units.quota}
+              secondary={`${slotData.snacks.actualWeight} oz · ${slotData.snacks.actualCal} cal`}
+            />
+          </>
+        )}
 
         {/* Macro breakdown: actual vs target */}
         {summary.macro_actual && (
@@ -195,11 +212,22 @@ function TripSummary() {
                 actualCal={slotData.lunch.actualCal} calLow={slotData.lunch.calLow} calHigh={slotData.lunch.calHigh}
                 actualWeight={slotData.lunch.actualWeight} weightLow={slotData.lunch.weightLow} weightHigh={slotData.lunch.weightHigh}
               />
-              <CategoryRow
-                label="Snacks"
-                actualCal={slotData.snacks.actualCal} calLow={slotData.snacks.calLow} calHigh={slotData.snacks.calHigh}
-                actualWeight={slotData.snacks.actualWeight} weightLow={slotData.snacks.weightLow} weightHigh={slotData.snacks.weightHigh}
-              />
+              {summary.snack_units ? (
+                <div className="grid grid-cols-[8rem_1fr] gap-3 items-center">
+                  <span className="text-xs font-medium">Snacks</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {summary.snack_units.filled} of {summary.snack_units.quota} units
+                    &middot; {slotData.snacks.actualWeight} oz
+                    &middot; {slotData.snacks.actualCal} cal
+                  </span>
+                </div>
+              ) : (
+                <CategoryRow
+                  label="Snacks"
+                  actualCal={slotData.snacks.actualCal} calLow={slotData.snacks.calLow} calHigh={slotData.snacks.calHigh}
+                  actualWeight={slotData.snacks.actualWeight} weightLow={slotData.snacks.weightLow} weightHigh={slotData.snacks.weightHigh}
+                />
+              )}
               {(summary.drink_mix_weight > 0 || drinkMixes.length > 0) && (
                 <CategoryRow
                   label="Drink Mixes"

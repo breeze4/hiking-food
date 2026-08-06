@@ -58,6 +58,8 @@ def test_summary_splits_daytime_calorie_target_40_60(c):
             "cal_per_oz": 100,
         },
     ).json()
+    # The 40/60 split is the legacy snack model; structured trips meter units.
+    c.put(f"/api/trips/{trip['id']}", json={"snack_model": "legacy"})
 
     summary = c.get(f"/api/trips/{trip['id']}/summary").json()
 

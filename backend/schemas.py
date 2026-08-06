@@ -274,6 +274,45 @@ class TripSnackUpdate(BaseModel):
     trip_notes: Optional[str] = None
 
 
+class TripSnackUnitRead(BaseModel):
+    id: int
+    # Exactly one of these is set: packaged catalog item or library bag.
+    catalog_item_id: Optional[int] = None
+    unit_type_id: Optional[int] = None
+    kind: str  # packaged | bag
+    name: str
+    quantity: int = 1
+    # Per-unit values; total_* are these scaled by quantity.
+    weight_oz: float = 0
+    calories: float = 0
+    cal_per_oz: Optional[float] = None
+    protein_g: float = 0
+    fat_g: float = 0
+    carb_g: float = 0
+    total_weight: float = 0
+    total_calories: float = 0
+    # Non-blocking: outside +/-25% of this trip's oz_per_snack.
+    weight_warning: bool = False
+    has_full_data: bool = True
+    packed: bool = False
+    actual_weight_oz: Optional[float] = None
+    trip_notes: Optional[str] = None
+
+
+class TripSnackUnitCreate(BaseModel):
+    catalog_item_id: Optional[int] = None
+    unit_type_id: Optional[int] = None
+    quantity: int = 1
+    trip_notes: Optional[str] = None
+
+
+class TripSnackUnitUpdate(BaseModel):
+    quantity: Optional[int] = None
+    packed: Optional[bool] = None
+    actual_weight_oz: Optional[float] = None
+    trip_notes: Optional[str] = None
+
+
 class TripMealRead(BaseModel):
     id: int
     recipe_id: int
@@ -311,16 +350,25 @@ class TripDetailRead(BaseModel):
     snacks_per_day: int = 4
     oz_per_snack: float = 2.0
     snacks: list[TripSnackRead] = []
+    snack_units: list[TripSnackUnitRead] = []
     meals: list[TripMealRead] = []
 
 
 class SlotSubtotal(BaseModel):
     weight: float
     calories: float
+    # The calorie band is absent on a structured trip's snacks slot, where the
+    # unit meter replaces it; the summary endpoint excludes unset fields.
     target_cal: float = 0
     target_cal_low: float = 0
     target_cal_high: float = 0
     days_covered: Optional[float] = None
+
+
+class SnackUnitQuota(BaseModel):
+    quota: int
+    filled: int
+    per_day: list[int] = []
 
 
 class MacroActual(BaseModel):
@@ -377,6 +425,8 @@ class TripSummaryRead(BaseModel):
     drink_mix_weight: float = 0
     drink_mix_calories: float = 0
     slot_subtotals: dict[str, SlotSubtotal] = {}
+    # Structured trips only; a legacy trip's summary never carries the block.
+    snack_units: Optional[SnackUnitQuota] = None
     meal_weight_actual: float
     meal_calories_actual: float
     breakfast_weight: float = 0

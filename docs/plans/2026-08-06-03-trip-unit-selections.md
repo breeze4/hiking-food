@@ -28,12 +28,12 @@ AFK
 
 ## Acceptance criteria
 
-- [ ] `venv/bin/pytest` passes with new tests: quota for 0.5+2+0.5 @ 4/day = 12 (2+4+4+2); 0.25 first day rounds to 1; selections CRUD; unit endpoints on a legacy trip return 409; clone copies selection rows with packed reset.
-- [ ] Structured trip summary includes `snack_units: {quota, filled, per_day}` and its `slot_subtotals.snacks` carries no `target_cal` band; a legacy trip's summary dict is unchanged (asserted against a pre-change snapshot in tests).
-- [ ] Unit calories/weight follow the packaged (catalog serving) vs bag (library derived) rules from the spec, verified in `trip_summary_view` totals.
-- [ ] Planner UI on a structured trip: add a packaged unit and a bag unit, set quantities, meter shows filled/quota and turns complete at quota; row badge appears when unit weight is outside ±25% of the trip's `oz_per_snack`; packed checkbox + actual weight editable.
-- [ ] Planner UI on a legacy trip is unchanged (existing `SnackSelection` component tests still pass untouched except for added structured cases).
-- [ ] `pnpm lint && pnpm build && pnpm test` pass.
+- [x] `venv/bin/pytest` passes with new tests: quota for 0.5+2+0.5 @ 4/day = 12 (2+4+4+2); 0.25 first day rounds to 1; selections CRUD; unit endpoints on a legacy trip return 409; clone copies selection rows with packed reset.
+- [x] Structured trip summary includes `snack_units: {quota, filled, per_day}` and its `slot_subtotals.snacks` carries no `target_cal` band; a legacy trip's summary dict is unchanged (asserted against a pre-change snapshot in tests).
+- [x] Unit calories/weight follow the packaged (catalog serving) vs bag (library derived) rules from the spec, verified in `trip_summary_view` totals.
+- [x] Planner UI on a structured trip: add a packaged unit and a bag unit, set quantities, meter shows filled/quota and turns complete at quota; row badge appears when unit weight is outside ±25% of the trip's `oz_per_snack`; packed checkbox + actual weight editable.
+- [x] Planner UI on a legacy trip is unchanged (existing `SnackSelection` component tests still pass untouched except for added structured cases).
+- [x] `pnpm lint && pnpm build && pnpm test` pass.
 
 ## Owns
 
@@ -68,12 +68,12 @@ AFK
 
 ## Tasks
 
-- [ ] `snack_units.py` service: quota math (per-day round-half-up of `snacks_per_day` × fraction over the day list), selection resolution (packaged vs bag), selection view.
-- [ ] Selection endpoints + structured-only guard (409 on legacy trips) + schemas.
-- [ ] Clone: copy `trip_snack_units` rows, reset packed/actual weight (match existing snack clone posture).
-- [ ] `trip_summary_view` structured branch: `snack_units` meter block; snacks slot loses the calorie band; unit weight/calories/macros roll into trip totals; legacy path untouched.
-- [ ] Backend tests per criteria, including the legacy-invariance snapshot.
-- [ ] Frontend structured snacks section: unit picker (catalog packaged items + library types), quantity steppers, meter, tolerance badges, packed/actual-weight; summary meter; component tests.
+- [x] `snack_units.py` service: quota math (per-day round-half-up of `snacks_per_day` × fraction over the day list), selection resolution (packaged vs bag), selection view.
+- [x] Selection endpoints + structured-only guard (409 on legacy trips) + schemas.
+- [x] Clone: copy `trip_snack_units` rows, reset packed/actual weight (match existing snack clone posture).
+- [x] `trip_summary_view` structured branch: `snack_units` meter block; snacks slot loses the calorie band; unit weight/calories/macros roll into trip totals; legacy path untouched.
+- [x] Backend tests per criteria, including the legacy-invariance snapshot.
+- [x] Frontend structured snacks section: unit picker (catalog packaged items + library types), quantity steppers, meter, tolerance badges, packed/actual-weight; summary meter; component tests.
 
 ## Implementation notes
 

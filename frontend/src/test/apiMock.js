@@ -44,6 +44,34 @@ export function makeTripDetail(overrides = {}) {
     oz_per_snack: 2,
     meals: [],
     snacks: [],
+    snack_units: [],
+    ...overrides,
+  };
+}
+
+// A trip snack unit selection as the trip detail returns it: the resolved unit
+// values plus the per-trip quantity, packing record, and tolerance flag.
+export function makeTripSnackUnit(overrides = {}) {
+  return {
+    id: 50,
+    catalog_item_id: null,
+    unit_type_id: 1,
+    kind: 'bag',
+    name: 'Trail Mix Bag',
+    quantity: 1,
+    weight_oz: 2,
+    calories: 300,
+    cal_per_oz: 150,
+    protein_g: 8,
+    fat_g: 20,
+    carb_g: 26,
+    total_weight: 2,
+    total_calories: 300,
+    weight_warning: false,
+    has_full_data: true,
+    packed: false,
+    actual_weight_oz: null,
+    trip_notes: null,
     ...overrides,
   };
 }
