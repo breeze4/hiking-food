@@ -170,9 +170,53 @@ def _migration_2_trip_cascades(conn: Connection) -> None:
     )
 
 
+def _migration_3_structured_snacks(conn: Connection) -> None:
+    _add_column_if_missing(conn, "trips", "snack_model", "TEXT DEFAULT 'legacy'")
+    _add_column_if_missing(conn, "trips", "snacks_per_day", "INTEGER DEFAULT 4")
+    _add_column_if_missing(conn, "trips", "oz_per_snack", "REAL DEFAULT 2")
+    # Every trip that predates the structured model keeps today's behavior.
+    conn.execute(text(
+        "UPDATE trips SET snack_model = 'legacy' WHERE snack_model IS NULL"
+    ))
+    conn.execute(text(
+        "UPDATE trips SET snacks_per_day = 4 WHERE snacks_per_day IS NULL"
+    ))
+    conn.execute(text(
+        "UPDATE trips SET oz_per_snack = 2 WHERE oz_per_snack IS NULL"
+    ))
+    conn.exec_driver_sql("""
+        CREATE TABLE IF NOT EXISTS snack_unit_types (
+            id INTEGER NOT NULL PRIMARY KEY,
+            name TEXT NOT NULL,
+            notes TEXT
+        )
+    """)
+    conn.exec_driver_sql("""
+        CREATE TABLE IF NOT EXISTS snack_unit_ingredients (
+            id INTEGER NOT NULL PRIMARY KEY,
+            unit_type_id INTEGER NOT NULL REFERENCES snack_unit_types(id),
+            ingredient_id INTEGER NOT NULL REFERENCES ingredients(id),
+            amount_oz FLOAT
+        )
+    """)
+    conn.exec_driver_sql("""
+        CREATE TABLE IF NOT EXISTS trip_snack_units (
+            id INTEGER NOT NULL PRIMARY KEY,
+            trip_id INTEGER NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+            catalog_item_id INTEGER REFERENCES snack_catalog(id),
+            unit_type_id INTEGER REFERENCES snack_unit_types(id),
+            quantity INTEGER,
+            packed BOOLEAN,
+            actual_weight_oz FLOAT,
+            trip_notes TEXT
+        )
+    """)
+
+
 MIGRATIONS: tuple[Callable[[Connection], None], ...] = (
     _migration_1_existing_columns,
     _migration_2_trip_cascades,
+    _migration_3_structured_snacks,
 )
 CURRENT_SCHEMA_VERSION = len(MIGRATIONS)
 

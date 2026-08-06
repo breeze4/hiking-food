@@ -69,12 +69,12 @@ None - can start immediately.
 
 ## Tasks
 
-- [ ] Add the three trip columns and three new model classes to `models.py` (unit type: name, notes; composition: unit_type_id FK, ingredient_id FK, amount_oz; trip unit: trip_id FK cascade, nullable catalog_item_id FK, nullable unit_type_id FK, quantity, packed, actual_weight_oz, trip_notes).
-- [ ] Write `_migration_3_structured_snacks`: add columns (backfill `snack_model='legacy'` on existing rows, defaults 4/2), create tables; append to `MIGRATIONS`.
-- [ ] Default new trips to `structured` at creation; copy the three fields in clone.
-- [ ] Expose fields through trip schemas and `trip_detail_view` / `trip_list_view`.
-- [ ] Migration + workflow tests, including the legacy-summary-unchanged invariant.
-- [ ] Trip calculator inputs (structured trips only) + component test.
+- [x] Add the three trip columns and three new model classes to `models.py` (unit type: name, notes; composition: unit_type_id FK, ingredient_id FK, amount_oz; trip unit: trip_id FK cascade, nullable catalog_item_id FK, nullable unit_type_id FK, quantity, packed, actual_weight_oz, trip_notes).
+- [x] Write `_migration_3_structured_snacks`: add columns (backfill `snack_model='legacy'` on existing rows, defaults 4/2), create tables; append to `MIGRATIONS`.
+- [x] Default new trips to `structured` at creation; copy the three fields in clone.
+- [x] Expose fields through trip schemas and `trip_detail_view` / `trip_list_view`.
+- [x] Migration + workflow tests, including the legacy-summary-unchanged invariant.
+- [x] Trip calculator inputs (structured trips only) + component test.
 
 ## Implementation notes
 

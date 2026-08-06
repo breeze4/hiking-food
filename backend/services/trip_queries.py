@@ -107,6 +107,11 @@ def trip_detail_view(db: Session, trip: Trip) -> dict:
         ),
         "oz_per_day": trip.oz_per_day if trip.oz_per_day is not None else 22,
         "cal_per_oz": trip.cal_per_oz if trip.cal_per_oz is not None else 125,
+        "snack_model": trip.snack_model or "legacy",
+        "snacks_per_day": (
+            trip.snacks_per_day if trip.snacks_per_day is not None else 4
+        ),
+        "oz_per_snack": trip.oz_per_snack if trip.oz_per_snack is not None else 2,
         "snacks": [trip_snack_view(db, selection) for selection in snacks],
         "meals": [trip_meal_view(db, selection) for selection in meals],
     }
@@ -126,6 +131,11 @@ def trip_list_view(db: Session, *, newest_first: bool = False) -> list[dict]:
             "first_day_fraction": trip.first_day_fraction,
             "full_days": trip.full_days,
             "last_day_fraction": trip.last_day_fraction,
+            "snack_model": trip.snack_model or "legacy",
+            "snacks_per_day": (
+                trip.snacks_per_day if trip.snacks_per_day is not None else 4
+            ),
+            "oz_per_snack": trip.oz_per_snack if trip.oz_per_snack is not None else 2,
         }
         for trip in query.all()
     ]

@@ -63,6 +63,11 @@ class Trip(Base):
     drink_mixes_per_day = Column(Integer, default=2)
     oz_per_day = Column(Float, default=22)
     cal_per_oz = Column(Float, default=125)
+    # legacy or structured. The default stays legacy so any insert that omits
+    # the field keeps today's behavior; the create-trip path opts new trips in.
+    snack_model = Column(Text, default="legacy")
+    snacks_per_day = Column(Integer, default=4)
+    oz_per_snack = Column(Float, default=2)
 
 
 class TripMeal(Base):
@@ -105,6 +110,39 @@ class TripSnack(Base):
     catalog_item_id = Column(Integer, ForeignKey("snack_catalog.id"), nullable=False)
     servings = Column(Float)
     slot = Column(Text)  # lunch, snacks
+    packed = Column(Boolean, default=False)
+    actual_weight_oz = Column(Float)
+    trip_notes = Column(Text)
+
+
+class SnackUnitType(Base):
+    __tablename__ = "snack_unit_types"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Text, nullable=False)
+    notes = Column(Text)
+
+
+class SnackUnitIngredient(Base):
+    __tablename__ = "snack_unit_ingredients"
+
+    id = Column(Integer, primary_key=True)
+    unit_type_id = Column(
+        Integer, ForeignKey("snack_unit_types.id"), nullable=False
+    )
+    ingredient_id = Column(Integer, ForeignKey("ingredients.id"), nullable=False)
+    amount_oz = Column(Float)
+
+
+class TripSnackUnit(Base):
+    __tablename__ = "trip_snack_units"
+
+    id = Column(Integer, primary_key=True)
+    trip_id = Column(Integer, ForeignKey("trips.id", ondelete="CASCADE"), nullable=False)
+    # Exactly one of these is set: a packaged catalog item or a bag unit type.
+    catalog_item_id = Column(Integer, ForeignKey("snack_catalog.id"))
+    unit_type_id = Column(Integer, ForeignKey("snack_unit_types.id"))
+    quantity = Column(Integer, default=1)
     packed = Column(Boolean, default=False)
     actual_weight_oz = Column(Float)
     trip_notes = Column(Text)

@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 
 function TripCalculator() {
   const { tripDetail, refreshTrip } = useTrip();
-  const [form, setForm] = useState({ first_day_fraction: 1, full_days: 0, last_day_fraction: 0, drink_mixes_per_day: 2, oz_per_day: 22, cal_per_oz: 125 });
+  const [form, setForm] = useState({ first_day_fraction: 1, full_days: 0, last_day_fraction: 0, drink_mixes_per_day: 2, oz_per_day: 22, cal_per_oz: 125, snacks_per_day: 4, oz_per_snack: 2 });
   const [open, setOpen] = useState(true);
   const saveTimer = useRef(null);
 
@@ -23,6 +23,8 @@ function TripCalculator() {
         drink_mixes_per_day: tripDetail.drink_mixes_per_day ?? 2,
         oz_per_day: tripDetail.oz_per_day ?? 22,
         cal_per_oz: tripDetail.cal_per_oz ?? 125,
+        snacks_per_day: tripDetail.snacks_per_day ?? 4,
+        oz_per_snack: tripDetail.oz_per_snack ?? 2,
       });
     }
   }, [tripDetail]);
@@ -34,6 +36,9 @@ function TripCalculator() {
 
   if (!tripDetail) return null;
 
+  // The snack model is read straight from the trip so a debounced save can
+  // never carry a stale copy of it back to the server; it has no UI affordance.
+  const structured = tripDetail.snack_model === 'structured';
   const totalDays = form.first_day_fraction + form.full_days + form.last_day_fraction;
   const totalWeight = (totalDays * form.oz_per_day).toFixed(1);
   const totalCal = Math.round(totalDays * form.oz_per_day * form.cal_per_oz);
@@ -138,6 +143,40 @@ function TripCalculator() {
                   className="w-20"
                 />
               </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium leading-none">Snack model</p>
+                <p className="text-sm text-muted-foreground h-9 flex items-center">
+                  {structured ? 'Structured' : 'Legacy'}
+                </p>
+              </div>
+              {structured && (
+                <>
+                  <div className="space-y-1">
+                    <Label htmlFor="snacks-per-day">Snacks/day</Label>
+                    <Input
+                      id="snacks-per-day"
+                      type="number"
+                      disabled={saveMutation.pending}
+                      min="0" step="1"
+                      value={form.snacks_per_day}
+                      onChange={(e) => handleChange('snacks_per_day', parseInt(e.target.value) || 0)}
+                      className="w-20"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="oz-per-snack">Oz/snack</Label>
+                    <Input
+                      id="oz-per-snack"
+                      type="number"
+                      disabled={saveMutation.pending}
+                      min="0" step="0.25"
+                      value={form.oz_per_snack}
+                      onChange={(e) => handleChange('oz_per_snack', parseFloat(e.target.value) || 0)}
+                      className="w-20"
+                    />
+                  </div>
+                </>
+              )}
             </div>
             <p className="text-sm text-muted-foreground mt-3">
               <span className="font-medium text-foreground">Total days: {totalDays}</span>

@@ -112,6 +112,71 @@ def test_rest_rejects_invalid_trip_targets(c, field, value, detail):
     assert response.json()["detail"] == detail
 
 
+def test_rest_new_trips_use_the_structured_snack_model(c):
+    created = c.post("/api/trips", json={"name": "Olympics 2026"})
+
+    assert created.status_code == 201
+    assert created.json()["snack_model"] == "structured"
+    assert created.json()["snacks_per_day"] == 4
+    assert created.json()["oz_per_snack"] == 2
+
+
+def test_rest_can_retune_the_structured_snack_configuration(c):
+    trip = c.post("/api/trips", json={"name": "Winter Traverse"}).json()
+
+    response = c.put(
+        f"/api/trips/{trip['id']}",
+        json={"snacks_per_day": 6, "oz_per_snack": 2.5},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["snacks_per_day"] == 6
+    assert response.json()["oz_per_snack"] == 2.5
+    assert response.json()["snack_model"] == "structured"
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "detail"),
+    [
+        ("snacks_per_day", -1, "snacks_per_day cannot be negative"),
+        ("oz_per_snack", 0, "oz_per_snack must be greater than zero"),
+        ("snack_model", "freeform", "snack_model must be legacy or structured"),
+    ],
+)
+def test_rest_rejects_invalid_snack_configuration(c, field, value, detail):
+    trip = c.post("/api/trips", json={"name": "Snack Config"}).json()
+
+    response = c.put(f"/api/trips/{trip['id']}", json={field: value})
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == detail
+
+
+def test_rest_clone_copies_the_snack_model_and_configuration(c):
+    trip = c.post("/api/trips", json={"name": "Source"}).json()
+    c.put(
+        f"/api/trips/{trip['id']}",
+        json={"snacks_per_day": 5, "oz_per_snack": 1.75},
+    )
+
+    clone = c.post(f"/api/trips/{trip['id']}/clone")
+
+    assert clone.status_code == 201
+    assert clone.json()["snack_model"] == "structured"
+    assert clone.json()["snacks_per_day"] == 5
+    assert clone.json()["oz_per_snack"] == 1.75
+
+
+def test_rest_clone_of_a_legacy_trip_stays_legacy(c):
+    trip = c.post("/api/trips", json={"name": "Historic"}).json()
+    c.put(f"/api/trips/{trip['id']}", json={"snack_model": "legacy"})
+
+    clone = c.post(f"/api/trips/{trip['id']}/clone")
+
+    assert clone.status_code == 201
+    assert clone.json()["snack_model"] == "legacy"
+
+
 def test_rest_rejects_duplicate_trip_name(c):
     assert c.post("/api/trips", json={"name": "Same Trip"}).status_code == 201
 

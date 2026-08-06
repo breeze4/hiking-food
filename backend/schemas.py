@@ -184,6 +184,9 @@ class TripUpdate(BaseModel):
     drink_mixes_per_day: Optional[int] = None
     oz_per_day: Optional[float] = None
     cal_per_oz: Optional[float] = None
+    snack_model: Optional[str] = None
+    snacks_per_day: Optional[int] = None
+    oz_per_snack: Optional[float] = None
 
 
 class TripListRead(BaseModel):
@@ -260,6 +263,9 @@ class TripDetailRead(BaseModel):
     drink_mixes_per_day: int = 2
     oz_per_day: Optional[float] = 22.0
     cal_per_oz: Optional[float] = 125.0
+    snack_model: str = "legacy"
+    snacks_per_day: int = 4
+    oz_per_snack: float = 2.0
     snacks: list[TripSnackRead] = []
     meals: list[TripMealRead] = []
 

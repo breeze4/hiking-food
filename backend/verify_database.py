@@ -10,7 +10,12 @@ import models  # noqa: F401 - register all tables with Base
 from migrations import CURRENT_SCHEMA_VERSION
 
 
-CASCADE_TABLES = {"trip_meals", "trip_snacks", "trip_day_assignments"}
+CASCADE_TABLES = {
+    "trip_meals",
+    "trip_snacks",
+    "trip_day_assignments",
+    "trip_snack_units",
+}
 
 
 def collect_database_errors(db_engine: Engine) -> list[str]:

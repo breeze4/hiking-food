@@ -35,6 +35,17 @@ ALLOCATION_SHAPE_FIELDS = {
     "last_day_fraction",
 }
 
+SNACK_MODELS = {"legacy", "structured"}
+
+# New trips opt into the structured snack model here rather than through a
+# column default, so the migration's legacy backfill can never be undercut by
+# an insert that omits the field.
+NEW_TRIP_SNACK_DEFAULTS = {
+    "snack_model": "structured",
+    "snacks_per_day": 4,
+    "oz_per_snack": 2.0,
+}
+
 CATEGORY_TO_SLOT = {
     "drink_mix": "snacks",
     "bars_energy": "snacks",
@@ -112,6 +123,9 @@ class TripPlanningService:
 
     def create_trip(self, values: Mapping[str, Any]) -> Trip:
         fields = dict(values)
+        for field, default in NEW_TRIP_SNACK_DEFAULTS.items():
+            if fields.get(field) is None:
+                fields[field] = default
         self._validate_trip_fields(fields, require_name=True)
         self._ensure_unique_name(fields["name"])
 
@@ -139,6 +153,9 @@ class TripPlanningService:
             "drink_mixes_per_day": source.drink_mixes_per_day,
             "oz_per_day": source.oz_per_day,
             "cal_per_oz": source.cal_per_oz,
+            "snack_model": source.snack_model,
+            "snacks_per_day": source.snacks_per_day,
+            "oz_per_snack": source.oz_per_snack,
         }
         fields.update({key: value for key, value in overrides.items() if value is not None})
         self._validate_trip_fields(fields, require_name=True)
@@ -525,7 +542,13 @@ class TripPlanningService:
             raise TripPlanningError("full_days cannot be negative")
         if fields.get("drink_mixes_per_day", 0) < 0:
             raise TripPlanningError("drink_mixes_per_day cannot be negative")
-        for field in ("oz_per_day", "cal_per_oz"):
+        for field in ("oz_per_day", "cal_per_oz", "oz_per_snack"):
             value = fields.get(field)
             if value is not None and value <= 0:
                 raise TripPlanningError(f"{field} must be greater than zero")
+        snacks_per_day = fields.get("snacks_per_day")
+        if snacks_per_day is not None and snacks_per_day < 0:
+            raise TripPlanningError("snacks_per_day cannot be negative")
+        snack_model = fields.get("snack_model")
+        if snack_model is not None and snack_model not in SNACK_MODELS:
+            raise TripPlanningError("snack_model must be legacy or structured")
