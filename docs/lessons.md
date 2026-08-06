@@ -91,3 +91,41 @@ and a proposed fix when obvious.
   fix: When a new source has to merge into an existing aggregation, extract the
     line-creation into one helper first, so the shared behavior holds by
     construction and the new source cannot drift from the old ones.
+
+- date: 2026-08-06
+  context: hiking-food structured-snack-units orchestration run; browser gates
+  category: friction
+  body: The Vite dev proxy rewrites `/hiking-food/api/...` to `/api/...` before
+    forwarding to :8000, but `backend/main.py` mounts the whole app under
+    `/hiking-food`, so every proxied API call 404s and the dev page renders "No
+    trips". Pre-existing mismatch, discovered by the step-1 verifier. All five
+    browser gates ran against the production-served dist at
+    `http://localhost:8000/hiking-food/` instead (each step's build gate had just
+    rebuilt it, so the served bundle matched the diff under test).
+  fix: Drop the `rewrite` from the `/hiking-food/api` proxy entry in
+    `frontend/vite.config.js` (the backend expects the prefixed path). One-line
+    change, separate commit; until then `pnpm dev` is not usable for API-backed
+    pages.
+
+- date: 2026-08-06
+  context: structured-snack-units run; six plans executed by six implementer agents
+  category: doc-gap
+  body: Every implementer legitimately touched files outside its plan's Owns list,
+    and it was the same shared infrastructure each time - tests/conftest.py
+    (dependency_overrides for a new router), frontend/src/test/apiMock.js (shared
+    fixtures), docs/architecture.md (self-healing counts/enumerations that go
+    stale on any new module). Each deviation cost handoff space to justify and
+    orchestrator time to audit.
+  fix: spec-to-plans should emit a standing "shared surfaces, expected to touch"
+    list (conftest, shared test fixtures, architecture.md, lessons.md) in every
+    plan, so Owns stays about domain code and deviations mean something.
+
+- date: 2026-08-06
+  context: structured-snack-units run; step-5 verifier browser cleanup
+  category: friction
+  body: A verifier ended its browser work with `agent-browser close --all`, which
+    closed two unrelated named sessions ("hiking-trip-docs", "ia") that other
+    work had open. Nothing was lost beyond the open contexts, but an agent
+    should never tear down sessions it did not create.
+  fix: Verifier briefings (and the agent-browser skill docs) should say: close
+    only the session you opened, by name; never `--all` in a shared environment.
