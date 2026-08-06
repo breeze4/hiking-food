@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { get, put, patch } from '../api';
+import { get, put, patch, updateTripSnackUnit } from '../api';
 import { useMutation } from '../hooks/useMutation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,13 @@ const SNACK_SLOTS = [
   { value: 'lunch', label: 'Lunch' },
   { value: 'snacks', label: 'Snacks' },
 ];
+
+const unitKey = (group) => `${group.kind}-${group.unit_type_id ?? group.catalog_item_id}`;
+
+// What to measure into each bag, as one line: "1.2 oz Almonds + 0.8 oz M&Ms".
+const recipeLine = (composition) => composition
+  .map((row) => `${row.amount_oz} oz ${row.ingredient_name}`)
+  .join(' + ');
 
 function PackingScreen() {
   const { tripId } = useParams();
@@ -58,12 +65,23 @@ function PackingScreen() {
   const setSnackWeight = (snackId, weight) => mutation.run(() => put(`/trips/${tripId}/snacks/${snackId}`, {
     actual_weight_oz: weight ? parseFloat(weight) : null,
   }));
+  // A group is one unit type; its packing record lives on the selections behind
+  // it, so a row edit writes the same value to each of them (normally just one).
+  const updateUnitGroup = (group, fields) => mutation.run(() => Promise.all(
+    group.selections.map((s) => updateTripSnackUnit(tripId, s.id, fields)),
+  ));
+  const setUnitWeight = (group, weight) => updateUnitGroup(group, {
+    actual_weight_oz: weight ? parseFloat(weight) : null,
+  });
 
   if (error) return <p className="text-destructive">{error}</p>;
   if (!packing) return <p className="text-muted-foreground">Loading...</p>;
 
   const packedSnacks = packing.snacks.filter((s) => s.packed).length;
   const packedMeals = packing.meals.filter((m) => m.packed).length;
+  // Absent on a legacy trip, an array (possibly empty) on a structured one.
+  const units = packing.units;
+  const packedUnits = (units || []).filter((u) => u.packed).length;
 
   return (
     <div className="space-y-6">
@@ -166,6 +184,75 @@ function PackingScreen() {
           ))}
         </div>
       </div>
+
+      {/* Snack Unit Assembly (structured trips only) */}
+      {units && (
+        <div>
+          <div className="flex items-center gap-3 mb-3">
+            <h3 className="text-lg font-semibold">Snack Unit Assembly</h3>
+            {units.length > 0 && (
+              <Badge variant="secondary">{packedUnits}/{units.length} packed</Badge>
+            )}
+          </div>
+          {units.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No snack units selected for this trip.</p>
+          ) : (
+            <Card className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10"></TableHead>
+                    <TableHead>Assemble</TableHead>
+                    <TableHead className="text-right">Derived (oz)</TableHead>
+                    <TableHead className="text-right">Actual (oz)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {units.map((group) => (
+                    <TableRow key={unitKey(group)} className={group.packed ? 'opacity-60' : ''}>
+                      <TableCell>
+                        <Checkbox
+                          checked={group.packed}
+                          disabled={mutating}
+                          aria-label={`${group.name} units packed`}
+                          onCheckedChange={(checked) => updateUnitGroup(group, { packed: checked })}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <span className={`font-medium ${group.packed ? 'line-through' : ''}`}>
+                          Make {group.count} &times; {group.name} @ {group.target_weight} oz
+                        </span>
+                        {group.composition.length > 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            {recipeLine(group.composition)}
+                          </p>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {group.unit_weight}
+                        {group.weight_warning && (
+                          <Badge variant="destructive" className="ml-2">Off target</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Input
+                          type="number"
+                          step="any"
+                          aria-label={`${group.name} unit actual weight`}
+                          disabled={mutating}
+                          defaultValue={group.actual_weight_oz || ''}
+                          onBlur={(e) => setUnitWeight(group, e.target.value)}
+                          className="w-20 h-7 ml-auto"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Snack Packing */}
       <div>

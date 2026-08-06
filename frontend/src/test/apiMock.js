@@ -76,6 +76,32 @@ export function makeTripSnackUnit(overrides = {}) {
   };
 }
 
+// A unit group as the packing projection returns it: one thing to make N of,
+// with the selections its packing record lives on.
+export function makePackingUnit(overrides = {}) {
+  return {
+    kind: 'bag',
+    unit_type_id: 1,
+    catalog_item_id: null,
+    name: 'Trail Mix Bag',
+    count: 6,
+    target_weight: 2,
+    unit_weight: 2,
+    unit_calories: 300,
+    total_weight: 12,
+    total_calories: 1800,
+    weight_warning: false,
+    packed: false,
+    actual_weight_oz: null,
+    composition: [
+      { ingredient_name: 'Almonds', amount_oz: 1 },
+      { ingredient_name: 'M&Ms', amount_oz: 1 },
+    ],
+    selections: [{ id: 50, quantity: 6, packed: false, actual_weight_oz: null }],
+    ...overrides,
+  };
+}
+
 // A snack unit type (bag) as the library endpoint returns it: composition plus
 // every derived value. `snackUnitTypes` accepts an array or a function, so a
 // test can return a different library on the refetch after a mutation.

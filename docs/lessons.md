@@ -67,3 +67,27 @@ and a proposed fix when obvious.
     stale one.
   fix: Assert on something only the post-mutation tree has — a per-item control's
     accessible name — instead of a text match that also existed before the click.
+
+- date: 2026-08-06
+  context: hiking-food step 5 (shopping + packing units); legacy invariance snapshots
+  category: approach
+  body: A "legacy output is unchanged" criterion is only worth as much as the
+    snapshot's provenance. Capturing the dict from the tree you just edited proves
+    nothing. Building the fixture in a script, running it against a git worktree of
+    the pre-change commit with the project venv on the worktree's backend path, and
+    hard-coding that JSON took about ten minutes and made the assertion real.
+  fix: For any invariance claim, capture the baseline from a worktree of the
+    pre-change commit before touching the file, and say in the test's comment which
+    commit it came from.
+
+- date: 2026-08-06
+  context: hiking-food step 5; three copies of the same aggregation block
+  category: approach
+  body: `shopping_view` had the same seven-line `totals.setdefault(...)` block for
+    recipe ingredients and catalog servings, and the new bag expansion would have
+    been a third. The acceptance criterion "on_hand / essentials / packing_method
+    behave the same for expanded bag ingredients" is then a property you assert
+    rather than one the code guarantees.
+  fix: When a new source has to merge into an existing aggregation, extract the
+    line-creation into one helper first, so the shared behavior holds by
+    construction and the new source cannot drift from the old ones.

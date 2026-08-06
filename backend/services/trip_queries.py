@@ -16,8 +16,10 @@ from models import (
 )
 from calculator import compute_trip_targets
 from services.autofill import build_day_list
+from services.catalog_queries import snack_unit_type_list_view
 from services.recipe_calc import compute_recipe_totals
 from services.snack_units import (
+    trip_oz_per_snack,
     trip_snack_unit_list_view,
     trip_unit_totals,
     unit_quota,
@@ -361,6 +363,82 @@ def trip_summary_view(db: Session, trip: Trip) -> dict:
     return summary
 
 
+def _bags_by_id(db: Session, selections: list[dict]) -> dict[int, dict]:
+    """The library bags behind these selections, keyed by id.
+
+    One list query serves every bag on the trip; the library owns composition
+    and derived values, so nothing here re-derives them.
+    """
+    if not any(selection["unit_type_id"] is not None for selection in selections):
+        return {}
+    return {bag["id"]: bag for bag in snack_unit_type_list_view(db)}
+
+
+def _packing_units(db: Session, trip: Trip) -> list[dict]:
+    """Unit selections as an assembly checklist, grouped by unit type or item.
+
+    A group is one thing to make N of: "make 6 x trail mix bag at 2.0 oz". The
+    count is the units to build, `target_weight` is the trip's per-unit target,
+    and `unit_weight` is what the composition actually derives. Packed state and
+    actual weights stay per selection, because that is where the columns live;
+    the group repeats them so a single-selection group (the normal case) reads
+    as one row.
+    """
+    selections = trip_snack_unit_list_view(db, trip)
+    bags = _bags_by_id(db, selections)
+    target_weight = trip_oz_per_snack(trip)
+    groups: dict[tuple[str, int], dict] = {}
+    for selection in selections:
+        kind = selection["kind"]
+        bag = bags.get(selection["unit_type_id"]) if kind == "bag" else None
+        key = (
+            kind,
+            selection["unit_type_id"] if kind == "bag" else selection["catalog_item_id"],
+        )
+        group = groups.get(key)
+        if group is None:
+            group = groups[key] = {
+                "kind": kind,
+                "unit_type_id": selection["unit_type_id"],
+                "catalog_item_id": selection["catalog_item_id"],
+                "name": selection["name"],
+                "count": 0,
+                "target_weight": target_weight,
+                "unit_weight": selection["weight_oz"],
+                "unit_calories": selection["calories"],
+                "total_weight": 0.0,
+                "total_calories": 0.0,
+                "weight_warning": selection["weight_warning"],
+                "packed": True,
+                "actual_weight_oz": None,
+                # What goes in the bag, so packing day does not need the library.
+                "composition": [
+                    {
+                        "ingredient_name": row["ingredient_name"],
+                        "amount_oz": row["amount_oz"],
+                    }
+                    for row in (bag["composition"] if bag else [])
+                ],
+                "selections": [],
+            }
+        group["count"] += selection["quantity"]
+        group["total_weight"] += selection["total_weight"]
+        group["total_calories"] += selection["total_calories"]
+        group["packed"] = group["packed"] and selection["packed"]
+        if group["actual_weight_oz"] is None:
+            group["actual_weight_oz"] = selection["actual_weight_oz"]
+        group["selections"].append({
+            "id": selection["id"],
+            "quantity": selection["quantity"],
+            "packed": selection["packed"],
+            "actual_weight_oz": selection["actual_weight_oz"],
+        })
+    for group in groups.values():
+        group["total_weight"] = round(group["total_weight"], 2)
+        group["total_calories"] = round(group["total_calories"], 1)
+    return list(groups.values())
+
+
 def packing_view(db: Session, trip: Trip) -> dict:
     meals = []
     for selection in db.query(TripMeal).filter(TripMeal.trip_id == trip.id):
@@ -413,7 +491,55 @@ def packing_view(db: Session, trip: Trip) -> dict:
             "actual_weight_oz": selection.actual_weight_oz,
             "packing_method": ingredient.packing_method,
         })
-    return {"trip_name": trip.name, "meals": meals, "snacks": snacks}
+    packing = {"trip_name": trip.name, "meals": meals, "snacks": snacks}
+    # A legacy trip's packing detail never grows a key it did not have before.
+    if _is_structured(trip):
+        packing["units"] = _packing_units(db, trip)
+    return packing
+
+
+def _shopping_line(totals: dict[int, dict], ingredient: Ingredient) -> dict:
+    """The shopping line for one ingredient, created the first time it is seen.
+
+    Every source merges into the same line — recipe amounts, catalog servings,
+    and the bulk ounces a bag unit expands into — so an ingredient bought for
+    two reasons is bought once, and on_hand / essentials / packing_method come
+    from the ingredient no matter which source found it.
+    """
+    return totals.setdefault(ingredient.id, {
+        "ingredient_id": ingredient.id,
+        "ingredient_name": ingredient.name,
+        "total_oz": 0,
+        "on_hand": bool(ingredient.on_hand),
+        "essentials": bool(ingredient.essentials),
+        "packing_method": ingredient.packing_method,
+    })
+
+
+def _unit_ingredient_ounces(db: Session, trip: Trip) -> list[tuple[int, float]]:
+    """(ingredient_id, ounces) that this trip's unit selections add to shopping.
+
+    A bag expands into its composition: six bags of 1 oz nuts + 1 oz M&Ms buy
+    six ounces of each. A packaged unit buys its catalog serving weight, the
+    same line a TripSnack row of the same item would produce.
+    """
+    selections = trip_snack_unit_list_view(db, trip)
+    bags = _bags_by_id(db, selections)
+    ounces: list[tuple[int, float]] = []
+    for selection in selections:
+        quantity = selection["quantity"]
+        if selection["kind"] == "bag":
+            bag = bags.get(selection["unit_type_id"])
+            for row in (bag["composition"] if bag else []):
+                ounces.append((row["ingredient_id"], row["amount_oz"] * quantity))
+        else:
+            catalog_item = db.get(SnackCatalogItem, selection["catalog_item_id"])
+            if catalog_item is not None:
+                ounces.append((
+                    catalog_item.ingredient_id,
+                    (catalog_item.weight_per_serving or 0) * quantity,
+                ))
+    return ounces
 
 
 def shopping_view(db: Session, trip: Trip) -> dict:
@@ -426,27 +552,20 @@ def shopping_view(db: Session, trip: Trip) -> dict:
             .all()
         )
         for recipe_ingredient, ingredient in rows:
-            item = totals.setdefault(recipe_ingredient.ingredient_id, {
-                "ingredient_id": recipe_ingredient.ingredient_id,
-                "ingredient_name": ingredient.name,
-                "total_oz": 0,
-                "on_hand": bool(ingredient.on_hand),
-                "essentials": bool(ingredient.essentials),
-                "packing_method": ingredient.packing_method,
-            })
+            item = _shopping_line(totals, ingredient)
             item["total_oz"] += recipe_ingredient.amount_oz * selection.quantity
     for selection in db.query(TripSnack).filter(TripSnack.trip_id == trip.id):
         catalog_item = db.get(SnackCatalogItem, selection.catalog_item_id)
         ingredient = db.get(Ingredient, catalog_item.ingredient_id)
-        item = totals.setdefault(catalog_item.ingredient_id, {
-            "ingredient_id": catalog_item.ingredient_id,
-            "ingredient_name": ingredient.name,
-            "total_oz": 0,
-            "on_hand": bool(ingredient.on_hand),
-            "essentials": bool(ingredient.essentials),
-            "packing_method": ingredient.packing_method,
-        })
+        item = _shopping_line(totals, ingredient)
         item["total_oz"] += selection.servings * (catalog_item.weight_per_serving or 0)
+    if _is_structured(trip):
+        for ingredient_id, amount_oz in _unit_ingredient_ounces(db, trip):
+            ingredient = db.get(Ingredient, ingredient_id)
+            if ingredient is None:
+                continue
+            item = _shopping_line(totals, ingredient)
+            item["total_oz"] += amount_oz
     for item in totals.values():
         item["total_oz"] = round(item["total_oz"], 2)
     regular = [item for item in totals.values() if not item["essentials"]]

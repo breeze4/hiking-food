@@ -28,10 +28,10 @@ AFK
 
 ## Acceptance criteria
 
-- [ ] `venv/bin/pytest` passes with new tests: 6 × (1 oz nuts + 1 oz M&Ms) bag yields 6 oz of each ingredient on the shopping list, merged with ounces of the same ingredient from other sources; packaged units aggregate by catalog item; a legacy trip's `shopping_view` and `packing_view` outputs are unchanged (snapshot assertions).
-- [ ] `packing_view` for a structured trip includes a units section grouped by unit type: count, per-unit target weight, per-unit derived weight, packed state, actual weights.
-- [ ] Packing screen shows "make N × <type> @ <target> oz" rows with packed checkoff and actual-weight entry wired to the existing trip-unit update endpoint; `pnpm lint && pnpm build && pnpm test` pass.
-- [ ] Ingredient `on_hand` / `essentials` / `packing_method` behavior on the shopping list applies to expanded bag ingredients the same as to recipe ingredients.
+- [x] `venv/bin/pytest` passes with new tests: 6 × (1 oz nuts + 1 oz M&Ms) bag yields 6 oz of each ingredient on the shopping list, merged with ounces of the same ingredient from other sources; packaged units aggregate by catalog item; a legacy trip's `shopping_view` and `packing_view` outputs are unchanged (snapshot assertions).
+- [x] `packing_view` for a structured trip includes a units section grouped by unit type: count, per-unit target weight, per-unit derived weight, packed state, actual weights.
+- [x] Packing screen shows "make N × <type> @ <target> oz" rows with packed checkoff and actual-weight entry wired to the existing trip-unit update endpoint; `pnpm lint && pnpm build && pnpm test` pass.
+- [x] Ingredient `on_hand` / `essentials` / `packing_method` behavior on the shopping list applies to expanded bag ingredients the same as to recipe ingredients.
 
 ## Owns
 
@@ -59,7 +59,7 @@ None — consumes `snack_unit_type_view` (plan 02), selection views (plan 03), a
 
 ## Tasks
 
-- [ ] Shopping expansion: for each bag selection, add quantity × amount_oz per composition ingredient into the aggregation; packaged selections keep the current catalog-item path.
-- [ ] Packing units section: group selections by unit type / catalog item, expose count, target weight (`oz_per_snack`), derived weight, packed, actual weights.
-- [ ] Legacy snapshot tests + new-case tests per criteria.
-- [ ] Packing screen units section + component test cases (checkoff and actual-weight entry reuse the plan-03 selection update endpoint — no new backend mutation).
+- [x] Shopping expansion: for each bag selection, add quantity × amount_oz per composition ingredient into the aggregation; packaged selections keep the current catalog-item path.
+- [x] Packing units section: group selections by unit type / catalog item, expose count, target weight (`oz_per_snack`), derived weight, packed, actual weights.
+- [x] Legacy snapshot tests + new-case tests per criteria.
+- [x] Packing screen units section + component test cases (checkoff and actual-weight entry reuse the plan-03 selection update endpoint — no new backend mutation).

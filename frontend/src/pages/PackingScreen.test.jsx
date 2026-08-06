@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import App from '../App';
-import { createApiMock, jsonResponse } from '../test/apiMock';
+import { createApiMock, jsonResponse, makePackingUnit } from '../test/apiMock';
 
 function packing() {
   return {
@@ -13,6 +13,19 @@ function packing() {
       servings: 2, target_weight: 2, target_calories: 200, actual_weight_oz: null,
     }],
   };
+}
+
+// A structured trip's packing detail: the legacy sections plus a units section.
+function structuredPacking(units = [makePackingUnit()]) {
+  return { trip_name: 'Olympics 2026', meals: [], snacks: [], units };
+}
+
+function requestBody(method, path) {
+  const call = fetch.mock.calls.find(([url, options]) => (
+    options?.method === method
+    && new URL(url, window.location.origin).pathname === path
+  ));
+  return call ? JSON.parse(call[1].body) : null;
 }
 
 beforeEach(() => {
@@ -95,5 +108,76 @@ describe('PackingScreen', () => {
     await waitFor(() => expect(
       screen.getByRole('checkbox', { name: 'Nuts packed' }),
     ).not.toHaveAttribute('aria-disabled', 'true'));
+  });
+});
+
+describe('PackingScreen snack unit assembly', () => {
+  test('a unit group reads as make N of a type at the trip target', async () => {
+    vi.stubGlobal('fetch', vi.fn(createApiMock({
+      packings: { 1: structuredPacking() },
+    })));
+    render(<App />);
+
+    expect(await screen.findByText('Make 6 × Trail Mix Bag @ 2 oz')).toBeVisible();
+    // The bag recipe, so packing day does not need the unit library open.
+    expect(screen.getByText('1 oz Almonds + 1 oz M&Ms')).toBeVisible();
+    expect(screen.getByText('0/1 packed')).toBeVisible();
+  });
+
+  test('checking off a group packs every selection behind it', async () => {
+    vi.stubGlobal('fetch', vi.fn(createApiMock({
+      packings: {
+        1: structuredPacking([makePackingUnit({
+          count: 6,
+          selections: [
+            { id: 50, quantity: 4, packed: false, actual_weight_oz: null },
+            { id: 51, quantity: 2, packed: false, actual_weight_oz: null },
+          ],
+        })]),
+      },
+    })));
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Trail Mix Bag units packed' }));
+
+    await waitFor(() => expect(
+      requestBody('PUT', '/hiking-food/api/trips/1/snack-units/50'),
+    ).toEqual({ packed: true }));
+    expect(requestBody('PUT', '/hiking-food/api/trips/1/snack-units/51')).toEqual({ packed: true });
+  });
+
+  test('an actual unit weight saves against the selection', async () => {
+    vi.stubGlobal('fetch', vi.fn(createApiMock({
+      packings: { 1: structuredPacking() },
+    })));
+    render(<App />);
+
+    const weight = await screen.findByRole('spinbutton', {
+      name: 'Trail Mix Bag unit actual weight',
+    });
+    fireEvent.blur(weight, { target: { value: '2.1' } });
+
+    await waitFor(() => expect(
+      requestBody('PUT', '/hiking-food/api/trips/1/snack-units/50'),
+    ).toEqual({ actual_weight_oz: 2.1 }));
+  });
+
+  test('a unit off the trip target is badged', async () => {
+    vi.stubGlobal('fetch', vi.fn(createApiMock({
+      packings: {
+        1: structuredPacking([makePackingUnit({ unit_weight: 3, weight_warning: true })]),
+      },
+    })));
+    render(<App />);
+
+    expect(await screen.findByText('Off target')).toBeVisible();
+  });
+
+  test('a legacy trip has no unit assembly section', async () => {
+    vi.stubGlobal('fetch', vi.fn(createApiMock({ packings: { 1: packing() } })));
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: 'Snack Packing' })).toBeVisible();
+    expect(screen.queryByRole('heading', { name: 'Snack Unit Assembly' })).toBeNull();
   });
 });
