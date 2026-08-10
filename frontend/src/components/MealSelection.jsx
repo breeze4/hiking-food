@@ -115,54 +115,91 @@ function MealSelection() {
         </CollapsibleTrigger>
         <MealMeters summary={summary} />
         <CollapsibleContent>
-          <CardContent className="pt-0 overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Recipe</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="w-32">Qty</TableHead>
-                  <TableHead className="text-right">Wt/Unit</TableHead>
-                  <TableHead className="text-right">Total Wt</TableHead>
-                  <TableHead className="text-right">Total Cal</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {meals.map((m) => (
-                  <TableRow key={m.id} className="even:bg-muted/50">
-                    <TableCell className="font-medium">{m.recipe_name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs">
-                        {m.category}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button variant="outline" size="icon" className="h-7 w-7"
-                          aria-label={`Decrease ${m.recipe_name} quantity`}
-                          disabled={quantityMutation.pending}
-                          onClick={() => quantityMutation.run(m.id, m.quantity - 1)}>-</Button>
-                        <span className="w-8 text-center text-sm">{m.quantity}</span>
-                        <Button variant="outline" size="icon" className="h-7 w-7"
-                          aria-label={`Increase ${m.recipe_name} quantity`}
-                          disabled={quantityMutation.pending}
-                          onClick={() => quantityMutation.run(m.id, m.quantity + 1)}>+</Button>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">{m.weight_per_unit}</TableCell>
-                    <TableCell className="text-right">{m.total_weight}</TableCell>
-                    <TableCell className="text-right">{m.total_calories}</TableCell>
-                  </TableRow>
-                ))}
-                {meals.length === 0 && (
+          <CardContent className="pt-0">
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="text-muted-foreground text-center py-4">
-                      No meals selected.
-                    </TableCell>
+                    <TableHead>Recipe</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead className="w-32">Qty</TableHead>
+                    <TableHead className="text-right">Wt/Unit</TableHead>
+                    <TableHead className="text-right">Total Wt</TableHead>
+                    <TableHead className="text-right">Total Cal</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {meals.map((m) => (
+                    <TableRow key={m.id} className="even:bg-muted/50">
+                      <TableCell className="font-medium">{m.recipe_name}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">
+                          {m.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button variant="outline" size="icon" className="h-7 w-7"
+                            aria-label={`Decrease ${m.recipe_name} quantity`}
+                            disabled={quantityMutation.pending}
+                            onClick={() => quantityMutation.run(m.id, m.quantity - 1)}>-</Button>
+                          <span className="w-8 text-center text-sm">{m.quantity}</span>
+                          <Button variant="outline" size="icon" className="h-7 w-7"
+                            aria-label={`Increase ${m.recipe_name} quantity`}
+                            disabled={quantityMutation.pending}
+                            onClick={() => quantityMutation.run(m.id, m.quantity + 1)}>+</Button>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">{m.weight_per_unit}</TableCell>
+                      <TableCell className="text-right">{m.total_weight}</TableCell>
+                      <TableCell className="text-right">{m.total_calories}</TableCell>
+                    </TableRow>
+                  ))}
+                  {meals.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-muted-foreground text-center py-4">
+                        No meals selected.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile card layout: controls stack under the name instead of
+                hiding off the right edge of a scrolling table. */}
+            <div className="md:hidden space-y-2">
+              {meals.map((m) => (
+                <div key={m.id} className="border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium text-sm">{m.recipe_name}</span>
+                    <Badge variant="outline" className="text-xs shrink-0">
+                      {m.category}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <Button variant="outline" size="icon" className="h-8 w-8"
+                        aria-label={`Decrease ${m.recipe_name} quantity`}
+                        disabled={quantityMutation.pending}
+                        onClick={() => quantityMutation.run(m.id, m.quantity - 1)}>-</Button>
+                      <span className="w-10 text-center font-medium">{m.quantity}</span>
+                      <Button variant="outline" size="icon" className="h-8 w-8"
+                        aria-label={`Increase ${m.recipe_name} quantity`}
+                        disabled={quantityMutation.pending}
+                        onClick={() => quantityMutation.run(m.id, m.quantity + 1)}>+</Button>
+                    </div>
+                    <div className="text-xs text-muted-foreground text-right">
+                      {m.total_weight} oz &middot; {m.total_calories} cal
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {meals.length === 0 && (
+                <p className="text-muted-foreground text-xs py-2">No meals selected.</p>
+              )}
+            </div>
 
             <div className="flex gap-2 mt-3">
               <select

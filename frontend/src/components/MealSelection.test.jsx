@@ -44,8 +44,9 @@ describe('MealSelection', () => {
     vi.stubGlobal('fetch', vi.fn(createApiMock({ recipes, tripDetails: seedTrip() })));
     render(<App />);
 
-    expect(await screen.findByRole('button', { name: 'Increase Trail Porridge quantity' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Decrease Trail Porridge quantity' })).toBeVisible();
+    // Desktop table + mobile card layout each render a stepper.
+    expect((await screen.findAllByRole('button', { name: 'Increase Trail Porridge quantity' })).length).toBe(2);
+    expect(screen.getAllByRole('button', { name: 'Decrease Trail Porridge quantity' }).length).toBe(2);
   });
 
   test('a successful quantity change refreshes the trip and renders the updated value', async () => {
@@ -63,11 +64,11 @@ describe('MealSelection', () => {
     })));
     render(<App />);
 
-    const increase = await screen.findByRole('button', { name: 'Increase Trail Porridge quantity' });
+    const increase = (await screen.findAllByRole('button', { name: 'Increase Trail Porridge quantity' }))[0];
     const getsBefore = countGetTripDetail();
     fireEvent.click(increase);
 
-    await waitFor(() => expect(screen.getByText('2')).toBeVisible());
+    await waitFor(() => expect(screen.getAllByText('2')[0]).toBeVisible());
     expect(countGetTripDetail()).toBeGreaterThan(getsBefore);
   });
 
@@ -84,11 +85,11 @@ describe('MealSelection', () => {
     })));
     render(<App />);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Increase Trail Porridge quantity' }));
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Increase Trail Porridge quantity' }))[0]);
 
     expect(await screen.findByText('Server exploded')).toBeVisible();
     // Still usable: the control is present and re-enabled.
-    expect(screen.getByRole('button', { name: 'Increase Trail Porridge quantity' })).toBeEnabled();
+    expect(screen.getAllByRole('button', { name: 'Increase Trail Porridge quantity' })[0]).toBeEnabled();
   });
 
   test('the stepper is disabled while its mutation is in flight', async () => {
@@ -107,13 +108,13 @@ describe('MealSelection', () => {
     })));
     render(<App />);
 
-    const increase = await screen.findByRole('button', { name: 'Increase Trail Porridge quantity' });
+    const increase = (await screen.findAllByRole('button', { name: 'Increase Trail Porridge quantity' }))[0];
     fireEvent.click(increase);
 
     await waitFor(() => expect(increase).toBeDisabled());
     releasePut();
     await waitFor(() => expect(
-      screen.getByRole('button', { name: 'Increase Trail Porridge quantity' }),
+      screen.getAllByRole('button', { name: 'Increase Trail Porridge quantity' })[0],
     ).toBeEnabled());
   });
 });
