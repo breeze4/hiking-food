@@ -19,7 +19,6 @@ from services.autofill import build_day_list
 from services.catalog_queries import snack_unit_type_list_view
 from services.recipe_calc import compute_recipe_totals
 from services.snack_units import (
-    lunch_quota,
     trip_oz_per_snack,
     trip_snack_unit_list_view,
     trip_unit_totals,
@@ -127,6 +126,9 @@ def trip_detail_view(db: Session, trip: Trip) -> dict:
             trip.snacks_per_day if trip.snacks_per_day is not None else 4
         ),
         "oz_per_snack": trip.oz_per_snack if trip.oz_per_snack is not None else 2,
+        # Null on purpose when unset: the client renders the live
+        # one-per-full-day default and must know it is not an override.
+        "lunches": trip.lunches,
         "snacks": [trip_snack_view(db, selection) for selection in snacks],
         "snack_units": trip_snack_unit_list_view(db, trip),
         "meals": [trip_meal_view(db, selection) for selection in meals],
@@ -155,6 +157,12 @@ def trip_list_view(db: Session, *, newest_first: bool = False) -> list[dict]:
         }
         for trip in query.all()
     ]
+
+
+def _lunches_needed(trip: Trip) -> int:
+    """The trip's lunch count: an explicit trips.lunches override, or one
+    lunch per full day when unset."""
+    return trip.lunches if trip.lunches is not None else (trip.full_days or 0)
 
 
 def trip_summary_view(db: Session, trip: Trip) -> dict:
@@ -295,7 +303,7 @@ def trip_summary_view(db: Session, trip: Trip) -> dict:
             "calories": round(subtotal["calories"], 1),
         })
         if slot == "lunch":
-            subtotal["lunches_needed"] = lunch_quota(trip)
+            subtotal["lunches_needed"] = _lunches_needed(trip)
     if structured:
         snacks_subtotal = slot_subtotals.setdefault(
             "snacks", {"weight": 0, "calories": 0}

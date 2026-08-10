@@ -401,7 +401,7 @@ LEGACY_SUMMARY_SNAPSHOT = {
     'meal_weight_actual': 10.5,
     'slot_subtotals': {'lunch': {'calories': 273.0,
                                  'days_covered': 0.3,
-                                 'lunches_needed': 4,
+                                 'lunches_needed': 2,
                                  'target_cal': 2368.8,
                                  'target_cal_high': 2605.7,
                                  'target_cal_low': 2131.9,

@@ -213,10 +213,16 @@ def _migration_3_structured_snacks(conn: Connection) -> None:
     """)
 
 
+def _migration_4_trip_lunches(conn: Connection) -> None:
+    # NULL means one lunch per full day, so existing trips need no backfill.
+    _add_column_if_missing(conn, "trips", "lunches", "INTEGER")
+
+
 MIGRATIONS: tuple[Callable[[Connection], None], ...] = (
     _migration_1_existing_columns,
     _migration_2_trip_cascades,
     _migration_3_structured_snacks,
+    _migration_4_trip_lunches,
 )
 CURRENT_SCHEMA_VERSION = len(MIGRATIONS)
 

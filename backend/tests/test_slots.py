@@ -67,7 +67,7 @@ def test_summary_splits_daytime_calorie_target_40_60(c):
     assert summary["slot_subtotals"]["snacks"]["target_cal"] == 1200
 
 
-def test_summary_counts_one_lunch_per_day(c):
+def test_summary_defaults_lunches_needed_to_full_days(c):
     trip = c.post(
         "/api/trips",
         json={
@@ -77,26 +77,38 @@ def test_summary_counts_one_lunch_per_day(c):
             "last_day_fraction": 1,
         },
     ).json()
+    # No override on the trip until the planner sets one.
+    assert trip["lunches"] is None
 
     summary = c.get(f"/api/trips/{trip['id']}/summary").json()
 
-    assert summary["slot_subtotals"]["lunch"]["lunches_needed"] == 7
+    assert summary["slot_subtotals"]["lunch"]["lunches_needed"] == 5
     # The count belongs to lunch alone; other slots never carry it.
     assert "lunches_needed" not in summary["slot_subtotals"]["snacks"]
 
 
-def test_summary_lunches_needed_rounds_partial_days_half_up(c):
+def test_explicit_lunches_override_the_full_days_default(c):
     trip = c.post(
         "/api/trips",
-        json={
-            "name": "Partial lunch days",
-            "first_day_fraction": 0.5,
-            "full_days": 2,
-            "last_day_fraction": 0.25,
-        },
+        json={"name": "Lunch override", "full_days": 5},
     ).json()
 
+    updated = c.put(f"/api/trips/{trip['id']}", json={"lunches": 7}).json()
+    assert updated["lunches"] == 7
     summary = c.get(f"/api/trips/{trip['id']}/summary").json()
+    assert summary["slot_subtotals"]["lunch"]["lunches_needed"] == 7
 
-    # 0.5 rounds up to a lunch, 0.25 rounds away: 1 + 2 + 0.
-    assert summary["slot_subtotals"]["lunch"]["lunches_needed"] == 3
+    # An explicit null clears the override back to the full-days default.
+    cleared = c.put(f"/api/trips/{trip['id']}", json={"lunches": None}).json()
+    assert cleared["lunches"] is None
+    summary = c.get(f"/api/trips/{trip['id']}/summary").json()
+    assert summary["slot_subtotals"]["lunch"]["lunches_needed"] == 5
+
+
+def test_negative_lunches_are_rejected(c):
+    trip = c.post("/api/trips", json={"name": "Bad lunches"}).json()
+
+    response = c.put(f"/api/trips/{trip['id']}", json={"lunches": -1})
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "lunches cannot be negative"

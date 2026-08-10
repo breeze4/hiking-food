@@ -44,6 +44,7 @@ For a specific trip, the user configures:
 **Trip Calculator** (built-in, based on Skurka calculator):
 - First day fraction, full days, last day fraction -> total days
 - Configurable oz/day range (default: low 19, high 24) and cal/oz (default: 125) — per-trip
+- Lunches count — per-trip, defaults to the number of full days until explicitly overridden (clearing the input restores the default)
 - Computes recommended food weight/day and calories from these settings
 - Subtracts provided meals -> daytime food targets
 - Shows low/high range for all recommendations
@@ -258,7 +259,7 @@ Summary lives at the top of the trip planner as a full-width section (not sideba
 Each food section also has inline meters in its header:
 - Breakfast/dinner: cal + weight bars, targets from ±10% of per-recipe average × days
 - Lunch/snacks: cal + weight bars, targets from backend slot_subtotals
-- Lunch additionally: a lunches count meter — `days_covered` of `lunches_needed`, where the backend computes lunches needed as one per day with partial days rounded half-up (same rule as the snack-unit quota)
+- Lunch additionally: a lunches count meter — `days_covered` of `lunches_needed`. Lunches needed is a trip input in the calculator (`trips.lunches`); when unset it defaults to one lunch per full day and tracks `full_days` edits live. The summary carries the effective count on the lunch subtotal.
 - Drink mixes: cal + weight bars (dynamic targets from selected mixes' averages × budget) + servings bar
 
 On mobile, meters stack vertically, and the meals table renders as stacked cards (name + category on top, quantity stepper and totals below) instead of a horizontally scrolling table. See `docs/specs/05-per-section-meters.md` and `docs/specs/06-collapsible-category-grid.md` for full specs.

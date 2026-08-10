@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 
 function TripCalculator() {
   const { tripDetail, refreshTrip } = useTrip();
-  const [form, setForm] = useState({ first_day_fraction: 1, full_days: 0, last_day_fraction: 0, drink_mixes_per_day: 2, oz_per_day: 22, cal_per_oz: 125, snacks_per_day: 4, oz_per_snack: 2 });
+  const [form, setForm] = useState({ first_day_fraction: 1, full_days: 0, last_day_fraction: 0, drink_mixes_per_day: 2, oz_per_day: 22, cal_per_oz: 125, snacks_per_day: 4, oz_per_snack: 2, lunches: null });
   const [open, setOpen] = useState(true);
   const saveTimer = useRef(null);
 
@@ -25,6 +25,9 @@ function TripCalculator() {
         cal_per_oz: tripDetail.cal_per_oz ?? 125,
         snacks_per_day: tripDetail.snacks_per_day ?? 4,
         oz_per_snack: tripDetail.oz_per_snack ?? 2,
+        // Stays null while the trip follows the one-lunch-per-full-day
+        // default, so a debounced save never materializes the default.
+        lunches: tripDetail.lunches ?? null,
       });
     }
   }, [tripDetail]);
@@ -116,6 +119,20 @@ function TripCalculator() {
                   min="0" step="1"
                   value={form.drink_mixes_per_day}
                   onChange={(e) => handleChange('drink_mixes_per_day', parseInt(e.target.value) || 0)}
+                  className="w-20"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="lunches">Lunches</Label>
+                <Input
+                  id="lunches"
+                  type="number"
+                  disabled={saveMutation.pending}
+                  min="0" step="1"
+                  value={form.lunches ?? form.full_days}
+                  onChange={(e) => handleChange('lunches', e.target.value === ''
+                    ? null
+                    : Math.max(0, parseInt(e.target.value) || 0))}
                   className="w-20"
                 />
               </div>

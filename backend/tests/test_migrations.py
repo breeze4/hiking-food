@@ -26,7 +26,7 @@ def test_migrations_record_current_version_and_are_idempotent(tmp_path):
         connection.commit()
         second_version = connection.exec_driver_sql("PRAGMA user_version").scalar_one()
 
-    assert first_version == second_version == 3
+    assert first_version == second_version == 4
     assert len(list((tmp_path / "backups").glob("migrations-v0-*.db"))) == 1
 
 
@@ -111,6 +111,9 @@ def test_legacy_trip_rows_are_preserved_and_gain_cascades(tmp_path):
 
 
 PRE_STRUCTURED_TRIP_COLUMNS = ("snack_model", "snacks_per_day", "oz_per_snack")
+# Every trips column that migrations after schema version 2 introduce; the
+# version-2 emulation below must drop them all.
+POST_V2_TRIP_COLUMNS = PRE_STRUCTURED_TRIP_COLUMNS + ("lunches",)
 STRUCTURED_TABLES = ("snack_unit_types", "snack_unit_ingredients", "trip_snack_units")
 
 
@@ -118,11 +121,12 @@ STRUCTURED_TABLES = ("snack_unit_types", "snack_unit_ingredients", "trip_snack_u
 class _PreStructuredTrip:
     """A trips row as it looked before the structured-snack migration.
 
-    Passing this to a read projection proves the projection reads no column
-    that migration 3 introduced beyond `snack_model`, which is how the
+    Passing this to a read projection proves the projection reads no
+    later-migration column without a None fallback, which is how the
     before/after summary comparison below can run against the pre-migration
-    database at all. `snack_model` stays None here — a row that predates the
-    column has no value for it, and the summary must still read it as legacy.
+    database at all. `snack_model` and `lunches` stay None here — a row that
+    predates those columns has no value for them, and the summary must still
+    read legacy behavior and the one-lunch-per-full-day default.
     """
 
     id: int
@@ -134,6 +138,7 @@ class _PreStructuredTrip:
     oz_per_day: float
     cal_per_oz: float
     snack_model: str | None = None
+    lunches: int | None = None
 
 
 def _build_pre_structured_database(database_path, seed_sql: str):
@@ -146,7 +151,7 @@ def _build_pre_structured_database(database_path, seed_sql: str):
     try:
         for table in STRUCTURED_TABLES:
             raw.execute(f"DROP TABLE {table}")
-        for column in PRE_STRUCTURED_TRIP_COLUMNS:
+        for column in POST_V2_TRIP_COLUMNS:
             raw.execute(f"ALTER TABLE trips DROP COLUMN {column}")
         raw.executescript(seed_sql)
         raw.execute("PRAGMA user_version=2")
@@ -260,4 +265,4 @@ def test_database_verifier_rejects_unversioned_schema(tmp_path):
     db_engine = create_database_engine(f"sqlite:///{tmp_path / 'outdated.db'}")
     Base.metadata.create_all(db_engine)
 
-    assert "schema version is 0; expected 3" in collect_database_errors(db_engine)
+    assert "schema version is 0; expected 4" in collect_database_errors(db_engine)

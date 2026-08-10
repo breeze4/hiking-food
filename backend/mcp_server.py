@@ -190,6 +190,7 @@ def build_mcp_server() -> FastMCP:
         first_day_fraction: float | None = None, full_days: int | None = None,
         last_day_fraction: float | None = None, drink_mixes_per_day: int | None = None,
         oz_per_day: float | None = None, cal_per_oz: float | None = None,
+        lunches: int | None = None,
     ) -> dict:
         """Clone a prior trip into a uniquely named destination and optionally change its shape."""
         with _session() as db:
@@ -201,6 +202,7 @@ def build_mcp_server() -> FastMCP:
                 "drink_mixes_per_day": drink_mixes_per_day,
                 "oz_per_day": oz_per_day,
                 "cal_per_oz": cal_per_oz,
+                "lunches": lunches,
             })
             return {
                 "source_trip_id": source_trip_id,
@@ -214,14 +216,16 @@ def build_mcp_server() -> FastMCP:
         first_day_fraction: float | None = None, full_days: int | None = None,
         last_day_fraction: float | None = None, drink_mixes_per_day: int | None = None,
         oz_per_day: float | None = None, cal_per_oz: float | None = None,
+        lunches: int | None = None,
     ) -> dict:
-        """Update a trip's name, duration, drink-mix target, or calorie/weight targets."""
+        """Update a trip's name, duration, drink-mix target, lunch count, or calorie/weight targets."""
         updates = {
             "name": name,
             "first_day_fraction": first_day_fraction, "full_days": full_days,
             "last_day_fraction": last_day_fraction,
             "drink_mixes_per_day": drink_mixes_per_day,
             "oz_per_day": oz_per_day, "cal_per_oz": cal_per_oz,
+            "lunches": lunches,
         }
         with _session() as db:
             trip = TripPlanningService(db).update_trip(

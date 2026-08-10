@@ -175,6 +175,7 @@ class TripPlanningService:
             "snack_model": source.snack_model,
             "snacks_per_day": source.snacks_per_day,
             "oz_per_snack": source.oz_per_snack,
+            "lunches": source.lunches,
         }
         fields.update({key: value for key, value in overrides.items() if value is not None})
         self._validate_trip_fields(fields, require_name=True)
@@ -640,6 +641,9 @@ class TripPlanningService:
         snacks_per_day = fields.get("snacks_per_day")
         if snacks_per_day is not None and snacks_per_day < 0:
             raise TripPlanningError("snacks_per_day cannot be negative")
+        lunches = fields.get("lunches")
+        if lunches is not None and lunches < 0:
+            raise TripPlanningError("lunches cannot be negative")
         snack_model = fields.get("snack_model")
         if snack_model is not None and snack_model not in SNACK_MODELS:
             raise TripPlanningError("snack_model must be legacy or structured")

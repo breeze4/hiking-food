@@ -218,6 +218,8 @@ class TripCreate(BaseModel):
     drink_mixes_per_day: int = 2
     oz_per_day: float = 22.0
     cal_per_oz: float = 125.0
+    # None means one lunch per full day.
+    lunches: Optional[int] = None
 
 
 class TripUpdate(BaseModel):
@@ -231,6 +233,8 @@ class TripUpdate(BaseModel):
     snack_model: Optional[str] = None
     snacks_per_day: Optional[int] = None
     oz_per_snack: Optional[float] = None
+    # Explicit null clears the override back to one lunch per full day.
+    lunches: Optional[int] = None
 
 
 class TripListRead(BaseModel):
@@ -349,6 +353,8 @@ class TripDetailRead(BaseModel):
     snack_model: str = "legacy"
     snacks_per_day: int = 4
     oz_per_snack: float = 2.0
+    # None means the trip follows the one-lunch-per-full-day default.
+    lunches: Optional[int] = None
     snacks: list[TripSnackRead] = []
     snack_units: list[TripSnackUnitRead] = []
     meals: list[TripMealRead] = []

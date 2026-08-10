@@ -68,6 +68,8 @@ class Trip(Base):
     snack_model = Column(Text, default="legacy")
     snacks_per_day = Column(Integer, default=4)
     oz_per_snack = Column(Float, default=2)
+    # NULL means one lunch per full day; a value is an explicit override.
+    lunches = Column(Integer)
 
 
 class TripMeal(Base):

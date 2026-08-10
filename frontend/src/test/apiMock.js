@@ -42,6 +42,7 @@ export function makeTripDetail(overrides = {}) {
     snack_model: 'structured',
     snacks_per_day: 4,
     oz_per_snack: 2,
+    lunches: null,
     meals: [],
     snacks: [],
     snack_units: [],
