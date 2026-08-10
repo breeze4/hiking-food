@@ -16,9 +16,10 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      // The backend mounts everything under /hiking-food (backend/main.py),
+      // so the prefix passes through unchanged.
       '/hiking-food/api': {
         target: 'http://localhost:8000',
-        rewrite: (path) => path.replace(/^\/hiking-food/, ''),
       },
     },
   },
