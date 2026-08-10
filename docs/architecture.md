@@ -48,7 +48,7 @@ Specs, plans, and session logs live in `docs/`; `docs/plans/INDEX.md` is the aut
 
 **Styling**: Tailwind CSS v4 configured entirely in CSS (`src/index.css`) using `@theme inline` with `oklch` colors. Class-based dark mode. Geist variable font. No CSS modules or styled-components.
 
-**Dev proxy**: Vite proxies `/hiking-food/api` to `http://localhost:8000`, stripping the `/hiking-food` prefix, so the frontend and backend share the same URL structure in dev and prod.
+**Dev proxy**: Vite proxies `/hiking-food/api` to `http://localhost:8000` with the path unchanged — the backend mounts everything under `/hiking-food` (`backend/main.py`), so the frontend and backend share the same URL structure in dev and prod.
 
 **Patterns**: Trip calculator uses debounced save (500ms `setTimeout`). Daily plan page renders a hand-built SVG stacked bar chart with no charting library. Some form controls use native `<select>` rather than shadcn equivalents.
 

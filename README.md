@@ -33,13 +33,15 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-Start the frontend (Vite proxies `/api` to `:8000`):
+Start the frontend (Vite proxies `/hiking-food/api` to `:8000`):
 
 ```sh
 cd frontend
 pnpm install --frozen-lockfile
 pnpm dev
 ```
+
+Then open `http://localhost:5173/hiking-food/`.
 
 Run tests:
 

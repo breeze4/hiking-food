@@ -1,4 +1,4 @@
-Dev: `cd backend && uvicorn main:app --reload` + `cd frontend && pnpm dev` (Vite proxies /api to :8000)
+Dev: `cd backend && venv/bin/uvicorn main:app --reload` + `cd frontend && pnpm dev`, then open `http://localhost:5173/hiking-food/` (Vite proxies `/hiking-food/api` to :8000 unchanged)
 Test: `cd backend && venv/bin/pytest`
 Frontend checks: `cd frontend && pnpm lint && pnpm build`
 Deploy: commits to `main` are gated and deployed to beebaby by cicd-router using `cicd-router.project.yml`. Push the exact verified commit; do not use a direct deploy script.
