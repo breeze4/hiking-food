@@ -65,3 +65,38 @@ def test_summary_splits_daytime_calorie_target_40_60(c):
 
     assert summary["slot_subtotals"]["lunch"]["target_cal"] == 800
     assert summary["slot_subtotals"]["snacks"]["target_cal"] == 1200
+
+
+def test_summary_counts_one_lunch_per_day(c):
+    trip = c.post(
+        "/api/trips",
+        json={
+            "name": "Lunch count",
+            "first_day_fraction": 1,
+            "full_days": 5,
+            "last_day_fraction": 1,
+        },
+    ).json()
+
+    summary = c.get(f"/api/trips/{trip['id']}/summary").json()
+
+    assert summary["slot_subtotals"]["lunch"]["lunches_needed"] == 7
+    # The count belongs to lunch alone; other slots never carry it.
+    assert "lunches_needed" not in summary["slot_subtotals"]["snacks"]
+
+
+def test_summary_lunches_needed_rounds_partial_days_half_up(c):
+    trip = c.post(
+        "/api/trips",
+        json={
+            "name": "Partial lunch days",
+            "first_day_fraction": 0.5,
+            "full_days": 2,
+            "last_day_fraction": 0.25,
+        },
+    ).json()
+
+    summary = c.get(f"/api/trips/{trip['id']}/summary").json()
+
+    # 0.5 rounds up to a lunch, 0.25 rounds away: 1 + 2 + 0.
+    assert summary["slot_subtotals"]["lunch"]["lunches_needed"] == 3

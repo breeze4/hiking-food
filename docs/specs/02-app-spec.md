@@ -258,9 +258,10 @@ Summary lives at the top of the trip planner as a full-width section (not sideba
 Each food section also has inline meters in its header:
 - Breakfast/dinner: cal + weight bars, targets from ±10% of per-recipe average × days
 - Lunch/snacks: cal + weight bars, targets from backend slot_subtotals
+- Lunch additionally: a lunches count meter — `days_covered` of `lunches_needed`, where the backend computes lunches needed as one per day with partial days rounded half-up (same rule as the snack-unit quota)
 - Drink mixes: cal + weight bars (dynamic targets from selected mixes' averages × budget) + servings bar
 
-On mobile, meters stack vertically. See `docs/specs/05-per-section-meters.md` and `docs/specs/06-collapsible-category-grid.md` for full specs.
+On mobile, meters stack vertically, and the meals table renders as stacked cards (name + category on top, quantity stepper and totals below) instead of a horizontally scrolling table. See `docs/specs/05-per-section-meters.md` and `docs/specs/06-collapsible-category-grid.md` for full specs.
 
 ## Food Planning Agent
 

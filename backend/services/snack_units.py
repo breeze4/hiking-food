@@ -62,6 +62,12 @@ def unit_quota(trip: Trip) -> dict:
     return {"quota": sum(per_day), "per_day": per_day}
 
 
+def lunch_quota(trip: Trip) -> int:
+    """How many lunches the trip needs: one per day, partial days round
+    half-up — the same never-pack-a-fraction rule as the unit quota."""
+    return sum(_round_half_up(fraction) for fraction in trip_day_fractions(trip))
+
+
 def trip_oz_per_snack(trip: Trip) -> float:
     return trip.oz_per_snack if trip.oz_per_snack is not None else DEFAULT_OZ_PER_SNACK
 

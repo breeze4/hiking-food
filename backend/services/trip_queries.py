@@ -19,6 +19,7 @@ from services.autofill import build_day_list
 from services.catalog_queries import snack_unit_type_list_view
 from services.recipe_calc import compute_recipe_totals
 from services.snack_units import (
+    lunch_quota,
     trip_oz_per_snack,
     trip_snack_unit_list_view,
     trip_unit_totals,
@@ -293,6 +294,8 @@ def trip_summary_view(db: Session, trip: Trip) -> dict:
             "weight": round(subtotal["weight"], 2),
             "calories": round(subtotal["calories"], 1),
         })
+        if slot == "lunch":
+            subtotal["lunches_needed"] = lunch_quota(trip)
     if structured:
         snacks_subtotal = slot_subtotals.setdefault(
             "snacks", {"weight": 0, "calories": 0}

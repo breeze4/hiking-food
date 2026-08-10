@@ -363,6 +363,8 @@ class SlotSubtotal(BaseModel):
     target_cal_low: float = 0
     target_cal_high: float = 0
     days_covered: Optional[float] = None
+    # Lunch slot only: one lunch per day, partial days round half-up.
+    lunches_needed: Optional[int] = None
 
 
 class SnackUnitQuota(BaseModel):

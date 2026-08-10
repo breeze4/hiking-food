@@ -225,7 +225,7 @@ function structuredSummary(overrides = {}) {
   return makeSummary({
     snack_units: { quota: 14, filled: 12, per_day: [2, 4, 4, 2] },
     slot_subtotals: {
-      lunch: { weight: 0, calories: 0, target_cal: 800, target_cal_low: 720, target_cal_high: 880, days_covered: 0 },
+      lunch: { weight: 0, calories: 0, target_cal: 800, target_cal_low: 720, target_cal_high: 880, days_covered: 0, lunches_needed: 4 },
       snacks: { weight: 24, calories: 3200 },
     },
     ...overrides,
@@ -275,6 +275,26 @@ describe('SnackSelection structured units', () => {
     const meter = await screen.findByRole('progressbar', { name: 'Units filled' });
     expect(meter).toHaveAttribute('aria-valuenow', '14');
     expect(screen.getAllByText('Complete').length).toBeGreaterThan(0);
+  });
+
+  test('the lunch section meters lunch days covered against lunches needed', async () => {
+    vi.stubGlobal('fetch', vi.fn(structuredMock({
+      summary: structuredSummary({
+        slot_subtotals: {
+          lunch: {
+            weight: 5, calories: 300, target_cal: 800, target_cal_low: 720,
+            target_cal_high: 880, days_covered: 1.5, lunches_needed: 4,
+          },
+          snacks: { weight: 24, calories: 3200 },
+        },
+      }),
+    })));
+    render(<App />);
+
+    const meter = await screen.findByRole('progressbar', { name: 'Lunches filled' });
+    expect(meter).toHaveAttribute('aria-valuenow', '1.5');
+    expect(meter).toHaveAttribute('aria-valuemax', '4');
+    expect(screen.getByText('1.5 of 4')).toBeVisible();
   });
 
   test('the add panel offers library bags and packaged snacks', async () => {

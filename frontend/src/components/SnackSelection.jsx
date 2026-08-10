@@ -586,10 +586,21 @@ function SlotMeters({ slot, summary }) {
   const weightLow = weightTarget * 0.9;
   const weightHigh = weightTarget * 1.1;
 
+  // One lunch per day, partial days rounded half-up; days_covered gauges
+  // how many of them the selected calories add up to.
+  const showLunches = slot === 'lunch' && st.lunches_needed != null;
+
   return (
-    <div className="mb-2 p-2 rounded-md bg-muted/60 grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <div className={`mb-2 p-2 rounded-md bg-muted/60 grid grid-cols-1 gap-2 ${showLunches ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
       <ProgressMeter label="Cal" actual={st.calories} targetLow={st.target_cal_low} targetHigh={st.target_cal_high} unit="cal" compact />
       <ProgressMeter label="Wt" actual={st.weight} targetLow={weightLow} targetHigh={weightHigh} unit="oz" compact />
+      {showLunches && (
+        <SnackUnitMeter
+          label="Lunches"
+          filled={st.days_covered ?? 0}
+          quota={st.lunches_needed}
+        />
+      )}
     </div>
   );
 }
