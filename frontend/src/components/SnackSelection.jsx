@@ -7,6 +7,7 @@ import { useTrip } from '../context/TripContext';
 import { useMutation } from '../hooks/useMutation';
 import ProgressMeter from './ProgressMeter';
 import SnackUnitMeter from './SnackUnitMeter';
+import NotesCell from './NotesCell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -446,13 +447,11 @@ function SnackUnitSection({
                         />
                       </TableCell>
                       <TableCell>
-                        <Input
-                          defaultValue={u.trip_notes || ''}
-                          aria-label={`${u.name} notes`}
+                        <NotesCell
+                          name={u.name}
+                          value={u.trip_notes}
                           disabled={mutating}
-                          onBlur={(e) => onUpdateNotes(u.id, e.target.value)}
-                          placeholder="notes..."
-                          className="h-7 text-xs w-28"
+                          onSave={(v) => onUpdateNotes(u.id, v)}
                         />
                       </TableCell>
                       <TableCell>
@@ -500,15 +499,23 @@ function SnackUnitSection({
                     {u.total_weight} oz &middot; {u.total_calories} cal
                   </div>
                 </div>
-                <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Checkbox
-                    checked={u.packed}
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Checkbox
+                      checked={u.packed}
+                      disabled={mutating}
+                      aria-label={`${u.name} packed`}
+                      onCheckedChange={(checked) => onUpdatePacked(u.id, checked)}
+                    />
+                    Packed
+                  </label>
+                  <NotesCell
+                    name={u.name}
+                    value={u.trip_notes}
                     disabled={mutating}
-                    aria-label={`${u.name} packed`}
-                    onCheckedChange={(checked) => onUpdatePacked(u.id, checked)}
+                    onSave={(v) => onUpdateNotes(u.id, v)}
                   />
-                  Packed
-                </label>
+                </div>
               </div>
             ))}
             {units.length === 0 && (
@@ -674,13 +681,11 @@ function SlotSection({
                       <TableCell className="text-right">{s.total_calories}</TableCell>
                       <TableCell className="text-right">{s.calories_per_oz}</TableCell>
                       <TableCell>
-                        <Input
-                          defaultValue={s.trip_notes || ''}
-                          aria-label={`${s.ingredient_name} notes`}
+                        <NotesCell
+                          name={s.ingredient_name}
+                          value={s.trip_notes}
                           disabled={mutating}
-                          onBlur={(e) => onUpdateNotes(s.id, e.target.value)}
-                          placeholder="notes..."
-                          className="h-7 text-xs w-28"
+                          onSave={(v) => onUpdateNotes(s.id, v)}
                         />
                       </TableCell>
                       <TableCell>
@@ -747,6 +752,12 @@ function SlotSection({
                     {s.total_weight} oz &middot; {s.total_calories} cal &middot; {s.calories_per_oz} c/oz
                   </div>
                 </div>
+                <NotesCell
+                  name={s.ingredient_name}
+                  value={s.trip_notes}
+                  disabled={mutating}
+                  onSave={(v) => onUpdateNotes(s.id, v)}
+                />
               </div>
             ))}
             {snacks.length === 0 && (
@@ -854,13 +865,11 @@ function DrinkMixSection({
                       <TableCell className="text-right">{s.total_weight}</TableCell>
                       <TableCell className="text-right">{s.total_calories}</TableCell>
                       <TableCell>
-                        <Input
-                          defaultValue={s.trip_notes || ''}
-                          aria-label={`${s.ingredient_name} notes`}
+                        <NotesCell
+                          name={s.ingredient_name}
+                          value={s.trip_notes}
                           disabled={mutating}
-                          onBlur={(e) => onUpdateNotes(s.id, e.target.value)}
-                          placeholder="notes..."
-                          className="h-7 text-xs w-28"
+                          onSave={(v) => onUpdateNotes(s.id, v)}
                         />
                       </TableCell>
                       <TableCell>
@@ -901,6 +910,12 @@ function DrinkMixSection({
                     {s.total_weight} oz &middot; {s.total_calories} cal
                   </div>
                 </div>
+                <NotesCell
+                  name={s.ingredient_name}
+                  value={s.trip_notes}
+                  disabled={mutating}
+                  onSave={(v) => onUpdateNotes(s.id, v)}
+                />
               </div>
             ))}
             {snacks.length === 0 && (

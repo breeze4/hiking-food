@@ -59,14 +59,49 @@ describe('SnackSelection', () => {
     expect(screen.getAllByRole('button', { name: 'Decrease Tuna Packet servings' }).length).toBe(2);
     expect(screen.getAllByRole('button', { name: 'Remove Tuna Packet' }).length).toBe(2);
     expect(screen.getAllByLabelText('Tuna Packet slot').length).toBe(2);
+    expect(screen.getAllByRole('button', { name: 'Tuna Packet notes' }).length).toBe(2);
     // Desktop-only controls.
     expect(screen.getByRole('spinbutton', { name: 'Tuna Packet servings' })).toBeVisible();
-    expect(screen.getByRole('textbox', { name: 'Tuna Packet notes' })).toBeVisible();
 
     // Drink mixes get the same treatment.
     expect(screen.getAllByRole('button', { name: 'Increase Skratch Mix servings' }).length).toBe(2);
     expect(screen.getAllByRole('button', { name: 'Remove Skratch Mix' }).length).toBe(2);
-    expect(screen.getByRole('textbox', { name: 'Skratch Mix notes' })).toBeVisible();
+    expect(screen.getAllByRole('button', { name: 'Skratch Mix notes' }).length).toBe(2);
+  });
+
+  test('the notes dialog shows the saved note and saves edits', async () => {
+    const tripDetails = seedTrip({ trip_notes: 'repackage into a ziploc before the trailhead' });
+    vi.stubGlobal('fetch', vi.fn(createApiMock({
+      snacks: catalog,
+      tripDetails,
+      handler: (path, method, options) => {
+        if (method === 'PUT' && path === '/hiking-food/api/trips/1/snacks/20') {
+          tripDetails[1].snacks[0].trip_notes = JSON.parse(options.body).trip_notes;
+          return jsonResponse({});
+        }
+        return undefined;
+      },
+    })));
+    render(<App />);
+
+    // The saved note reads as a preview on the trigger itself.
+    const trigger = (await screen.findAllByRole('button', { name: 'Tuna Packet notes' }))[0];
+    expect(trigger).toHaveTextContent('repackage into a ziploc before the trailhead');
+    fireEvent.click(trigger);
+
+    // The dialog opens with the full note ready to edit.
+    const textarea = await screen.findByRole('textbox', { name: 'Tuna Packet notes' });
+    expect(textarea).toHaveValue('repackage into a ziploc before the trailhead');
+    fireEvent.change(textarea, { target: { value: 'buy two more packets' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(
+      requestBody('PUT', '/hiking-food/api/trips/1/snacks/20'),
+    ).toEqual({ trip_notes: 'buy two more packets' }));
+    // The refreshed trip renders the new note back on the trigger.
+    await waitFor(() => expect(
+      screen.getAllByRole('button', { name: 'Tuna Packet notes' })[0],
+    ).toHaveTextContent('buy two more packets'));
   });
 
   test('a successful servings change refreshes the trip and renders the updated value', async () => {
