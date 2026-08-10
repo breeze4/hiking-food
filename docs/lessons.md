@@ -129,3 +129,18 @@ and a proposed fix when obvious.
     should never tear down sessions it did not create.
   fix: Verifier briefings (and the agent-browser skill docs) should say: close
     only the session you opened, by name; never `--all` in a shared environment.
+
+- date: 2026-08-10
+  context: notes-dialog work; dev servers 404ed on every API call through Vite
+  category: friction
+  body: The dev-proxy rewrite bug hit again and was re-diagnosed from scratch
+    (curl the proxy, curl the backend, read vite.config.js, read main.py, git
+    archaeology) before finding the 2026-08-06 lessons entry that already
+    contained the exact one-line fix. The fix had been diagnosed but never
+    applied, so the known-broken state sat in the repo for four days and cost a
+    second full diagnosis. Now fixed in commit 0a8db35.
+  fix: When a lessons entry ships with a concrete, verified, one-line fix,
+    apply it in the same session that diagnosed it (separate commit) instead of
+    only recording it. Also: grep docs/lessons.md for the failing symptom
+    before diagnosing dev-environment failures - the answer may already be
+    written down.
