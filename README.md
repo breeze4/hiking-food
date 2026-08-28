@@ -72,3 +72,5 @@ ChatGPT plugin. Claude can use the same remote MCP URL and OAuth contract.
 ## Deploy
 
 Deploys run automatically through cicd-router on each commit to `main` (see `cicd-router.project.yml`); there is no manual deploy script.
+
+<!-- Factory prerequisite proof: factory/prerequisite-20260828153516 -->
