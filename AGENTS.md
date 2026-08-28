@@ -1,9 +1,10 @@
 Dev: `cd backend && uvicorn main:app --reload` + `cd frontend && pnpm dev` (Vite proxies /api to :8000)
 Test: `cd backend && venv/bin/pytest`
 Frontend checks: `cd frontend && pnpm lint && pnpm build`
-Deploy: push `main` to send the exact commit to Factory.
+Deploy: commit to `main`. The Factory runner publishes the exact commit and
+records its deployment.
 The `factory.project.yml` file is the active contract.
-Factory runs the retained `scripts/cicd-router-gates.sh` gate.
+Factory runs `scripts/cicd-router-gates.sh` as the project gate.
 The `cicd-router.project.yml` file is audit data only.
 Do not use a direct deployment script.
 Access: `http://beebaby:8000/hiking-food/`
