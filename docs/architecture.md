@@ -62,10 +62,18 @@ Specs, plans, and session logs live in `docs/`; `docs/plans/INDEX.md` is the aut
 
 ## Deployment
 
-**Method**: `cicd-router` watches verified commits to `main`, runs the exact-SHA project gates from `scripts/cicd-router-gates.sh`, rsyncs the approved source to `beebaby`, runs `deploy/remote-bootstrap.sh`, restarts the user systemd service, and performs the configured health check.
+**Method:** Factory receives a signed GitHub event for a pushed `main` commit.
+It fetches that exact commit and runs the retained
+`scripts/cicd-router-gates.sh` gate. Factory copies the approved source to
+BeeBaby and runs `deploy/remote-bootstrap.sh`. It then restarts the user
+systemd service and examines the configured health endpoint.
+
+The `factory.project.yml` file is the active contract. The
+`cicd-router.project.yml` file is audit and recovery data only.
 
 **Service**: Runs as a user-level systemd unit (`hiking-food.service`) on port 8000. `loginctl enable-linger` keeps it alive after logout. BeeBaby's Tailscale Funnel publishes the OAuth-protected `/hiking-food` MCP path through a recognized-certificate HTTPS hostname for remote chatbot clients.
 
 **Database persistence**: The SQLite file on the server is never overwritten — rsync excludes `*.db`, and schema changes are applied by the idempotent startup migrations.
 
-**CI/CD**: cicd-router provides the project gate, exact-SHA deployment, service restart, smoke check, and result publication for commits pushed to `main`.
+**Deployment control:** Factory provides the project gate, exact-commit
+deployment, service restart, smoke check, rollback record, and result record.

@@ -1,7 +1,11 @@
 Dev: `cd backend && venv/bin/uvicorn main:app --reload` + `cd frontend && pnpm dev`, then open `http://localhost:5173/hiking-food/` (Vite proxies `/hiking-food/api` to :8000 unchanged)
 Test: `cd backend && venv/bin/pytest`
 Frontend checks: `cd frontend && pnpm lint && pnpm build`
-Deploy: commits to `main` are gated and deployed to beebaby by cicd-router using `cicd-router.project.yml`. Push the exact verified commit; do not use a direct deploy script.
+Deploy: push `main` to send the exact commit to Factory.
+The `factory.project.yml` file is the active contract.
+Factory runs the retained `scripts/cicd-router-gates.sh` gate.
+The `cicd-router.project.yml` file is audit data only.
+Do not use a direct deployment script.
 Access: `http://beebaby:8000/hiking-food/`
 
 ## Plans

@@ -71,4 +71,10 @@ ChatGPT plugin. Claude can use the same remote MCP URL and OAuth contract.
 
 ## Deploy
 
-Deploys run automatically through cicd-router on each commit to `main` (see `cicd-router.project.yml`); there is no manual deploy script.
+Factory deploys each pushed `main` commit that passes the project gates. The
+`factory.project.yml` file is the active deployment contract. Factory runs the
+retained `scripts/cicd-router-gates.sh` gate, restarts
+`hiking-food.service`, and examines `/hiking-food/api/health` on port `8000`.
+
+The `cicd-router.project.yml` file is audit and recovery data only. Do not use
+a direct deployment script.
