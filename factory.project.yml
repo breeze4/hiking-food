@@ -1,0 +1,60 @@
+# hiking-food.
+#
+# A prefixed health path, and one environment file outside the deployment directory.
+#
+# Converted from cicd-router.project.yml by `factory deployment convert`,
+# which writes nothing itself. The source file stays in this repository as
+# the rollback input and the audit record.
+version: 1
+identity:
+  id: hiking-food
+  name: Hiking Food
+source:
+  github_owner: breeze4
+  github_repository: hiking-food
+  deploy_branches:
+    - main
+gates:
+  stages:
+    - name: project-gates
+      command: bash scripts/cicd-router-gates.sh
+  dependency_path:
+    prepend:
+      - backend/venv/bin
+  caches: []
+deploy:
+  enabled: true
+  directory: dev/hiking-food
+  source_subdir: .
+  service_unit: hiking-food.service
+  restart_units:
+    - hiking-food.service
+  env_files:
+    - ~/.config/hiking-food/mcp.env
+  rsync:
+    excludes:
+      - .git/
+      - .local/
+      - node_modules/
+      - backend/venv/
+      - frontend/node_modules/
+      - __pycache__/
+      - "*.db"
+      - "*.pdf"
+  steps:
+    - name: bootstrap
+      command: bash deploy/remote-bootstrap.sh
+  port: 8000
+  web_path: /
+smoke:
+  attempts: 5
+  delay_seconds: 2
+  checks:
+    - name: app-health
+      kind: http
+      port: 8000
+      path: /hiking-food/api/health
+      expected_status: 200
+rollback:
+  source: last_green_sha
+
