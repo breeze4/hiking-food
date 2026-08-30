@@ -50,3 +50,7 @@ concurrency from changing shared UI timing.
 Vitest 4 rejects the initial `--minWorkers` option before it starts tests. The
 final command keeps the supported `--maxWorkers=1` limit and removes the
 unsupported option.
+
+The corrected worker-limit push again received HTTP `502` from the GitHub
+webhook route and created no Woodpecker pipeline. This evidence commit triggers
+the unchanged recovery tree after recording that edge failure.
