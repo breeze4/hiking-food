@@ -41,3 +41,8 @@ frontend interaction test times out under the CI load after 72 tests pass. The
 same full 73-test suite passes locally. This transient timing failure changes
 the check command to retry a failed frontend test once. It does not change test
 expectations or application behavior.
+
+The retry exposes two failures from the shared asynchronous UI test under
+parallel Woodpecker workers. The final recovery runs the unchanged frontend
+suite with one worker. This preserves every assertion and prevents test-file
+concurrency from changing shared UI timing.
