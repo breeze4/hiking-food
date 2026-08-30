@@ -9,7 +9,7 @@ MCP environment file.
 
 The Planner database is `110592` bytes and the OAuth database is `20480` bytes.
 Both are owned by `beeadmin:beeadmin`. SQLite reports `ok` for both integrity
-checks. The Planner database uses WAL mode; the OAuth database uses delete mode.
+checks. The Planner database uses delete mode; the OAuth database uses WAL mode.
 
 ## Bridge
 
@@ -71,8 +71,8 @@ The candidate used SQLite backup operations for both databases, then mounted
 only those backup files at `/data`. It passed `/hiking-food/api/health`, OAuth
 authorization-server discovery with the retained HTTPS issuer, and the
 path-prefixed root route. The Planner and OAuth database integrity checks both
-returned `ok`. The Planner backup retained WAL mode, and the OAuth backup
-retained delete journal mode. Docker inspection proves `ReadonlyRootfs=true`,
+returned `ok`. The Planner backup retained delete journal mode, and the OAuth
+backup retained WAL mode. Docker inspection proves `ReadonlyRootfs=true`,
 `CapDrop=[ALL]`, and only the candidate `/data` bind.
 
 The candidate moved to loopback port `18086` only because `18080` belongs to
