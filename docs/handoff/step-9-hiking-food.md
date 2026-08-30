@@ -35,3 +35,9 @@ Woodpecker pipeline `1` passes the Python backend tests but fails the frontend
 check before application tests. Its Node image selected pnpm `11.24.0`, while
 the locked frontend requires `11.5.1`. The recovery explicitly activates pnpm
 `11.5.1` in the check workflow and image builder before dependency installation.
+
+Pipeline `2` passes the backend checks and image publication, but one existing
+frontend interaction test times out under the CI load after 72 tests pass. The
+same full 73-test suite passes locally. This transient timing failure changes
+the check command to retry a failed frontend test once. It does not change test
+expectations or application behavior.
