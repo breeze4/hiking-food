@@ -91,3 +91,13 @@ production traffic.
 A fresh-context verifier must inspect this committed bridge and repeat the
 repository, image, database restore, OAuth discovery, path-prefix, source
 service, and rollback criteria without repairing this step.
+
+## Factory compatibility recovery
+
+Factory deployment `b787b00b-57ed-457a-86df-cb87c8be5da0` for the legacy
+worker-limit commit failed its `scripts/cicd-router-gates.sh` frontend test.
+The failed gate uses the same asynchronous test timing as the Woodpecker check.
+The legacy gate now uses the proven supported `--maxWorkers=1` limit. A normal
+commit hook records the recovery deployment. The earlier queued deployment
+`aef0c6e1-d803-43dd-82c7-4f7c9c1312be` remains a historical failed-gate input
+and is not a valid compatibility proof.
