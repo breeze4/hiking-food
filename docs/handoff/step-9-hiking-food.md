@@ -54,3 +54,8 @@ unsupported option.
 The corrected worker-limit push again received HTTP `502` from the GitHub
 webhook route and created no Woodpecker pipeline. This evidence commit triggers
 the unchanged recovery tree after recording that edge failure.
+
+The first evidence trigger also received no Woodpecker pipeline. After the
+existing Funnel target was reapplied without a route change, this step creates
+one empty recovery trigger for the corrected tree and verifies the delivery and
+pipeline through the Woodpecker API.
