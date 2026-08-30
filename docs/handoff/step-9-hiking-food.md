@@ -59,3 +59,35 @@ The first evidence trigger also received no Woodpecker pipeline. After the
 existing Funnel target was reapplied without a route change, this step creates
 one empty recovery trigger for the corrected tree and verifies the delivery and
 pipeline through the Woodpecker API.
+
+## Final bridge evidence
+
+Woodpecker pipeline `5` passes for commit
+`51a49c4c799f3e047def8a2d2288a2b8abb6ea4b`. It publishes
+`ghcr.io/breeze4/hiking-food@sha256:c4e3a2768e92085ac7a2b90be3911543cedab24931728febcbfe7aa2a9b4a452`.
+The OCI revision label equals that commit, and the image user is `1000:1000`.
+
+The candidate used SQLite backup operations for both databases, then mounted
+only those backup files at `/data`. It passed `/hiking-food/api/health`, OAuth
+authorization-server discovery with the retained HTTPS issuer, and the
+path-prefixed root route. The Planner and OAuth database integrity checks both
+returned `ok`. The Planner backup retained WAL mode, and the OAuth backup
+retained delete journal mode. Docker inspection proves `ReadonlyRootfs=true`,
+`CapDrop=[ALL]`, and only the candidate `/data` bind.
+
+The candidate moved to loopback port `18086` only because `18080` belongs to
+the existing Caddy candidate and `18081` belongs to the deployment probe. This
+temporary test override does not change the committed service definition or any
+production route. The source `hiking-food.service` stayed active throughout.
+
+The normal commit hook recorded Factory compatibility deployment
+`aef0c6e1-d803-43dd-82c7-4f7c9c1312be` for the trigger commit. After the
+candidate stopped, the source service returned its health response and the
+path-prefixed root response from port `8000`. The candidate never received
+production traffic.
+
+## Remaining verification
+
+A fresh-context verifier must inspect this committed bridge and repeat the
+repository, image, database restore, OAuth discovery, path-prefix, source
+service, and rollback criteria without repairing this step.
