@@ -24,3 +24,9 @@ OAuth issuer configuration unchanged.
 The candidate uses isolated SQLite backups. It does not receive production
 traffic or stop the Factory source service. Stopping the candidate returns the
 source service as the active writer.
+
+## Recovery
+
+The initial GitHub push delivery received HTTP `502` with `failed to connect to
+host`, so Woodpecker created no pipeline for the bridge commit. This handoff
+commit records the delivery before it triggers the unchanged bridge tree again.
