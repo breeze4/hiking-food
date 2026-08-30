@@ -1,0 +1,31 @@
+services:
+  hiking-food:
+    image: ${IMAGE_DIGEST:?Set IMAGE_DIGEST to an immutable GHCR digest}
+    env_file:
+      - ${HIKING_FOOD_ENV_FILE:?Set HIKING_FOOD_ENV_FILE to the protected MCP environment file}
+    environment:
+      HIKING_FOOD_DATABASE_URL: sqlite:////data/hiking_food.db
+      HIKING_FOOD_AUTH_DB_PATH: /data/hiking_food_auth.db
+      HIKING_FOOD_BACKUP_DIR: /data/backups
+    user: "1000:1000"
+    init: true
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    volumes:
+      - type: bind
+        source: ${HIKING_FOOD_DATA_DIR:?Set HIKING_FOOD_DATA_DIR to the protected database directory}
+        target: /data
+    ports:
+      - "127.0.0.1:18080:8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8080/hiking-food/api/health', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      start_period: 15s
+      retries: 3
+    stop_grace_period: 30s

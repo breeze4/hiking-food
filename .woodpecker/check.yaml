@@ -1,0 +1,17 @@
+when:
+  - event: [push, pull_request]
+
+steps:
+  backend-tests:
+    image: python:3.12.13-slim@sha256:229a2c5bfa27522db7815ea81f9bed70af17ccb9de9fc7ad142b1877b5830d36
+    commands:
+      - pip install --no-cache-dir --require-hashes -r backend/requirements-dev.txt
+      - python -m pytest backend/tests
+  frontend-checks:
+    image: node:22.14.0-bookworm-slim@sha256:745403dc46b5ab4c998502b07a12cbf020cf2c30645427a68ec0718f02d647de
+    commands:
+      - corepack enable
+      - pnpm --dir frontend install --frozen-lockfile
+      - pnpm --dir frontend test
+      - pnpm --dir frontend lint
+      - pnpm --dir frontend build
