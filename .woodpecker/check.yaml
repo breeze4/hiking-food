@@ -11,6 +11,7 @@ steps:
     image: node:22.14.0-bookworm-slim@sha256:745403dc46b5ab4c998502b07a12cbf020cf2c30645427a68ec0718f02d647de
     commands:
       - corepack enable
+      - corepack prepare pnpm@11.5.1 --activate
       - pnpm --dir frontend install --frozen-lockfile
       - pnpm --dir frontend test
       - pnpm --dir frontend lint

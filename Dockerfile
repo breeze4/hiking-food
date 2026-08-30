@@ -2,7 +2,7 @@ FROM node:22.14.0-bookworm-slim@sha256:745403dc46b5ab4c998502b07a12cbf020cf2c306
 
 WORKDIR /build/frontend
 COPY frontend/package.json frontend/pnpm-lock.yaml ./
-RUN corepack enable && pnpm install --frozen-lockfile
+RUN corepack enable && corepack prepare pnpm@11.5.1 --activate && pnpm install --frozen-lockfile
 COPY frontend ./
 RUN pnpm build
 

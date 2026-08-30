@@ -30,3 +30,8 @@ source service as the active writer.
 The initial GitHub push delivery received HTTP `502` with `failed to connect to
 host`, so Woodpecker created no pipeline for the bridge commit. This handoff
 commit records the delivery before it triggers the unchanged bridge tree again.
+
+Woodpecker pipeline `1` passes the Python backend tests but fails the frontend
+check before application tests. Its Node image selected pnpm `11.24.0`, while
+the locked frontend requires `11.5.1`. The recovery explicitly activates pnpm
+`11.5.1` in the check workflow and image builder before dependency installation.
