@@ -46,3 +46,7 @@ The retry exposes two failures from the shared asynchronous UI test under
 parallel Woodpecker workers. The final recovery runs the unchanged frontend
 suite with one worker. This preserves every assertion and prevents test-file
 concurrency from changing shared UI timing.
+
+Vitest 4 rejects the initial `--minWorkers` option before it starts tests. The
+final command keeps the supported `--maxWorkers=1` limit and removes the
+unsupported option.

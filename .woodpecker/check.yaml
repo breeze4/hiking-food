@@ -13,6 +13,6 @@ steps:
       - corepack enable
       - corepack prepare pnpm@11.5.1 --activate
       - pnpm --dir frontend install --frozen-lockfile
-      - pnpm --dir frontend test --maxWorkers=1 --minWorkers=1
+      - pnpm --dir frontend test --maxWorkers=1
       - pnpm --dir frontend lint
       - pnpm --dir frontend build
