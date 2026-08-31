@@ -82,3 +82,38 @@ runs the same frontend command the check workflow already ran.
   fails if that host is unreachable.
 - The retired `deploy/` files stay in the tree. Remove them after the rollback
   window closes.
+
+## Pipeline and deployment evidence
+
+Commit `ed99ab8c414a335ae8547dbeeacff89bfde02f4b` ran as Woodpecker pipeline `8`
+for `breeze4/hiking-food` and reached `success`. Every step exited `0`:
+
+```
+hiking-food-gates|success|0
+publish-image|success|0
+deploy|success|0
+```
+
+The merged gate passed in the pipeline, so the two `SnackSelection.test.jsx`
+assertions that flaked in the local reproduction passed under Woodpecker.
+
+BeeBaby recorded the deployment in
+`/srv/beebaby/deployments/hiking-food/active.env`:
+
+```
+IMAGE_DIGEST=ghcr.io/breeze4/hiking-food@sha256:f411e6ee429418c0909d1f387018fabaff8e631173cd6f5e809a7117facb9dc6
+COMMIT_SHA=ed99ab8c414a335ae8547dbeeacff89bfde02f4b
+```
+
+`COMMIT_SHA` equals the pushed commit. The history log records the entry as
+`deploy`, after the `cutover` entry for `51a49c4`.
+
+## Live verification
+
+The service keeps its `/hiking-food` path prefix on both routes:
+
+| Check | Result |
+| --- | --- |
+| `http://beebaby.tailc65f2f.ts.net:8000/hiking-food/api/health` | `200`, body `{"status":"ok"}` |
+| `https://beebaby.tailc65f2f.ts.net/hiking-food/` | `200` |
+| `https://beebaby.tailc65f2f.ts.net/hiking-food/mcp` | `401`, the expected OAuth challenge |
