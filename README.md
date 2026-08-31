@@ -71,17 +71,20 @@ ChatGPT plugin. Claude can use the same remote MCP URL and OAuth contract.
 
 ## Deploy
 
-A local commit to `main` creates a durable Factory deployment intent. The
-Factory runner publishes the exact commit to GitHub and asks Factory to record
-the deployment.
+Woodpecker on BeeBaby tests each commit on the `main` branch, builds an
+immutable container image, publishes it to GitHub Container Registry, and
+deploys that digest through the restricted deployment command. Caddy routes
+`/hiking-food` to the running container.
 
-The `factory.project.yml` file defines the active deployment contract. Factory
-runs `scripts/cicd-router-gates.sh` as the project gate. Factory restarts
-`hiking-food.service` and examines `/hiking-food/api/health` on port `8000`.
+The `.woodpecker/` directory holds the check, publish, and deploy workflows. The
+check workflow runs `scripts/ci-gates.sh`, which runs the backend tests and the
+frontend tests, lint, and build. The `Dockerfile` builds the runtime image and
+`compose.beebaby.yaml` defines the deployed service, its mounted data
+directory, and its health check.
 
-The `cicd-router.project.yml` file is audit and recovery data only. Do not use
-a direct deployment script.
+The `deploy/` directory records the retired source-copy deployment. It stays
+until the container deployment passes one BeeBaby reboot and seven days of
+normal operation, because the documented rollback path still needs it.
 
-<!-- Factory auto-merge proof: factory/auto-merge-20260828153957 -->
-
-<!-- Deployed after cicd-router retirement: factory/post-retirement-20260828170653 -->
+For the build, deploy, rollback, data, secret, and verification path, read
+[Deploy Hiking Food](docs/deployment.md). Do not use a direct deployment script.

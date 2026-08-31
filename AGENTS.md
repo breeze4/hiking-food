@@ -1,11 +1,11 @@
 Dev: `cd backend && uvicorn main:app --reload` + `cd frontend && pnpm dev` (Vite proxies /api to :8000)
 Test: `cd backend && venv/bin/pytest`
 Frontend checks: `cd frontend && pnpm lint && pnpm build`
-Deploy: commit to `main`. The Factory runner publishes the exact commit and
-records its deployment.
-The `factory.project.yml` file is the active contract.
-Factory runs `scripts/cicd-router-gates.sh` as the project gate.
-The `cicd-router.project.yml` file is audit data only.
+Deploy: commit to `main`. Woodpecker checks the exact commit, publishes its
+container image, and deploys that image to BeeBaby.
+The `.woodpecker/` workflows are the active contract.
+The check workflow runs `scripts/ci-gates.sh` as the project gate.
+Read `docs/deployment.md` for the deploy, rollback, and verification path.
 Do not use a direct deployment script.
 Access: `http://beebaby:8000/hiking-food/`
 Chatbot MCP: read `docs/agents/hiking-food-mcp.md` before planning trips through MCP.

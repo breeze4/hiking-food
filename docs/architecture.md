@@ -62,18 +62,25 @@ Specs, plans, and session logs live in `docs/`; `docs/plans/INDEX.md` is the aut
 
 ## Deployment
 
-**Method:** Factory receives a signed GitHub event for a pushed `main` commit.
-It fetches that exact commit and runs the retained
-`scripts/cicd-router-gates.sh` gate. Factory copies the approved source to
-BeeBaby and runs `deploy/remote-bootstrap.sh`. It then restarts the user
-systemd service and examines the configured health endpoint.
+**Method:** Woodpecker on BeeBaby receives a GitHub event for a pushed `main`
+commit and runs three workflows against that exact commit. `.woodpecker/check.yaml`
+runs the `scripts/ci-gates.sh` gate. `.woodpecker/publish.yaml` builds the
+`Dockerfile` image and pushes it to `ghcr.io/breeze4/hiking-food` under the
+commit SHA. `.woodpecker/deploy.yaml` calls the restricted deployment command on
+BeeBaby, which resolves the tag to an immutable digest, renders
+`compose.beebaby.yaml`, waits for container health, and probes the route.
 
-The `factory.project.yml` file is the active contract. The
-`cicd-router.project.yml` file is audit and recovery data only.
+**Service**: Runs as a Compose container that listens on loopback port `18080`
+and serves container port `8080`. Caddy routes `/hiking-food` to it, and
+publishes the OAuth-protected `/hiking-food/mcp` path through a
+recognized-certificate HTTPS hostname for remote chatbot clients. The registry
+port `8000` keeps answering for direct health checks.
 
-**Service**: Runs as a user-level systemd unit (`hiking-food.service`) on port 8000. `loginctl enable-linger` keeps it alive after logout. BeeBaby's Tailscale Funnel publishes the OAuth-protected `/hiking-food` MCP path through a recognized-certificate HTTPS hostname for remote chatbot clients.
+**Database persistence**: The SQLite files live outside the image in the mounted
+`/data` directory, so an image replacement never overwrites them. Schema changes
+are applied by the idempotent startup migrations.
 
-**Database persistence**: The SQLite file on the server is never overwritten — rsync excludes `*.db`, and schema changes are applied by the idempotent startup migrations.
-
-**Deployment control:** Factory provides the project gate, exact-commit
-deployment, service restart, smoke check, rollback record, and result record.
+**Deployment control:** The deployment command provides the digest check, the
+image revision check against the pipeline commit, the health wait, the route
+probe, the automatic restore of the previous digest on failure, and the digest
+record. See `docs/deployment.md`.
