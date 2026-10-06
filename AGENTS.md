@@ -18,3 +18,15 @@ When you complete a plan or change its status, update `docs/plans/INDEX.md`:
 - Move the plan between the Completed / In Progress / Not Started sections
 - Keep the table format consistent
 - Do this in the same commit as the plan file changes
+
+<!-- cos:managed-project:start -->
+## Reading copy
+
+This section applies only when the file `.cos/reading-copy` exists in this checkout. If that file doesn't exist, ignore this section.
+
+When `.cos/reading-copy` exists:
+
+- This checkout is a reading copy of the project `hiking-food`, which the chief of staff owns on beebaby.
+- The git hooks in this checkout reject every commit and push.
+- To change the project, ask the chief of staff. Or run `cos eject hiking-food` here, make the change, and run `cos migrate hiking-food` when you finish.
+<!-- cos:managed-project:end -->
