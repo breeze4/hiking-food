@@ -144,3 +144,15 @@ and a proposed fix when obvious.
     only recording it. Also: grep docs/lessons.md for the failing symptom
     before diagnosing dev-environment failures - the answer may already be
     written down.
+
+- date: 2026-10-07
+  context: tasks#22 H4, re-stamping CI and adding secret-names.yaml from a cloud worker
+  category: friction
+  body: The cloud worker can't read the `cos secrets adopt` draft at
+    `data/secret-drafts/hiking-food/secret-names.yaml` on BeeBaby. The list came
+    from the code instead. Adopt copies every name in the runtime env file, so
+    the draft includes `HIKING_FOOD_OAUTH_ISSUER` even though it isn't secret.
+    Leaving it off breaks the issuer when deploys write the file from the store.
+  fix: When a task needs a host-only draft, attach the draft text to the brief.
+    Until then, compare the list with `cos secrets status --project PROJECT`
+    before landing.
